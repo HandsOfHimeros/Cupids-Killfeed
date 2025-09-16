@@ -1,3 +1,36 @@
+// --- Cupid Spawn Utility ---
+// Adds a spawn entry to Cupid.json on Nitrado via API
+const CUPID_FILE_PATH = '/games/ni11886592_1/ftproot/dayzps_missions/dayzOffline.chernarusplus/custom/Cupid.json';
+const NITRADO_BASE_URL = 'https://api.nitrado.net/services';
+const { NITRATOKEN, ID1 } = require('./config.json');
+
+async function addCupidSpawnEntry(entry) {
+    const axios = require('axios');
+    // Download current Cupid.json
+    const downloadUrl = `${NITRADO_BASE_URL}/${ID1}/gameservers/file_server/download?file=${encodeURIComponent(CUPID_FILE_PATH)}`;
+    let cupidJson = [];
+    try {
+        const res = await axios.get(downloadUrl, {
+            headers: { 'Authorization': `Bearer ${NITRATOKEN}` },
+            responseType: 'json'
+        });
+        cupidJson = res.data;
+        if (!Array.isArray(cupidJson)) cupidJson = [];
+    } catch (e) {
+        cupidJson = [];
+    }
+    cupidJson.push(entry);
+    // Upload updated Cupid.json
+    const uploadUrl = `${NITRADO_BASE_URL}/${ID1}/gameservers/file_server/upload?file=${encodeURIComponent(CUPID_FILE_PATH)}`;
+    await axios.post(uploadUrl, JSON.stringify(cupidJson), {
+        headers: {
+            'Authorization': `Bearer ${NITRATOKEN}`,
+            'Content-Type': 'application/json'
+        }
+    });
+}
+
+module.exports.addCupidSpawnEntry = addCupidSpawnEntry;
 // --- Killfeed Channel Monitor ---
 const KILLFEED_CHANNEL_ID = '1404256735245373511'; // Discord channel for Killfeed
 let lastSeenKillfeedLogLine = '';
