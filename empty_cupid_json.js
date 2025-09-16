@@ -1,4 +1,4 @@
-// Script to empty Cupid.json on Nitrado (remove all spawn entries)
+// Script to empty Cupid on Nitrado (remove all spawn entries)
 // Usage: node empty_cupid_json.js
 
 const axios = require('axios');
@@ -21,7 +21,7 @@ async function emptyCupidJson() {
 (async () => {
   try {
     await emptyCupidJson();
-    console.log('Cupid.json has been emptied.');
+  console.log('Cupid has been emptied.');
   } catch (err) {
     console.error('Error:', err.response ? err.response.data : err.message);
   }

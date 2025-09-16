@@ -1,4 +1,4 @@
-// Script to add a spawn entry to Cupid.json with a restart_id
+// Script to add a spawn entry to Cupid with a restart_id
 // Usage: node add_spawn_with_restart_id.js '{"item":"YourItem","location":"YourLocation"}' <restart_id>
 
 const axios = require('axios');
@@ -41,7 +41,7 @@ async function uploadCupidJson(json) {
     }
     cupidJson.push(newEntry);
     await uploadCupidJson(cupidJson);
-    console.log('New spawn entry added to Cupid.json:', newEntry);
+  console.log('New spawn entry added to Cupid:', newEntry);
   } catch (err) {
     console.error('Error:', err.response ? err.response.data : err.message);
   }

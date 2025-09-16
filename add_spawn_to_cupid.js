@@ -1,4 +1,4 @@
-// Script to add a new spawn entry to Cupid.json on Nitrado using the API
+// Script to add a new spawn entry to Cupid on Nitrado using the API
 // Usage: node add_spawn_to_cupid.js '{"item":"YourItem","location":"YourLocation"}'
 
 const axios = require('axios');
@@ -42,7 +42,7 @@ async function uploadCupidJson(json) {
     }
     cupidJson.push(newEntry);
     await uploadCupidJson(cupidJson);
-    console.log('New spawn entry added to Cupid.json:', newEntry);
+  console.log('New spawn entry added to Cupid:', newEntry);
   } catch (err) {
     console.error('Error:', err.response ? err.response.data : err.message);
   }

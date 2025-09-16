@@ -209,23 +209,120 @@ module.exports = {
                     .setRequired(false)),
     ],
     async execute(interaction) {
+        console.log(`[ECONOMY] execute called for command: ${interaction.commandName}, channel: ${interaction.channelId}`);
         const { commandName } = interaction;
         const userId = interaction.user.id;
         const { MessageEmbed } = require('discord.js');
         // Allow /shop in the shop channel (ID: 1392604466766807051) or economy channel
         const SHOP_CHANNEL_ID = '1392604466766807051';
         if (interaction.commandName === 'shop') {
-            if (interaction.channelId !== SHOP_CHANNEL_ID) {
-                await interaction.reply({
-                    embeds: [
-                        new MessageEmbed()
-                            .setColor('#ff5555')
-                            .setTitle('Wrong Channel')
-                            .setDescription('Please use this command in the <#' + SHOP_CHANNEL_ID + '> channel.')
-                            .setFooter({ text: 'Shop', iconURL: interaction.client.user.displayAvatarURL() })
-                    ],
-                    ephemeral: true
-                });
+            console.log('[SHOP] Entered /shop logic');
+            try {
+                console.log('[SHOP] Channel check');
+                if (interaction.channelId !== SHOP_CHANNEL_ID) {
+                    await interaction.reply({
+                        embeds: [
+                            new MessageEmbed()
+                                .setColor('#ff5555')
+                                .setTitle('Wrong Channel')
+                                .setDescription('Please use this command in the <#' + SHOP_CHANNEL_ID + '> channel.')
+                                .setFooter({ text: 'Shop', iconURL: interaction.client.user.displayAvatarURL() })
+                        ],
+                        ephemeral: true
+                    });
+                    return;
+                }
+                console.log('[SHOP] Passed channel check');
+                // --- SHOP COMMAND LOGIC ---
+                const shopItems = require('../shop_items.js');
+                const itemName = interaction.options.getString('item');
+                if (!itemName) {
+                    console.log('[SHOP] No itemName, showing shop menu');
+                    let desc = '';
+                    for (const item of shopItems) {
+                        desc += `**${item.name}** — $${item.averagePrice}\n${item.description}\n\n`;
+                    }
+                    await interaction.reply({
+                        embeds: [
+                            new MessageEmbed()
+                                .setColor('#ff69b4')
+                                .setTitle('DayZ Shop')
+                                .setDescription(desc)
+                                .setFooter({ text: 'Use /shop item:<name> to purchase.' })
+                        ]
+                    });
+                    console.log('[SHOP] Shop menu sent');
+                    return;
+                }
+                console.log('[SHOP] Looking for item:', itemName);
+                const item = shopItems.find(i => i.name.toLowerCase() === itemName.toLowerCase());
+                if (!item) {
+                    console.log('[SHOP] Item not found:', itemName);
+                    await interaction.reply({
+                        embeds: [
+                            new MessageEmbed()
+                                .setColor('#ff5555')
+                                .setTitle('Item Not Found')
+                                .setDescription('That item does not exist in the shop.')
+                        ], ephemeral: true
+                    });
+                    return;
+                }
+                // Check balance
+                const bal = getBalance(userId);
+                if (bal < item.averagePrice) {
+                    console.log('[SHOP] Insufficient funds:', bal, 'needed:', item.averagePrice);
+                    await interaction.reply({
+                        embeds: [
+                            new MessageEmbed()
+                                .setColor('#ffaa00')
+                                .setTitle('Insufficient Funds')
+                                .setDescription(`You need $${item.averagePrice} to buy ${item.name}. Your balance: $${bal}`)
+                        ], ephemeral: true
+                    });
+                    return;
+                }
+                // Deduct money
+                addBalance(userId, -item.averagePrice);
+                // Write spawn entry to Cupid.json via Nitrado API
+                const { addCupidSpawnEntry } = require('../index.js');
+                const spawnEntry = {
+                    userId,
+                    item: item.name,
+                    class: item.class,
+                    amount: item.amount || 1,
+                    timestamp: Date.now(),
+                    restart_id: Date.now().toString()
+                };
+                try {
+                    console.log('[SHOP] Adding Cupid spawn entry:', spawnEntry);
+                    await addCupidSpawnEntry(spawnEntry);
+                    await interaction.reply({
+                        embeds: [
+                            new MessageEmbed()
+                                .setColor('#00ff99')
+                                .setTitle('Purchase Successful!')
+                                .setDescription(`You bought **${item.name}** for $${item.averagePrice}. It will spawn at your location after the next restart!`)
+                        ]
+                    });
+                    console.log('[SHOP] Purchase successful');
+                } catch (err) {
+                    console.error('[SHOP] Error writing spawn entry:', err);
+                    await interaction.reply({
+                        embeds: [
+                            new MessageEmbed()
+                                .setColor('#ff5555')
+                                .setTitle('Spawn Error')
+                                .setDescription('Purchase succeeded, but failed to write spawn entry. Please contact an admin.')
+                        ], ephemeral: true
+                    });
+                }
+                return;
+            } catch (err) {
+                console.error('[SHOP] Fatal error in /shop logic:', err);
+                try {
+                    await interaction.reply({ content: 'Fatal error in /shop logic: ' + err.message, ephemeral: true });
+                } catch {}
                 return;
             }
         } else if (interaction.channelId !== ECONOMY_CHANNEL_ID) {

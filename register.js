@@ -26,16 +26,28 @@ const commandsPath = path.join(__dirname, 'commands');
 const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
 
 for (const file of commandFiles) {
-	const filePath = path.join(commandsPath, file);
+  const filePath = path.join(commandsPath, file);
   try {
     const command = require(filePath);
-    if (command && command.data && command.data.name) {
-      commands.push(command.data.toJSON());
+    if (command && Array.isArray(command.data)) {
+      for (const cmd of command.data) {
+        if (cmd && typeof cmd.toJSON === 'function') {
+          const json = cmd.toJSON();
+          commands.push(json);
+          console.log(`Registering command from array: ${json.name}`);
+        } else {
+          console.warn(`Invalid command format in array in file: ${filePath}`);
+        }
+      }
+    } else if (command && command.data && typeof command.data.toJSON === 'function') {
+      const json = command.data.toJSON();
+      commands.push(json);
+      console.log(`Registering command: ${json.name}`);
     } else {
-        console.warn(`No commands detected in file: ${filePath}`);
+      console.warn(`No commands detected in file: ${filePath}`);
     }
   } catch (error) {
-      console.error(`Error loading command file ${filePath}:`, error);
+    console.error(`Error loading command file ${filePath}:`, error);
   }
 }
 

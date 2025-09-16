@@ -1,4 +1,4 @@
-// Script to clean up Cupid.json by removing entries with an old restart_id
+// Script to clean up Cupid by removing entries with an old restart_id
 // Usage: node cleanup_cupid_by_restart_id.js <current_restart_id>
 
 const axios = require('axios');
@@ -40,7 +40,7 @@ async function uploadCupidJson(json) {
     }
     const filtered = cupidJson.filter(entry => entry.restart_id === current_restart_id);
     await uploadCupidJson(filtered);
-    console.log('Cupid.json cleaned. Remaining entries:', filtered.length);
+  console.log('Cupid cleaned. Remaining entries:', filtered.length);
   } catch (err) {
     console.error('Error:', err.response ? err.response.data : err.message);
   }

@@ -1,33 +1,68 @@
 // --- Cupid Spawn Utility ---
-// Adds a spawn entry to Cupid.json on Nitrado via API
+// Adds a spawn entry to Cupid on Nitrado via API
 const CUPID_FILE_PATH = '/games/ni11886592_1/ftproot/dayzps_missions/dayzOffline.chernarusplus/custom/Cupid.json';
 const NITRADO_BASE_URL = 'https://api.nitrado.net/services';
-const { NITRATOKEN, ID1 } = require('./config.json');
+const config = require('./config.json');
 
 async function addCupidSpawnEntry(entry) {
     const axios = require('axios');
-    // Download current Cupid.json
-    const downloadUrl = `${NITRADO_BASE_URL}/${ID1}/gameservers/file_server/download?file=${encodeURIComponent(CUPID_FILE_PATH)}`;
-    let cupidJson = [];
+    const fs = require('fs');
+    const FormData = require('form-data');
+    // Download current Cupid
+    const downloadUrl = `${NITRADO_BASE_URL}/${config.ID1}/gameservers/file_server/download?file=${encodeURIComponent(CUPID_FILE_PATH)}`;
+    let cupidJson = { Objects: [] };
     try {
         const res = await axios.get(downloadUrl, {
-            headers: { 'Authorization': `Bearer ${NITRATOKEN}` },
+            headers: { 'Authorization': `Bearer ${config.NITRATOKEN}` },
             responseType: 'json'
         });
-        cupidJson = res.data;
-        if (!Array.isArray(cupidJson)) cupidJson = [];
-    } catch (e) {
-        cupidJson = [];
-    }
-    cupidJson.push(entry);
-    // Upload updated Cupid.json
-    const uploadUrl = `${NITRADO_BASE_URL}/${ID1}/gameservers/file_server/upload?file=${encodeURIComponent(CUPID_FILE_PATH)}`;
-    await axios.post(uploadUrl, JSON.stringify(cupidJson), {
-        headers: {
-            'Authorization': `Bearer ${NITRATOKEN}`,
-            'Content-Type': 'application/json'
+        if (res.data && Array.isArray(res.data.Objects)) {
+            cupidJson.Objects = res.data.Objects;
         }
-    });
+    } catch (e) {
+        console.error('[CUPID] Error downloading Cupid:', e.response ? e.response.data : e.message);
+        cupidJson = { Objects: [] };
+    }
+    cupidJson.Objects.push(entry);
+    // Write to a temp file
+    const tempPath = './Cupid_upload.json';
+    fs.writeFileSync(tempPath, JSON.stringify(cupidJson, null, 2));
+
+    // Try both original and mission root upload paths
+    const uploadPaths = [
+        CUPID_FILE_PATH,
+        '/games/ni11886592_1/ftproot/dayzps_missions/dayzOffline.chernarusplus/Cupid.json',
+        '/games/ni11886592_1/ftproot//dayzps_missions/dayzOffline.chernarusplus/custom'
+    ];
+    let lastError = null;
+    for (const path of uploadPaths) {
+        try {
+            const form = new FormData();
+            form.append('file', fs.createReadStream(tempPath), 'Cupid.json');
+            const uploadUrl = `https://api.nitrado.net/services/${config.ID1}/gameservers/file_server/upload?file=${encodeURIComponent(path)}`;
+            console.log('[CUPID] Uploading to:', uploadUrl);
+            console.log('[CUPID] FormData headers:', form.getHeaders());
+            const response = await axios.post(uploadUrl, form, {
+                headers: {
+                    ...form.getHeaders(),
+                    Authorization: `Bearer ${config.NITRATOKEN}`,
+                },
+                maxContentLength: Infinity,
+                maxBodyLength: Infinity,
+            });
+            console.log('[CUPID] Upload response:', response.data);
+            if (response.data && response.data.status !== 'success') {
+                throw new Error(`Nitrado upload failed: ${JSON.stringify(response.data)}`);
+            }
+            fs.unlinkSync(tempPath);
+            return;
+        } catch (e) {
+            lastError = e;
+            console.error(`[CUPID] Error uploading Cupid to ${path}:`, e.response ? e.response.data : e.message);
+        }
+    }
+    fs.existsSync(tempPath) && fs.unlinkSync(tempPath);
+    if (lastError) throw lastError;
 }
 
 module.exports.addCupidSpawnEntry = addCupidSpawnEntry;
@@ -243,12 +278,12 @@ async function pollDayZLogForBuilds() {
 async function fetchMostRecentDayZLog() {
     try {
         // Step 1: List all files in the directory
-        const { NITRATOKEN, ID1, ID2 } = require('./config.json');
+    // ...existing code...
         const axios = require('axios');
-        const dirPath = `/games/${ID2}/noftp/dayzps/config/`;
-        const listUrl = `https://api.nitrado.net/services/${ID1}/gameservers/file_server/list?dir=${encodeURIComponent(dirPath)}`;
+    const dirPath = `/games/${config.ID2}/noftp/dayzps/config/`;
+    const listUrl = `https://api.nitrado.net/services/${config.ID1}/gameservers/file_server/list?dir=${encodeURIComponent(dirPath)}`;
         const listResp = await axios.get(listUrl, {
-            headers: { 'Authorization': `Bearer ${NITRATOKEN}` }
+            headers: { 'Authorization': `Bearer ${config.NITRATOKEN}` }
         });
         const files = listResp.data.data.entries || [];
         // Step 2: Filter for DayZServer log files
@@ -258,9 +293,9 @@ async function fetchMostRecentDayZLog() {
         logFiles.sort((a, b) => b.name.localeCompare(a.name));
         const mostRecent = logFiles[0];
         // Step 4: Download the most recent log file
-        const downloadUrl = `https://api.nitrado.net/services/${ID1}/gameservers/file_server/download?file=${encodeURIComponent(dirPath + mostRecent.name)}`;
+        const downloadUrl = `https://api.nitrado.net/services/${config.ID1}/gameservers/file_server/download?file=${encodeURIComponent(dirPath + mostRecent.name)}`;
         const downloadResp = await axios.get(downloadUrl, {
-            headers: { 'Authorization': `Bearer ${NITRATOKEN}` }
+            headers: { 'Authorization': `Bearer ${config.NITRATOKEN}` }
         });
         // The download URL is in downloadResp.data.data.token.url
         return {
@@ -294,8 +329,8 @@ require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
 const { Client, Collection, Intents } = require('discord.js');
-const { GUILDID, TOKEN } = require('./config.json');
-const { NITRATOKEN, ID1 } = require('./config.json');
+// Removed destructuring require for GUILDID and TOKEN. Use config.GUILDID and config.TOKEN instead.
+// ...existing code...
 const axios = require('axios');
 const moment = require('moment-timezone');
 const nodeoutlook = require('nodejs-nodemailer-outlook');
@@ -315,7 +350,7 @@ const bot = new Client({
     ]
 });
 
-let servCheck = GUILDID;
+let servCheck = config.GUILDID;
 
 // Setup Slash Command Handler
 bot.commands = new Collection();
@@ -378,7 +413,7 @@ bot.on('messageCreate', async message => {
 });
 
 // Login Discord Bot
-bot.login(TOKEN).catch(error => {
+bot.login(config.TOKEN).catch(error => {
     console.log(error);
 });
 
@@ -486,9 +521,9 @@ if (require.main === module) {
 // Fetch log files from Nitrado API
 async function fetchNitradoLogs() {
     try {
-        const response = await axios.get(`https://api.nitrado.net/services/${ID1}/gameservers`, {
+        const response = await axios.get(`https://api.nitrado.net/services/${config.ID1}/gameservers`, {
             headers: {
-                'Authorization': `Bearer ${NITRATOKEN}`
+                'Authorization': `Bearer ${config.NITRATOKEN}`
             }
         });
         // You can adjust this to return specific log data as needed
