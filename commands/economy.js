@@ -2,7 +2,7 @@
 const path = require('path');
 const fs = require('fs');
 const COOLDOWN_FILE = path.join(__dirname, '../logs/economy_cooldowns.json');
-const MINI_GAMES = ['slots','rob','golf','cards','job','blackjack','crime','theft','bribe'];
+const MINI_GAMES = ['slots','rob','golf','cards','job','blackjack','crime','theft','bribe','work'];
 const COOLDOWN_LIMIT = 1; // times allowed
 const COOLDOWN_WINDOW = 6 * 60 * 60 * 1000; // 6 hours in ms
 
@@ -615,6 +615,14 @@ module.exports = {
             const newBal = addBalance(userId, amount);
             await interaction.reply({ embeds: [new MessageEmbed().setColor('#00aaff').setTitle('🏦 Withdraw Successful').addField('Amount', `$${amount}`, true).addField('New Wallet Balance', `$${newBal}`, true)] });
         } else if (commandName === 'work') {
+            if (!canPlayMiniGame(userId, 'work')) {
+                const msRemaining = nextAvailableMiniGame(userId, 'work');
+                const hours = Math.floor(msRemaining / (60 * 60 * 1000));
+                const minutes = Math.floor((msRemaining % (60 * 60 * 1000)) / (60 * 1000));
+                await interaction.reply(`⏳ You must wait **${hours}h ${minutes}m** before working again.`);
+                return;
+            }
+            recordMiniGamePlay(userId, 'work');
             const earned = Math.floor(Math.random() * 100) + 50;
             const bal = addBalance(userId, earned);
             const { MessageEmbed } = require('discord.js');
