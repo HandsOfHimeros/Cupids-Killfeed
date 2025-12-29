@@ -424,10 +424,7 @@ function updatePlayerLocation(playerName, position) {
 function getPlayerLocation(playerName) {
     const loc = playerLocations[playerName.toLowerCase()];
     if (!loc) return null;
-    // Check if location is stale (older than 30 minutes)
-    if (Date.now() - loc.timestamp > 30 * 60 * 1000) {
-        return null;
-    }
+    // Always return last known location, regardless of age
     return loc.position;
 }
 
