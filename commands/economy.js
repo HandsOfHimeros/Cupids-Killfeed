@@ -299,6 +299,9 @@ module.exports = {
         new SlashCommandBuilder()
             .setName('myname')
             .setDescription('Check your registered DayZ player name'),
+        new SlashCommandBuilder()
+            .setName('shophelp')
+            .setDescription('Learn how to use the shop and spawn system'),
     ],
     async execute(interaction) {
         console.log(`[ECONOMY] execute called for command: ${interaction.commandName}, channel: ${interaction.channelId}`);
@@ -822,6 +825,30 @@ module.exports = {
                     ], ephemeral: true
                 });
             }
+        } else if (commandName === 'shophelp') {
+            await interaction.reply({
+                embeds: [
+                    new MessageEmbed()
+                        .setColor('#00aaff')
+                        .setTitle('🛒 Shop & Spawn System Guide')
+                        .setDescription('**How to buy items and spawn them in-game:**')
+                        .addField('1️⃣ Set Your DayZ Name', 
+                            '`/setname name:YourExactDayZName`\nMust match your in-game name exactly!', false)
+                        .addField('2️⃣ Check Your Name', 
+                            '`/myname` - Verify your registered name', false)
+                        .addField('3️⃣ Browse the Shop', 
+                            '`/shop` - View all available items and prices', false)
+                        .addField('4️⃣ Purchase an Item', 
+                            '`/shop item:canteen` - Buy an item from the shop', false)
+                        .addField('📍 Location System', 
+                            '• Items spawn at your **last known location**\n• Bot tracks your position from server logs\n• Make sure you\'ve been on the server recently\n• Items will spawn at your location after next restart', false)
+                        .addField('🔄 Restart Schedule', 
+                            '**Server restarts:** 3, 6, 9, 12 (AM/PM) EST\n• Purchased items spawn on next restart\n• Items spawn once and are removed from spawn list\n• Buy anytime - spawns on next scheduled restart', false)
+                        .addField('💰 Earn Money', 
+                            '`/work`, `/slots`, `/blackjack`, `/job`, `/rob`, `/crime`, `/theft`, `/bribe`\n⏳ Each can be used once every 6 hours', false)
+                        .setFooter({ text: 'Need help? Ask an admin!' })
+                ], ephemeral: true
+            });
         }
     }
 };
