@@ -620,7 +620,6 @@ function checkForServerRestart(logText) {
     // If we see restart indicators and enough time has passed (10 min)
     if (hasRestartIndicator && (now - lastRestartTime > 10 * 60 * 1000)) {
         lastRestartTime = now;
-        }
     }
 }
 
