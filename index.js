@@ -571,9 +571,39 @@ bot.on('error', err => {
 const CONNECTIONS_CHANNEL_ID = '1405195781639770224'; // Discord channel for connections
 let lastSeenLogLine = '';
 let lastRestartTime = 0;
-let restartCleanupScheduled = false;
+let lastCleanupCheck = 0;
 
-// Helper: Detect server restart and schedule spawn cleanup
+// Server restart times: 3, 6, 9, 12 (am/pm) - cleanup runs 15 minutes after
+const RESTART_HOURS = [3, 6, 9, 12, 15, 18, 21, 0]; // 0 = midnight
+
+// Helper: Check if it's time to cleanup after scheduled restart
+function checkScheduledCleanup() {
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    const timeSinceLastCheck = Date.now() - lastCleanupCheck;
+    
+    // Only check once per hour
+    if (timeSinceLastCheck < 50 * 60 * 1000) return;
+    
+    // Check if we're 15-20 minutes after a restart hour
+    for (const restartHour of RESTART_HOURS) {
+        const hourDiff = currentHour - restartHour;
+        
+        // Handle midnight wraparound
+        const adjustedDiff = hourDiff < 0 ? hourDiff + 24 : hourDiff;
+        
+        if (adjustedDiff === 0 && currentMinute >= 15 && currentMinute <= 20) {
+            // We're in the cleanup window
+            lastCleanupCheck = Date.now();
+            console.log(`[RESTART] Cleanup window detected after ${restartHour}:00 restart`);
+            cleanupSpawnJson();
+            return;
+        }
+    }
+}
+
+// Helper: Detect server restart and schedule spawn cleanup (legacy fallback)
 function checkForServerRestart(logText) {
     // Look for restart indicators - when log starts fresh or sees "Game started"
     const lines = logText.split(/\r?\n/);
@@ -589,15 +619,6 @@ function checkForServerRestart(logText) {
     // If we see restart indicators and enough time has passed (10 min)
     if (hasRestartIndicator && (now - lastRestartTime > 10 * 60 * 1000)) {
         lastRestartTime = now;
-        
-        // Schedule cleanup in 5 minutes (after items have spawned)
-        if (!restartCleanupScheduled) {
-            restartCleanupScheduled = true;
-            console.log('[RESTART] Server restart detected, scheduling spawn cleanup in 5 minutes...');
-            setTimeout(async () => {
-                await cleanupSpawnJson();
-                restartCleanupScheduled = false;
-            }, 5 * 60 * 1000);
         }
     }
 }
@@ -739,7 +760,10 @@ async function pollDayZLogForConnections() {
         const logText = resp.data;
         const events = parseConnectionEvents(logText);
         
-        // Check for server restart indicator
+        // Check for scheduled cleanup time
+        checkScheduledCleanup();
+        
+        // Check for server restart indicator (legacy fallback)
         checkForServerRestart(logText);
         
         // Only post new events since last poll
