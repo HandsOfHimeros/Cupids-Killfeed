@@ -1,7 +1,5 @@
 // --- Killfeed Channel Monitor ---
 const KILLFEED_CHANNEL_ID = '1404256735245373511'; // Discord channel for Killfeed
-// --- Killfeed Channel Monitor ---
-const KILLFEED_CHANNEL_ID = '1404256735245373511'; // Discord channel for Killfeed
 let lastSeenKillfeedLogLine = '';
 
 function parseKillfeedLogEvents(logText) {
