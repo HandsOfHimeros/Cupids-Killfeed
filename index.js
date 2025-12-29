@@ -245,6 +245,7 @@ module.exports.fetchMostRecentDayZLog = fetchMostRecentDayZLog;
 // Function to add a spawn entry to spawn.json on Nitrado server
 async function addCupidSpawnEntry(spawnEntry) {
     const FILE_PATH = `/games/${config.ID2}/ftproot/dayzps_missions/dayzOffline.chernarusplus/custom/spawn.json`;
+    const FTP_FILE_PATH = `/dayzps_missions/dayzOffline.chernarusplus/custom/spawn.json`;
     const BASE_URL = 'https://api.nitrado.net/services';
     
     try {
@@ -310,17 +311,47 @@ async function addCupidSpawnEntry(spawnEntry) {
         spawnJson.Objects.push(spawnObject);
         console.log(`[SPAWN] Added spawn, total objects: ${spawnJson.Objects.length}`);
         
-        // Step 6: Upload back to Nitrado as JSON
-        const uploadUrl = `${BASE_URL}/${config.ID1}/gameservers/file_server/upload?file=${encodeURIComponent(FILE_PATH)}`;
-        
-        await axios.post(uploadUrl, JSON.stringify(spawnJson, null, 2), {
-            headers: {
-                'Authorization': `Bearer ${config.NITRATOKEN}`,
-                'Content-Type': 'application/json'
-            }
+        // Step 6: Get FTP credentials from Nitrado API
+        console.log('[SPAWN] Getting FTP credentials...');
+        const credUrl = `${BASE_URL}/${config.ID1}/gameservers/file_server/credentials`;
+        const credResp = await axios.get(credUrl, {
+            headers: { 'Authorization': `Bearer ${config.NITRATOKEN}` }
         });
         
-        console.log('[SPAWN] Successfully uploaded spawn.json to Nitrado');
+        const ftpHost = credResp.data.data.hostname;
+        const ftpUser = credResp.data.data.username;
+        const ftpPass = credResp.data.data.password;
+        const ftpPort = credResp.data.data.port || 21;
+        
+        console.log(`[SPAWN] FTP: ${ftpUser}@${ftpHost}:${ftpPort}`);
+        
+        // Step 7: Upload via FTP
+        const { Client } = require('basic-ftp');
+        const client = new Client();
+        client.ftp.verbose = false;
+        
+        try {
+            await client.access({
+                host: ftpHost,
+                user: ftpUser,
+                password: ftpPass,
+                port: ftpPort,
+                secure: false
+            });
+            
+            console.log('[SPAWN] Connected to FTP');
+            
+            // Write to temp file and upload
+            const tmpPath = path.join(__dirname, 'logs', `spawn_${Date.now()}.json`);
+            fs.writeFileSync(tmpPath, JSON.stringify(spawnJson, null, 2), 'utf8');
+            
+            await client.uploadFrom(tmpPath, FTP_FILE_PATH);
+            fs.unlinkSync(tmpPath);
+            
+            console.log('[SPAWN] Successfully uploaded spawn.json via FTP');
+        } finally {
+            client.close();
+        }
         
     } catch (err) {
         console.error('[SPAWN] Error adding spawn entry:', err.response ? err.response.data : err.message);
