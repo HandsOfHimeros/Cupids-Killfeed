@@ -1,4 +1,7 @@
 // --- Killfeed Channel Monitor ---
+const fs = require('fs');
+const path = require('path');
+const axios = require('axios');
 const KILLFEED_CHANNEL_ID = '1404256735245373511'; // Discord channel for Killfeed
 let lastSeenKillfeedLogLine = '';
 
@@ -71,11 +74,16 @@ async function pollDayZLogForKillfeed() {
         
         // Parse player locations from log
         const lines = logText.split(/\r?\n/);
+        let locationCount = 0;
         for (const line of lines) {
             const locInfo = parsePlayerLocation(line);
             if (locInfo) {
                 updatePlayerLocation(locInfo.name, locInfo.position);
+                locationCount++;
             }
+        }
+        if (locationCount > 0) {
+            console.log(`[LOCATION] Updated ${locationCount} player locations`);
         }
         
         const events = parseKillfeedLogEvents(logText);
@@ -458,11 +466,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>. */
 
 require('dotenv').config();
-const fs = require('fs');
-const path = require('path');
 const { Client, Collection, Intents } = require('discord.js');
 const config = require('./config.json');
-const axios = require('axios');
 const moment = require('moment-timezone');
 const nodeoutlook = require('nodejs-nodemailer-outlook');
 
