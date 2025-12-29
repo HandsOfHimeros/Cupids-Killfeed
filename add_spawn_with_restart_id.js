@@ -14,34 +14,69 @@ async function getCupidJson() {
     headers: { 'Authorization': `Bearer ${API_TOKEN}` },
     responseType: 'json'
   });
-  return res.data;
+  // Always return { Objects: [...] }
+  if (res.data && Array.isArray(res.data.Objects)) {
+    return { Objects: res.data.Objects };
+  } else if (res.data && Array.isArray(res.data)) {
+    // If file is just an array, wrap it
+    return { Objects: res.data };
+  } else {
+    return { Objects: [] };
+  }
 }
 
+const FormData = require('form-data');
+const path = require('path');
+const os = require('os');
+const fs = require('fs');
+
 async function uploadCupidJson(json) {
+  // Write to a temp file
+  const tmpPath = path.join(os.tmpdir(), `Cupid_${Date.now()}.json`);
+  fs.writeFileSync(tmpPath, JSON.stringify(json, null, 2), 'utf8');
   const url = `${BASE_URL}/${SERVICE_ID}/gameservers/file_server/upload?file=${encodeURIComponent(FILE_PATH)}`;
-  await axios.post(url, JSON.stringify(json), {
-    headers: {
-      'Authorization': `Bearer ${API_TOKEN}`,
-      'Content-Type': 'application/json'
-    }
+  const form = new FormData();
+  form.append('file', fs.createReadStream(tmpPath), {
+    filename: 'Cupid.json',
+    contentType: 'application/json'
   });
+  await axios.post(url, form, {
+    headers: {
+      ...form.getHeaders(),
+      'Authorization': `Bearer ${API_TOKEN}`
+    },
+    maxContentLength: Infinity,
+    maxBodyLength: Infinity
+  });
+  fs.unlinkSync(tmpPath);
 }
 
 (async () => {
   try {
-    const newEntry = process.argv[2] ? JSON.parse(process.argv[2]) : { item: "TestItem", location: "TestLocation" };
+    // Accept a local JSON file as input for the new entry
+    const fs = require('fs');
+    let newEntry = { name: "TestItem", pos: [0,0,0], ypr: [0,0,0], scale: 1, enableCEPersistency: 0, customString: "" };
+    if (process.argv[2]) {
+      try {
+        const fileContent = fs.readFileSync(process.argv[2], 'utf8');
+        newEntry = JSON.parse(fileContent);
+      } catch (e) {
+        console.error('Failed to read or parse input file:', e.message);
+        process.exit(1);
+      }
+    }
     const restart_id = process.argv[3] || Date.now().toString();
     newEntry.restart_id = restart_id;
-    let cupidJson = [];
+    let cupidJson = { Objects: [] };
     try {
       cupidJson = await getCupidJson();
-      if (!Array.isArray(cupidJson)) cupidJson = [];
+      if (!cupidJson.Objects || !Array.isArray(cupidJson.Objects)) cupidJson.Objects = [];
     } catch (e) {
-      cupidJson = [];
+      cupidJson = { Objects: [] };
     }
-    cupidJson.push(newEntry);
+    cupidJson.Objects.push(newEntry);
     await uploadCupidJson(cupidJson);
-  console.log('New spawn entry added to Cupid:', newEntry);
+    console.log('New spawn entry added to Cupid:', newEntry);
   } catch (err) {
     console.error('Error:', err.response ? err.response.data : err.message);
   }

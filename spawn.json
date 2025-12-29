@@ -1,5 +1,25 @@
 {
+  "_comment": "Spawn templates for DayZ items. Edit 'name' field to match exact DayZ class names from your server.",
+  "_instructions": {
+    "name": "Exact DayZ class name (e.g., 'M4A1', 'AKM', 'Mosin9130')",
+    "pos": "Position [x, y, z] - leave [0,0,0] for Cupid mod to set at player location",
+    "ypr": "Rotation [yaw, pitch, roll] - usually [0,0,0]",
+    "scale": "Size multiplier - usually 1",
+    "enableCEPersistency": "0 = temporary spawn, 1 = persistent",
+    "attachments": "Array of attachment class names (scopes, magazines, etc.)",
+    "quantity": "For stackable items like ammo or bandages"
+  },
+  
   "spawnTemplates": {
+    "_example_gun_with_attachments": {
+      "name": "M4A1",
+      "pos": [0, 0, 0],
+      "ypr": [0, 0, 0],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": ["ACOGOptic", "M4_MP_Buttstock", "M4_PlasticHndgrd"]
+    },
+    
     "M4A1": {
       "name": "M4A1",
       "pos": [0, 0, 0],
