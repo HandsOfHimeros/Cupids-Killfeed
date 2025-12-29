@@ -826,6 +826,7 @@ module.exports = {
                 });
             }
         } else if (commandName === 'shophelp') {
+            const { MessageEmbed } = require('discord.js');
             await interaction.reply({
                 embeds: [
                     new MessageEmbed()
