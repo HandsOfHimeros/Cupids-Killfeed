@@ -306,13 +306,13 @@ async function addCupidSpawnEntry(spawnEntry) {
         
         // Step 3.5: Try to get player's actual location
         let playerPos = template.pos || [0, 0, 0];
-        if (spawnEntry.discordUsername) {
-            const location = getPlayerLocation(spawnEntry.discordUsername);
+        if (spawnEntry.dayzPlayerName) {
+            const location = getPlayerLocation(spawnEntry.dayzPlayerName);
             if (location) {
                 playerPos = [location.x, location.y, location.z];
-                console.log(`[SPAWN] Found location for ${spawnEntry.discordUsername}:`, playerPos);
+                console.log(`[SPAWN] Found location for ${spawnEntry.dayzPlayerName}:`, playerPos);
             } else {
-                console.log(`[SPAWN] No recent location found for ${spawnEntry.discordUsername}, using template position`);
+                console.log(`[SPAWN] No recent location found for ${spawnEntry.dayzPlayerName}, using template position`);
             }
         }
         
@@ -322,6 +322,7 @@ async function addCupidSpawnEntry(spawnEntry) {
             pos: playerPos,
             customString: JSON.stringify({
                 userId: spawnEntry.userId,
+                dayzPlayerName: spawnEntry.dayzPlayerName,
                 item: spawnEntry.item,
                 timestamp: spawnEntry.timestamp,
                 restart_id: spawnEntry.restart_id

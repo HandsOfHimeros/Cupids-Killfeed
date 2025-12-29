@@ -44,6 +44,7 @@ const { Client, Intents } = require('discord.js');
 
 const BALANCES_FILE = path.join(__dirname, '../logs/economy_balances.json');
 const BANK_FILE = path.join(__dirname, '../logs/economy_banks.json');
+const DAYZ_NAMES_FILE = path.join(__dirname, '../dayz_names.json');
 const ECONOMY_CHANNEL_ID = '1404621573498863806';
 
 // Ensure logs directory exists
@@ -135,6 +136,39 @@ function saveBalances(balances) {
     } catch (err) {
         console.error('[ECONOMY] CRITICAL: Failed to save balances:', err);
     }
+}
+
+// DayZ name management
+function getDayZNames() {
+    try {
+        if (!fs.existsSync(DAYZ_NAMES_FILE)) {
+            fs.writeFileSync(DAYZ_NAMES_FILE, '{}');
+            return {};
+        }
+        return JSON.parse(fs.readFileSync(DAYZ_NAMES_FILE, 'utf8'));
+    } catch (err) {
+        console.error('[ECONOMY] Error reading DayZ names file:', err);
+        return {};
+    }
+}
+
+function saveDayZNames(names) {
+    try {
+        fs.writeFileSync(DAYZ_NAMES_FILE, JSON.stringify(names, null, 2));
+    } catch (err) {
+        console.error('[ECONOMY] Error saving DayZ names:', err);
+    }
+}
+
+function setDayZName(userId, dayzName) {
+    const names = getDayZNames();
+    names[userId] = dayzName;
+    saveDayZNames(names);
+}
+
+function getDayZName(userId) {
+    const names = getDayZNames();
+    return names[userId] || null;
 }
 
 function addBalance(userId, amount) {
@@ -255,6 +289,16 @@ module.exports = {
                 option.setName('item')
                     .setDescription('Item to purchase (leave blank to view shop)')
                     .setRequired(false)),
+        new SlashCommandBuilder()
+            .setName('setname')
+            .setDescription('Set your DayZ player name for spawn locations')
+            .addStringOption(option =>
+                option.setName('name')
+                    .setDescription('Your exact DayZ player name')
+                    .setRequired(true)),
+        new SlashCommandBuilder()
+            .setName('myname')
+            .setDescription('Check your registered DayZ player name'),
     ],
     async execute(interaction) {
         console.log(`[ECONOMY] execute called for command: ${interaction.commandName}, channel: ${interaction.channelId}`);
@@ -332,11 +376,13 @@ module.exports = {
                 }
                 // Deduct money
                 addBalance(userId, -item.averagePrice);
+                // Get registered DayZ name or use Discord username
+                const dayzName = getDayZName(userId) || interaction.user.username;
                 // Write spawn entry to Cupid.json via Nitrado API
                 const { addCupidSpawnEntry } = require('../index.js');
                 const spawnEntry = {
                     userId,
-                    discordUsername: interaction.user.username,
+                    dayzPlayerName: dayzName,
                     item: item.name,
                     class: item.class,
                     amount: item.amount || 1,
@@ -736,6 +782,38 @@ module.exports = {
             }
             addBalance(target.id, amount);
             await interaction.reply(`Added $${amount} to ${target.username}'s balance.`);
+        } else if (commandName === 'setname') {
+            const dayzName = interaction.options.getString('name');
+            setDayZName(userId, dayzName);
+            await interaction.reply({
+                embeds: [
+                    new MessageEmbed()
+                        .setColor('#00ff99')
+                        .setTitle('DayZ Name Set')
+                        .setDescription(`Your DayZ player name has been set to: **${dayzName}**\n\nItems purchased from the shop will now spawn at your in-game location!`)
+                ], ephemeral: true
+            });
+        } else if (commandName === 'myname') {
+            const dayzName = getDayZName(userId);
+            if (!dayzName) {
+                await interaction.reply({
+                    embeds: [
+                        new MessageEmbed()
+                            .setColor('#ffaa00')
+                            .setTitle('No DayZ Name Set')
+                            .setDescription('You have not set your DayZ player name yet.\n\nUse `/setname` to set it so items spawn at your location!')
+                    ], ephemeral: true
+                });
+            } else {
+                await interaction.reply({
+                    embeds: [
+                        new MessageEmbed()
+                            .setColor('#00aaff')
+                            .setTitle('Your DayZ Name')
+                            .setDescription(`**${dayzName}**\n\nYou can change it anytime with `/setname``)
+                    ], ephemeral: true
+                });
+            }
         }
     }
 };
