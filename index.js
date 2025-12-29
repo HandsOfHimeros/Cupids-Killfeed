@@ -593,16 +593,54 @@ function checkForServerRestart(logText) {
     }
 }
 
-// Helper: Clear spawn.json after restart
+// Helper: Clear spawn.json after restart (only remove old items)
 async function cleanupSpawnJson() {
     const FILE_PATH = `/games/${config.ID2}/ftproot/dayzps_missions/dayzOffline.chernarusplus/custom/spawn.json`;
     const FTP_FILE_PATH = `/dayzps_missions/dayzOffline.chernarusplus/custom/spawn.json`;
     const BASE_URL = 'https://api.nitrado.net/services';
     
     try {
-        console.log('[RESTART] Cleaning up spawn.json...');
+        console.log('[RESTART] Cleaning up old spawn entries...');
         
-        // Get FTP credentials
+        // Step 1: Download current spawn.json
+        let spawnJson = { Objects: [] };
+        try {
+            const downloadUrl = `${BASE_URL}/${config.ID1}/gameservers/file_server/download?file=${encodeURIComponent(FILE_PATH)}`;
+            const downloadResp = await axios.get(downloadUrl, {
+                headers: { 'Authorization': `Bearer ${config.NITRATOKEN}` }
+            });
+            
+            const fileUrl = downloadResp.data.data.token.url;
+            const fileResp = await axios.get(fileUrl);
+            
+            if (fileResp.data && Array.isArray(fileResp.data.Objects)) {
+                spawnJson = fileResp.data;
+            }
+        } catch (downloadErr) {
+            console.log('[RESTART] Could not download spawn.json:', downloadErr.message);
+            return;
+        }
+        
+        // Step 2: Filter out items purchased before this restart
+        const originalCount = spawnJson.Objects.length;
+        spawnJson.Objects = spawnJson.Objects.filter(obj => {
+            if (!obj.customString) return true; // Keep non-shop items
+            
+            try {
+                const data = JSON.parse(obj.customString);
+                const itemTimestamp = parseInt(data.restart_id) || 0;
+                
+                // Keep items purchased after restart was detected (within last 10 minutes)
+                return itemTimestamp > lastRestartTime;
+            } catch {
+                return true; // Keep if can't parse
+            }
+        });
+        
+        const removedCount = originalCount - spawnJson.Objects.length;
+        console.log(`[RESTART] Removed ${removedCount} old spawn entries, kept ${spawnJson.Objects.length} new ones`);
+        
+        // Step 3: Upload cleaned spawn.json via FTP
         const infoUrl = `${BASE_URL}/${config.ID1}/gameservers`;
         const infoResp = await axios.get(infoUrl, {
             headers: { 'Authorization': `Bearer ${config.NITRATOKEN}` }
@@ -610,7 +648,6 @@ async function cleanupSpawnJson() {
         
         const ftpCreds = infoResp.data.data.gameserver.credentials.ftp;
         
-        // Upload empty spawn.json via FTP
         const { Client } = require('basic-ftp');
         const client = new Client();
         client.ftp.verbose = false;
@@ -624,14 +661,13 @@ async function cleanupSpawnJson() {
                 secure: false
             });
             
-            const emptySpawnJson = { Objects: [] };
             const tmpPath = path.join(__dirname, 'spawn_temp_cleanup.json');
-            fs.writeFileSync(tmpPath, JSON.stringify(emptySpawnJson, null, 2));
+            fs.writeFileSync(tmpPath, JSON.stringify(spawnJson, null, 2));
             
             await client.uploadFrom(tmpPath, FTP_FILE_PATH);
             fs.unlinkSync(tmpPath);
             
-            console.log('[RESTART] spawn.json cleared successfully');
+            console.log('[RESTART] spawn.json cleanup complete');
         } finally {
             client.close();
         }
