@@ -561,6 +561,84 @@ bot.on('error', err => {
 // --- Connection/Disconnection Log Monitor ---
 const CONNECTIONS_CHANNEL_ID = '1405195781639770224'; // Discord channel for connections
 let lastSeenLogLine = '';
+let lastRestartTime = 0;
+let restartCleanupScheduled = false;
+
+// Helper: Detect server restart and schedule spawn cleanup
+function checkForServerRestart(logText) {
+    // Look for restart indicators - when log starts fresh or sees "Game started"
+    const lines = logText.split(/\r?\n/);
+    const now = Date.now();
+    
+    // Check for restart indicators
+    const hasRestartIndicator = lines.some(line => 
+        line.includes('===') || // Log separator
+        line.includes('Started') ||
+        line.includes('Mission read from')
+    );
+    
+    // If we see restart indicators and enough time has passed (10 min)
+    if (hasRestartIndicator && (now - lastRestartTime > 10 * 60 * 1000)) {
+        lastRestartTime = now;
+        
+        // Schedule cleanup in 5 minutes (after items have spawned)
+        if (!restartCleanupScheduled) {
+            restartCleanupScheduled = true;
+            console.log('[RESTART] Server restart detected, scheduling spawn cleanup in 5 minutes...');
+            setTimeout(async () => {
+                await cleanupSpawnJson();
+                restartCleanupScheduled = false;
+            }, 5 * 60 * 1000);
+        }
+    }
+}
+
+// Helper: Clear spawn.json after restart
+async function cleanupSpawnJson() {
+    const FILE_PATH = `/games/${config.ID2}/ftproot/dayzps_missions/dayzOffline.chernarusplus/custom/spawn.json`;
+    const FTP_FILE_PATH = `/dayzps_missions/dayzOffline.chernarusplus/custom/spawn.json`;
+    const BASE_URL = 'https://api.nitrado.net/services';
+    
+    try {
+        console.log('[RESTART] Cleaning up spawn.json...');
+        
+        // Get FTP credentials
+        const infoUrl = `${BASE_URL}/${config.ID1}/gameservers`;
+        const infoResp = await axios.get(infoUrl, {
+            headers: { 'Authorization': `Bearer ${config.NITRATOKEN}` }
+        });
+        
+        const ftpCreds = infoResp.data.data.gameserver.credentials.ftp;
+        
+        // Upload empty spawn.json via FTP
+        const { Client } = require('basic-ftp');
+        const client = new Client();
+        client.ftp.verbose = false;
+        
+        try {
+            await client.access({
+                host: ftpCreds.hostname,
+                user: ftpCreds.username,
+                password: ftpCreds.password,
+                port: ftpCreds.port || 21,
+                secure: false
+            });
+            
+            const emptySpawnJson = { Objects: [] };
+            const tmpPath = path.join(__dirname, 'spawn_temp_cleanup.json');
+            fs.writeFileSync(tmpPath, JSON.stringify(emptySpawnJson, null, 2));
+            
+            await client.uploadFrom(tmpPath, FTP_FILE_PATH);
+            fs.unlinkSync(tmpPath);
+            
+            console.log('[RESTART] spawn.json cleared successfully');
+        } finally {
+            client.close();
+        }
+    } catch (err) {
+        console.error('[RESTART] Error cleaning spawn.json:', err.message);
+    }
+}
 
 // Helper: Parse connection/disconnection events from log text
 function parseConnectionEvents(logText) {
@@ -615,6 +693,10 @@ async function pollDayZLogForConnections() {
         const resp = await axios.get(url);
         const logText = resp.data;
         const events = parseConnectionEvents(logText);
+        
+        // Check for server restart indicator
+        checkForServerRestart(logText);
+        
         // Only post new events since last poll
         let newEvents = events;
         if (lastSeenLogLine) {
