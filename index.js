@@ -255,7 +255,25 @@ async function addCupidSpawnEntry(spawnEntry) {
     try {
         console.log('[SPAWN] Adding spawn entry to Cupid.json:', spawnEntry);
         
-        // Step 1: Download current Cupid.json
+        // Step 1: Load spawn templates from spawn.json
+        let spawnTemplates = {};
+        let defaultTemplate = { pos: [0, 0, 0], ypr: [0, 0, 0], scale: 1, enableCEPersistency: 0 };
+        
+        try {
+            const spawnConfigPath = path.join(__dirname, 'spawn.json');
+            if (fs.existsSync(spawnConfigPath)) {
+                const spawnConfig = JSON.parse(fs.readFileSync(spawnConfigPath, 'utf8'));
+                spawnTemplates = spawnConfig.spawnTemplates || {};
+                defaultTemplate = spawnConfig.defaultSpawnTemplate || defaultTemplate;
+                console.log('[SPAWN] Loaded spawn templates from spawn.json');
+            } else {
+                console.log('[SPAWN] spawn.json not found, using default template');
+            }
+        } catch (err) {
+            console.error('[SPAWN] Error loading spawn.json:', err.message);
+        }
+        
+        // Step 2: Download current Cupid.json
         let cupidJson = { Objects: [] };
         try {
             const downloadUrl = `${BASE_URL}/${config.ID1}/gameservers/file_server/download?file=${encodeURIComponent(FILE_PATH)}`;
@@ -277,13 +295,12 @@ async function addCupidSpawnEntry(spawnEntry) {
             console.log('[SPAWN] Could not download Cupid.json, will create new:', downloadErr.message);
         }
         
-        // Step 2: Create spawn object in DayZ format
+        // Step 3: Get spawn template for this item class
+        const template = spawnTemplates[spawnEntry.class] || { ...defaultTemplate, name: spawnEntry.class };
+        
+        // Step 4: Create spawn object using template from spawn.json
         const spawnObject = {
-            name: spawnEntry.class, // DayZ class name
-            pos: [0, 0, 0], // Will be set by Cupid mod based on player location
-            ypr: [0, 0, 0], // Yaw, pitch, roll
-            scale: 1,
-            enableCEPersistency: 0,
+            ...template,
             customString: JSON.stringify({
                 userId: spawnEntry.userId,
                 item: spawnEntry.item,
@@ -292,11 +309,13 @@ async function addCupidSpawnEntry(spawnEntry) {
             })
         };
         
-        // Step 3: Add to Objects array
+        console.log('[SPAWN] Using template for', spawnEntry.class, ':', JSON.stringify(template));
+        
+        // Step 5: Add to Objects array
         cupidJson.Objects.push(spawnObject);
         console.log(`[SPAWN] Added spawn, total objects: ${cupidJson.Objects.length}`);
         
-        // Step 4: Upload back to Nitrado using multipart form-data
+        // Step 6: Upload back to Nitrado using multipart form-data
         const tmpPath = path.join(os.tmpdir(), `Cupid_${Date.now()}.json`);
         fs.writeFileSync(tmpPath, JSON.stringify(cupidJson, null, 2), 'utf8');
         

@@ -1,0 +1,297 @@
+{
+  "spawnTemplates": {
+    "M4A1": {
+      "name": "M4A1",
+      "pos": [0, 0, 0],
+      "ypr": [0, 0, 0],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "AKM": {
+      "name": "AKM",
+      "pos": [0, 0, 0],
+      "ypr": [0, 0, 0],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Mosin9130": {
+      "name": "Mosin9130",
+      "pos": [0, 0, 0],
+      "ypr": [0, 0, 0],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "SVD": {
+      "name": "SVD",
+      "pos": [0, 0, 0],
+      "ypr": [0, 0, 0],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "FAL": {
+      "name": "FAL",
+      "pos": [0, 0, 0],
+      "ypr": [0, 0, 0],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "M70": {
+      "name": "M70",
+      "pos": [0, 0, 0],
+      "ypr": [0, 0, 0],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Mp133": {
+      "name": "Mp133Shotgun",
+      "pos": [0, 0, 0],
+      "ypr": [0, 0, 0],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "BK18": {
+      "name": "BK18",
+      "pos": [0, 0, 0],
+      "ypr": [0, 0, 0],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "CZ527": {
+      "name": "CZ527",
+      "pos": [0, 0, 0],
+      "ypr": [0, 0, 0],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "UMP45": {
+      "name": "UMP45",
+      "pos": [0, 0, 0],
+      "ypr": [0, 0, 0],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "MP5K": {
+      "name": "MP5K",
+      "pos": [0, 0, 0],
+      "ypr": [0, 0, 0],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Glock19": {
+      "name": "Glock19",
+      "pos": [0, 0, 0],
+      "ypr": [0, 0, 0],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "IJ70": {
+      "name": "IJ70",
+      "pos": [0, 0, 0],
+      "ypr": [0, 0, 0],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "FNX45": {
+      "name": "FNX45",
+      "pos": [0, 0, 0],
+      "ypr": [0, 0, 0],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Ammo_556x45": {
+      "name": "Ammo_556x45",
+      "pos": [0, 0, 0],
+      "ypr": [0, 0, 0],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "quantity": 1
+    },
+    "Ammo_762x39": {
+      "name": "Ammo_762x39",
+      "pos": [0, 0, 0],
+      "ypr": [0, 0, 0],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "quantity": 1
+    },
+    "Ammo_762x54": {
+      "name": "Ammo_762x54",
+      "pos": [0, 0, 0],
+      "ypr": [0, 0, 0],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "quantity": 1
+    },
+    "Ammo_9x19": {
+      "name": "Ammo_9x19",
+      "pos": [0, 0, 0],
+      "ypr": [0, 0, 0],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "quantity": 1
+    },
+    "Ammo_45ACP": {
+      "name": "Ammo_45ACP",
+      "pos": [0, 0, 0],
+      "ypr": [0, 0, 0],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "quantity": 1
+    },
+    "PlateCarrierVest": {
+      "name": "PlateCarrierVest",
+      "pos": [0, 0, 0],
+      "ypr": [0, 0, 0],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "AssaultBag": {
+      "name": "AssaultBag_Black",
+      "pos": [0, 0, 0],
+      "ypr": [0, 0, 0],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "FieldBag": {
+      "name": "FieldBag_Green",
+      "pos": [0, 0, 0],
+      "ypr": [0, 0, 0],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "HuntingBag": {
+      "name": "HuntingBag",
+      "pos": [0, 0, 0],
+      "ypr": [0, 0, 0],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "CombatHelmet": {
+      "name": "BallisticHelmet_Black",
+      "pos": [0, 0, 0],
+      "ypr": [0, 0, 0],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "TacticalGloves_Black": {
+      "name": "TacticalGloves_Black",
+      "pos": [0, 0, 0],
+      "ypr": [0, 0, 0],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "NVGHeadstrap": {
+      "name": "NVGHeadstrap",
+      "pos": [0, 0, 0],
+      "ypr": [0, 0, 0],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "NVGoggles": {
+      "name": "NVGoggles",
+      "pos": [0, 0, 0],
+      "ypr": [0, 0, 0],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "Canteen": {
+      "name": "Canteen",
+      "pos": [0, 0, 0],
+      "ypr": [0, 0, 0],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "TetracyclineAntibiotics": {
+      "name": "TetracyclineAntibiotics",
+      "pos": [0, 0, 0],
+      "ypr": [0, 0, 0],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "Epinephrine": {
+      "name": "Epinephrine",
+      "pos": [0, 0, 0],
+      "ypr": [0, 0, 0],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "Morphine": {
+      "name": "Morphine",
+      "pos": [0, 0, 0],
+      "ypr": [0, 0, 0],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "SalineBagIV": {
+      "name": "SalineBagIV",
+      "pos": [0, 0, 0],
+      "ypr": [0, 0, 0],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "BandageDressing": {
+      "name": "BandageDressing",
+      "pos": [0, 0, 0],
+      "ypr": [0, 0, 0],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "quantity": 5
+    },
+    "Lockpick": {
+      "name": "Lockpick",
+      "pos": [0, 0, 0],
+      "ypr": [0, 0, 0],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "CarBattery": {
+      "name": "CarBattery",
+      "pos": [0, 0, 0],
+      "ypr": [0, 0, 0],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "SparkPlug": {
+      "name": "SparkPlug",
+      "pos": [0, 0, 0],
+      "ypr": [0, 0, 0],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "CarRadiator": {
+      "name": "CarRadiator",
+      "pos": [0, 0, 0],
+      "ypr": [0, 0, 0],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "CanisterGasoline": {
+      "name": "CanisterGasoline",
+      "pos": [0, 0, 0],
+      "ypr": [0, 0, 0],
+      "scale": 1,
+      "enableCEPersistency": 0
+    }
+  },
+  "defaultSpawnTemplate": {
+    "pos": [0, 0, 0],
+    "ypr": [0, 0, 0],
+    "scale": 1,
+    "enableCEPersistency": 0
+  }
+}
