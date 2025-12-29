@@ -3,8 +3,8 @@ const path = require('path');
 const fs = require('fs');
 const COOLDOWN_FILE = path.join(__dirname, '../logs/economy_cooldowns.json');
 const MINI_GAMES = ['slots','rob','golf','cards','job','blackjack','crime','theft','bribe'];
-const COOLDOWN_LIMIT = 2; // times allowed
-const COOLDOWN_WINDOW = 12 * 60 * 60 * 1000; // 12 hours in ms
+const COOLDOWN_LIMIT = 1; // times allowed
+const COOLDOWN_WINDOW = 6 * 60 * 60 * 1000; // 6 hours in ms
 
 function getCooldowns() {
     if (!fs.existsSync(COOLDOWN_FILE)) fs.writeFileSync(COOLDOWN_FILE, '{}');
