@@ -46,19 +46,58 @@ const BALANCES_FILE = path.join(__dirname, '../logs/economy_balances.json');
 const BANK_FILE = path.join(__dirname, '../logs/economy_banks.json');
 const ECONOMY_CHANNEL_ID = '1404621573498863806';
 
-// Ensure balances and bank files exist
-if (!fs.existsSync(BALANCES_FILE)) {
-    fs.writeFileSync(BALANCES_FILE, '{}');
+// Ensure logs directory exists
+const logsDir = path.join(__dirname, '../logs');
+if (!fs.existsSync(logsDir)) {
+    fs.mkdirSync(logsDir, { recursive: true });
 }
-if (!fs.existsSync(BANK_FILE)) {
-    fs.writeFileSync(BANK_FILE, '{}');
+
+// Ensure balances and bank files exist (only create if missing, preserve existing data)
+try {
+    if (!fs.existsSync(BALANCES_FILE)) {
+        console.log('[ECONOMY] Creating new economy_balances.json file');
+        fs.writeFileSync(BALANCES_FILE, '{}');
+    } else {
+        // Verify file is readable and valid JSON
+        try {
+            JSON.parse(fs.readFileSync(BALANCES_FILE, 'utf8'));
+        } catch (parseErr) {
+            console.error('[ECONOMY] WARNING: economy_balances.json is corrupted! Creating backup...');
+            fs.copyFileSync(BALANCES_FILE, BALANCES_FILE + '.backup.' + Date.now());
+            fs.writeFileSync(BALANCES_FILE, '{}');
+        }
+    }
+    if (!fs.existsSync(BANK_FILE)) {
+        console.log('[ECONOMY] Creating new economy_banks.json file');
+        fs.writeFileSync(BANK_FILE, '{}');
+    } else {
+        // Verify file is readable and valid JSON
+        try {
+            JSON.parse(fs.readFileSync(BANK_FILE, 'utf8'));
+        } catch (parseErr) {
+            console.error('[ECONOMY] WARNING: economy_banks.json is corrupted! Creating backup...');
+            fs.copyFileSync(BANK_FILE, BANK_FILE + '.backup.' + Date.now());
+            fs.writeFileSync(BANK_FILE, '{}');
+        }
+    }
+} catch (err) {
+    console.error('[ECONOMY] CRITICAL: Failed to initialize economy files:', err);
 }
 function getBanks() {
-    return JSON.parse(fs.readFileSync(BANK_FILE, 'utf8'));
+    try {
+        return JSON.parse(fs.readFileSync(BANK_FILE, 'utf8'));
+    } catch (err) {
+        console.error('[ECONOMY] Error reading banks file:', err);
+        return {};
+    }
 }
 
 function saveBanks(banks) {
-    fs.writeFileSync(BANK_FILE, JSON.stringify(banks, null, 2));
+    try {
+        fs.writeFileSync(BANK_FILE, JSON.stringify(banks, null, 2));
+    } catch (err) {
+        console.error('[ECONOMY] CRITICAL: Failed to save banks:', err);
+    }
 }
 
 function addBank(userId, amount) {
@@ -82,11 +121,20 @@ function getBank(userId) {
 }
 
 function getBalances() {
-    return JSON.parse(fs.readFileSync(BALANCES_FILE, 'utf8'));
+    try {
+        return JSON.parse(fs.readFileSync(BALANCES_FILE, 'utf8'));
+    } catch (err) {
+        console.error('[ECONOMY] Error reading balances file:', err);
+        return {};
+    }
 }
 
 function saveBalances(balances) {
-    fs.writeFileSync(BALANCES_FILE, JSON.stringify(balances, null, 2));
+    try {
+        fs.writeFileSync(BALANCES_FILE, JSON.stringify(balances, null, 2));
+    } catch (err) {
+        console.error('[ECONOMY] CRITICAL: Failed to save balances:', err);
+    }
 }
 
 function addBalance(userId, amount) {
@@ -678,3 +726,46 @@ module.exports = {
         }
     }
 };
+
+// Auto-backup function to prevent data loss
+function createBackup() {
+    const backupDir = path.join(__dirname, '../logs/backups');
+    if (!fs.existsSync(backupDir)) {
+        fs.mkdirSync(backupDir, { recursive: true });
+    }
+    
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').substring(0, 19);
+    
+    try {
+        if (fs.existsSync(BALANCES_FILE)) {
+            fs.copyFileSync(BALANCES_FILE, path.join(backupDir, `economy_balances_${timestamp}.json`));
+        }
+        if (fs.existsSync(BANK_FILE)) {
+            fs.copyFileSync(BANK_FILE, path.join(backupDir, `economy_banks_${timestamp}.json`));
+        }
+        console.log(`[ECONOMY] Backup created at ${timestamp}`);
+        
+        // Clean old backups (keep only last 10)
+        const files = fs.readdirSync(backupDir).sort().reverse();
+        const balanceBackups = files.filter(f => f.startsWith('economy_balances_'));
+        const bankBackups = files.filter(f => f.startsWith('economy_banks_'));
+        
+        if (balanceBackups.length > 10) {
+            for (let i = 10; i < balanceBackups.length; i++) {
+                fs.unlinkSync(path.join(backupDir, balanceBackups[i]));
+            }
+        }
+        if (bankBackups.length > 10) {
+            for (let i = 10; i < bankBackups.length; i++) {
+                fs.unlinkSync(path.join(backupDir, bankBackups[i]));
+            }
+        }
+    } catch (err) {
+        console.error('[ECONOMY] Failed to create backup:', err);
+    }
+}
+
+// Create backup every 6 hours (21600000 ms)
+setInterval(createBackup, 6 * 60 * 60 * 1000);
+// Create initial backup on load
+createBackup();
