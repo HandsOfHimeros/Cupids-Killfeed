@@ -336,33 +336,46 @@ module.exports = {
                 const { addCupidSpawnEntry } = require('../index.js');
                 const spawnEntry = {
                     userId,
+                    discordUsername: interaction.user.username,
                     item: item.name,
                     class: item.class,
                     amount: item.amount || 1,
                     timestamp: Date.now(),
                     restart_id: Date.now().toString()
                 };
+                // Reply immediately before FTP upload (Discord has 3s timeout)
+                await interaction.reply({
+                    embeds: [
+                        new MessageEmbed()
+                            .setColor('#00ff99')
+                            .setTitle('Purchase Successful!')
+                            .setDescription(`You bought **${item.name}** for $${item.averagePrice}. Writing spawn entry...`)
+                    ]
+                });
+                
                 try {
                     console.log('[SHOP] Adding Cupid spawn entry:', spawnEntry);
                     await addCupidSpawnEntry(spawnEntry);
-                    await interaction.reply({
+                    console.log('[SHOP] Purchase successful, spawn entry written');
+                    // Update the message to confirm spawn was written
+                    await interaction.editReply({
                         embeds: [
                             new MessageEmbed()
                                 .setColor('#00ff99')
                                 .setTitle('Purchase Successful!')
-                                .setDescription(`You bought **${item.name}** for $${item.averagePrice}. It will spawn at your location after the next restart!`)
+                                .setDescription(`You bought **${item.name}** for $${item.averagePrice}. It will spawn at your location after the next restart! ✅`)
                         ]
                     });
-                    console.log('[SHOP] Purchase successful');
                 } catch (err) {
                     console.error('[SHOP] Error writing spawn entry:', err);
-                    await interaction.reply({
+                    // Update the message to show error
+                    await interaction.editReply({
                         embeds: [
                             new MessageEmbed()
                                 .setColor('#ff5555')
                                 .setTitle('Spawn Error')
                                 .setDescription('Purchase succeeded, but failed to write spawn entry. Please contact an admin.')
-                        ], ephemeral: true
+                        ]
                     });
                 }
                 return;

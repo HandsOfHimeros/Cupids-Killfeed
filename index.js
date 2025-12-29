@@ -68,6 +68,16 @@ async function pollDayZLogForKillfeed() {
         const { filename, url } = await fetchMostRecentDayZLog();
         const resp = await axios.get(url);
         const logText = resp.data;
+        
+        // Parse player locations from log
+        const lines = logText.split(/\r?\n/);
+        for (const line of lines) {
+            const locInfo = parsePlayerLocation(line);
+            if (locInfo) {
+                updatePlayerLocation(locInfo.name, locInfo.position);
+            }
+        }
+        
         const events = parseKillfeedLogEvents(logText);
         // Only post new events since last poll
         let newEvents = events;
@@ -294,9 +304,22 @@ async function addCupidSpawnEntry(spawnEntry) {
         // Step 3: Get spawn template for this item class
         const template = spawnTemplates[spawnEntry.class] || { ...defaultTemplate, name: spawnEntry.class };
         
+        // Step 3.5: Try to get player's actual location
+        let playerPos = template.pos || [0, 0, 0];
+        if (spawnEntry.discordUsername) {
+            const location = getPlayerLocation(spawnEntry.discordUsername);
+            if (location) {
+                playerPos = [location.x, location.y, location.z];
+                console.log(`[SPAWN] Found location for ${spawnEntry.discordUsername}:`, playerPos);
+            } else {
+                console.log(`[SPAWN] No recent location found for ${spawnEntry.discordUsername}, using template position`);
+            }
+        }
+        
         // Step 4: Create spawn object using template from spawn.json
         const spawnObject = {
             ...template,
+            pos: playerPos,
             customString: JSON.stringify({
                 userId: spawnEntry.userId,
                 item: spawnEntry.item,
@@ -306,6 +329,7 @@ async function addCupidSpawnEntry(spawnEntry) {
         };
         
         console.log('[SPAWN] Using template for', spawnEntry.class, ':', JSON.stringify(template));
+        console.log('[SPAWN] Spawn position:', playerPos);
         
         // Step 5: Add to Objects array
         spawnJson.Objects.push(spawnObject);
@@ -361,6 +385,63 @@ async function addCupidSpawnEntry(spawnEntry) {
 }
 
 module.exports.addCupidSpawnEntry = addCupidSpawnEntry;
+
+// --- Player Location Tracking ---
+const playerLocations = {};
+
+function parsePlayerLocation(logEntry) {
+    const regex = /(\d{2}:\d{2}:\d{2}) \| Player "(.+?)" \(id=(.+?) pos=<(.+?), (.+?), (.+?)>\)/;
+    const match = logEntry.match(regex);
+    if (match) {
+        return {
+            timestamp: match[1],
+            name: match[2],
+            playerId: match[3],
+            position: {
+                x: parseFloat(match[4]),
+                y: parseFloat(match[5]),
+                z: parseFloat(match[6])
+            }
+        };
+    }
+    return null;
+}
+
+function updatePlayerLocation(playerName, position) {
+    playerLocations[playerName.toLowerCase()] = {
+        position: position,
+        timestamp: Date.now()
+    };
+    // Save to file for persistence
+    try {
+        fs.writeFileSync('./player_locations.json', JSON.stringify(playerLocations, null, 2));
+    } catch (err) {
+        console.error('[LOCATION] Error saving locations:', err.message);
+    }
+}
+
+function getPlayerLocation(playerName) {
+    const loc = playerLocations[playerName.toLowerCase()];
+    if (!loc) return null;
+    // Check if location is stale (older than 30 minutes)
+    if (Date.now() - loc.timestamp > 30 * 60 * 1000) {
+        return null;
+    }
+    return loc.position;
+}
+
+// Load saved locations on startup
+try {
+    if (fs.existsSync('./player_locations.json')) {
+        const saved = JSON.parse(fs.readFileSync('./player_locations.json', 'utf8'));
+        Object.assign(playerLocations, saved);
+        console.log('[LOCATION] Loaded saved player locations');
+    }
+} catch (err) {
+    console.error('[LOCATION] Error loading saved locations:', err.message);
+}
+
+module.exports.getPlayerLocation = getPlayerLocation;
 
 /* DayZero KillFeed (DZK) DIY Project 2.1
 Copyright (c) 2023 TheCodeGang LLC.
