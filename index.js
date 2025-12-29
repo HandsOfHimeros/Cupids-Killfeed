@@ -573,8 +573,9 @@ let lastSeenLogLine = '';
 let lastRestartTime = 0;
 let lastCleanupCheck = 0;
 
-// Server restart times: 3, 6, 9, 12 (am/pm) - cleanup runs 15 minutes after
-const RESTART_HOURS = [3, 6, 9, 12, 15, 18, 21, 0]; // 0 = midnight
+// Server restart times: 3, 6, 9, 12 (am/pm) EST = 8, 11, 14, 17, 20, 23, 2, 5 UTC
+// Cleanup runs 15 minutes after
+const RESTART_HOURS = [8, 11, 14, 17, 20, 23, 2, 5]; // UTC hours
 
 // Helper: Check if it's time to cleanup after scheduled restart
 function checkScheduledCleanup() {
