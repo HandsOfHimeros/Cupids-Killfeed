@@ -1,71 +1,5 @@
-// --- Cupid Spawn Utility ---
-// Adds a spawn entry to Cupid on Nitrado via API
-const CUPID_FILE_PATH = '/games/ni11886592_1/ftproot/dayzps_missions/dayzOffline.chernarusplus/custom/Cupid.json';
-const NITRADO_BASE_URL = 'https://api.nitrado.net/services';
-const config = require('./config.json');
-
-async function addCupidSpawnEntry(entry) {
-    const axios = require('axios');
-    const fs = require('fs');
-    const FormData = require('form-data');
-    // Download current Cupid
-    const downloadUrl = `${NITRADO_BASE_URL}/${config.ID1}/gameservers/file_server/download?file=${encodeURIComponent(CUPID_FILE_PATH)}`;
-    let cupidJson = { Objects: [] };
-    try {
-        const res = await axios.get(downloadUrl, {
-            headers: { 'Authorization': `Bearer ${config.NITRATOKEN}` },
-            responseType: 'json'
-        });
-        if (res.data && Array.isArray(res.data.Objects)) {
-            cupidJson.Objects = res.data.Objects;
-        }
-    } catch (e) {
-        console.error('[CUPID] Error downloading Cupid:', e.response ? e.response.data : e.message);
-        cupidJson = { Objects: [] };
-    }
-    cupidJson.Objects.push(entry);
-    // Write to a temp file
-    const tempPath = './Cupid_upload.json';
-    fs.writeFileSync(tempPath, JSON.stringify(cupidJson, null, 2));
-
-    // Try both original and mission root upload paths
-    const uploadPaths = [
-        CUPID_FILE_PATH,
-        '/games/ni11886592_1/ftproot/dayzps_missions/dayzOffline.chernarusplus/Cupid.json',
-        '/games/ni11886592_1/ftproot//dayzps_missions/dayzOffline.chernarusplus/custom'
-    ];
-    let lastError = null;
-    for (const path of uploadPaths) {
-        try {
-            const form = new FormData();
-            form.append('file', fs.createReadStream(tempPath), 'Cupid.json');
-            const uploadUrl = `https://api.nitrado.net/services/${config.ID1}/gameservers/file_server/upload?file=${encodeURIComponent(path)}`;
-            console.log('[CUPID] Uploading to:', uploadUrl);
-            console.log('[CUPID] FormData headers:', form.getHeaders());
-            const response = await axios.post(uploadUrl, form, {
-                headers: {
-                    ...form.getHeaders(),
-                    Authorization: `Bearer ${config.NITRATOKEN}`,
-                },
-                maxContentLength: Infinity,
-                maxBodyLength: Infinity,
-            });
-            console.log('[CUPID] Upload response:', response.data);
-            if (response.data && response.data.status !== 'success') {
-                throw new Error(`Nitrado upload failed: ${JSON.stringify(response.data)}`);
-            }
-            fs.unlinkSync(tempPath);
-            return;
-        } catch (e) {
-            lastError = e;
-            console.error(`[CUPID] Error uploading Cupid to ${path}:`, e.response ? e.response.data : e.message);
-        }
-    }
-    fs.existsSync(tempPath) && fs.unlinkSync(tempPath);
-    if (lastError) throw lastError;
-}
-
-module.exports.addCupidSpawnEntry = addCupidSpawnEntry;
+// --- Killfeed Channel Monitor ---
+const KILLFEED_CHANNEL_ID = '1404256735245373511'; // Discord channel for Killfeed
 // --- Killfeed Channel Monitor ---
 const KILLFEED_CHANNEL_ID = '1404256735245373511'; // Discord channel for Killfeed
 let lastSeenKillfeedLogLine = '';
@@ -309,6 +243,90 @@ async function fetchMostRecentDayZLog() {
 }
 
 module.exports.fetchMostRecentDayZLog = fetchMostRecentDayZLog;
+
+// Function to add a spawn entry to Cupid.json on Nitrado server
+async function addCupidSpawnEntry(spawnEntry) {
+    const FormData = require('form-data');
+    const os = require('os');
+    
+    const FILE_PATH = `/games/${config.ID2}/ftproot/dayzps_missions/dayzOffline.chernarusplus/custom/Cupid.json`;
+    const BASE_URL = 'https://api.nitrado.net/services';
+    
+    try {
+        console.log('[SPAWN] Adding spawn entry to Cupid.json:', spawnEntry);
+        
+        // Step 1: Download current Cupid.json
+        let cupidJson = { Objects: [] };
+        try {
+            const downloadUrl = `${BASE_URL}/${config.ID1}/gameservers/file_server/download?file=${encodeURIComponent(FILE_PATH)}`;
+            const downloadResp = await axios.get(downloadUrl, {
+                headers: { 'Authorization': `Bearer ${config.NITRATOKEN}` }
+            });
+            
+            const fileUrl = downloadResp.data.data.token.url;
+            const fileResp = await axios.get(fileUrl);
+            
+            if (fileResp.data && Array.isArray(fileResp.data.Objects)) {
+                cupidJson = { Objects: fileResp.data.Objects };
+            } else if (fileResp.data && Array.isArray(fileResp.data)) {
+                cupidJson = { Objects: fileResp.data };
+            } else {
+                console.log('[SPAWN] Cupid.json not found or empty, creating new one');
+            }
+        } catch (downloadErr) {
+            console.log('[SPAWN] Could not download Cupid.json, will create new:', downloadErr.message);
+        }
+        
+        // Step 2: Create spawn object in DayZ format
+        const spawnObject = {
+            name: spawnEntry.class, // DayZ class name
+            pos: [0, 0, 0], // Will be set by Cupid mod based on player location
+            ypr: [0, 0, 0], // Yaw, pitch, roll
+            scale: 1,
+            enableCEPersistency: 0,
+            customString: JSON.stringify({
+                userId: spawnEntry.userId,
+                item: spawnEntry.item,
+                timestamp: spawnEntry.timestamp,
+                restart_id: spawnEntry.restart_id
+            })
+        };
+        
+        // Step 3: Add to Objects array
+        cupidJson.Objects.push(spawnObject);
+        console.log(`[SPAWN] Added spawn, total objects: ${cupidJson.Objects.length}`);
+        
+        // Step 4: Upload back to Nitrado using multipart form-data
+        const tmpPath = path.join(os.tmpdir(), `Cupid_${Date.now()}.json`);
+        fs.writeFileSync(tmpPath, JSON.stringify(cupidJson, null, 2), 'utf8');
+        
+        const uploadUrl = `${BASE_URL}/${config.ID1}/gameservers/file_server/upload?file=${encodeURIComponent(FILE_PATH)}`;
+        const form = new FormData();
+        form.append('file', fs.createReadStream(tmpPath), {
+            filename: 'Cupid.json',
+            contentType: 'application/json'
+        });
+        
+        await axios.post(uploadUrl, form, {
+            headers: {
+                ...form.getHeaders(),
+                'Authorization': `Bearer ${config.NITRATOKEN}`
+            },
+            maxContentLength: Infinity,
+            maxBodyLength: Infinity
+        });
+        
+        fs.unlinkSync(tmpPath);
+        console.log('[SPAWN] Successfully uploaded Cupid.json to Nitrado');
+        
+    } catch (err) {
+        console.error('[SPAWN] Error adding spawn entry:', err.response ? err.response.data : err.message);
+        throw err;
+    }
+}
+
+module.exports.addCupidSpawnEntry = addCupidSpawnEntry;
+
 /* DayZero KillFeed (DZK) DIY Project 2.1
 Copyright (c) 2023 TheCodeGang LLC.
 
@@ -329,8 +347,7 @@ require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
 const { Client, Collection, Intents } = require('discord.js');
-// Removed destructuring require for GUILDID and TOKEN. Use config.GUILDID and config.TOKEN instead.
-// ...existing code...
+const config = require('./config.json');
 const axios = require('axios');
 const moment = require('moment-timezone');
 const nodeoutlook = require('nodejs-nodemailer-outlook');
