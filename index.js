@@ -244,9 +244,6 @@ module.exports.fetchMostRecentDayZLog = fetchMostRecentDayZLog;
 
 // Function to add a spawn entry to spawn.json on Nitrado server
 async function addCupidSpawnEntry(spawnEntry) {
-    const FormData = require('form-data');
-    const os = require('os');
-    
     const FILE_PATH = `/games/${config.ID2}/ftproot/dayzps_missions/dayzOffline.chernarusplus/custom/spawn.json`;
     const BASE_URL = 'https://api.nitrado.net/services';
     
@@ -313,27 +310,16 @@ async function addCupidSpawnEntry(spawnEntry) {
         spawnJson.Objects.push(spawnObject);
         console.log(`[SPAWN] Added spawn, total objects: ${spawnJson.Objects.length}`);
         
-        // Step 6: Upload back to Nitrado using multipart form-data
-        const tmpPath = path.join(os.tmpdir(), `spawn_${Date.now()}.json`);
-        fs.writeFileSync(tmpPath, JSON.stringify(spawnJson, null, 2), 'utf8');
-        
+        // Step 6: Upload back to Nitrado as JSON
         const uploadUrl = `${BASE_URL}/${config.ID1}/gameservers/file_server/upload?file=${encodeURIComponent(FILE_PATH)}`;
-        const form = new FormData();
-        form.append('file', fs.createReadStream(tmpPath), {
-            filename: 'spawn.json',
-            contentType: 'application/json'
-        });
         
-        await axios.post(uploadUrl, form, {
+        await axios.post(uploadUrl, JSON.stringify(spawnJson, null, 2), {
             headers: {
-                ...form.getHeaders(),
-                'Authorization': `Bearer ${config.NITRATOKEN}`
-            },
-            maxContentLength: Infinity,
-            maxBodyLength: Infinity
+                'Authorization': `Bearer ${config.NITRATOKEN}`,
+                'Content-Type': 'application/json'
+            }
         });
         
-        fs.unlinkSync(tmpPath);
         console.log('[SPAWN] Successfully uploaded spawn.json to Nitrado');
         
     } catch (err) {
