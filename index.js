@@ -244,16 +244,16 @@ async function fetchMostRecentDayZLog() {
 
 module.exports.fetchMostRecentDayZLog = fetchMostRecentDayZLog;
 
-// Function to add a spawn entry to Cupid.json on Nitrado server
+// Function to add a spawn entry to spawn.json on Nitrado server
 async function addCupidSpawnEntry(spawnEntry) {
     const FormData = require('form-data');
     const os = require('os');
     
-    const FILE_PATH = `/games/${config.ID2}/ftproot/dayzps_missions/dayzOffline.chernarusplus/custom/Cupid.json`;
+    const FILE_PATH = `/games/${config.ID2}/ftproot/dayzps_missions/dayzOffline.chernarusplus/custom/spawn.json`;
     const BASE_URL = 'https://api.nitrado.net/services';
     
     try {
-        console.log('[SPAWN] Adding spawn entry to Cupid.json:', spawnEntry);
+        console.log('[SPAWN] Adding spawn entry to spawn.json:', spawnEntry);
         
         // Step 1: Load spawn templates from spawn.json
         let spawnTemplates = {};
@@ -273,8 +273,8 @@ async function addCupidSpawnEntry(spawnEntry) {
             console.error('[SPAWN] Error loading spawn.json:', err.message);
         }
         
-        // Step 2: Download current Cupid.json
-        let cupidJson = { Objects: [] };
+        // Step 2: Download current spawn.json from Nitrado
+        let spawnJson = { Objects: [] };
         try {
             const downloadUrl = `${BASE_URL}/${config.ID1}/gameservers/file_server/download?file=${encodeURIComponent(FILE_PATH)}`;
             const downloadResp = await axios.get(downloadUrl, {
@@ -285,14 +285,14 @@ async function addCupidSpawnEntry(spawnEntry) {
             const fileResp = await axios.get(fileUrl);
             
             if (fileResp.data && Array.isArray(fileResp.data.Objects)) {
-                cupidJson = { Objects: fileResp.data.Objects };
+                spawnJson = { Objects: fileResp.data.Objects };
             } else if (fileResp.data && Array.isArray(fileResp.data)) {
-                cupidJson = { Objects: fileResp.data };
+                spawnJson = { Objects: fileResp.data };
             } else {
-                console.log('[SPAWN] Cupid.json not found or empty, creating new one');
+                console.log('[SPAWN] spawn.json not found or empty, creating new one');
             }
         } catch (downloadErr) {
-            console.log('[SPAWN] Could not download Cupid.json, will create new:', downloadErr.message);
+            console.log('[SPAWN] Could not download spawn.json, will create new:', downloadErr.message);
         }
         
         // Step 3: Get spawn template for this item class
@@ -312,17 +312,17 @@ async function addCupidSpawnEntry(spawnEntry) {
         console.log('[SPAWN] Using template for', spawnEntry.class, ':', JSON.stringify(template));
         
         // Step 5: Add to Objects array
-        cupidJson.Objects.push(spawnObject);
-        console.log(`[SPAWN] Added spawn, total objects: ${cupidJson.Objects.length}`);
+        spawnJson.Objects.push(spawnObject);
+        console.log(`[SPAWN] Added spawn, total objects: ${spawnJson.Objects.length}`);
         
         // Step 6: Upload back to Nitrado using multipart form-data
-        const tmpPath = path.join(os.tmpdir(), `Cupid_${Date.now()}.json`);
-        fs.writeFileSync(tmpPath, JSON.stringify(cupidJson, null, 2), 'utf8');
+        const tmpPath = path.join(os.tmpdir(), `spawn_${Date.now()}.json`);
+        fs.writeFileSync(tmpPath, JSON.stringify(spawnJson, null, 2), 'utf8');
         
         const uploadUrl = `${BASE_URL}/${config.ID1}/gameservers/file_server/upload?file=${encodeURIComponent(FILE_PATH)}`;
         const form = new FormData();
         form.append('file', fs.createReadStream(tmpPath), {
-            filename: 'Cupid.json',
+            filename: 'spawn.json',
             contentType: 'application/json'
         });
         
@@ -336,7 +336,7 @@ async function addCupidSpawnEntry(spawnEntry) {
         });
         
         fs.unlinkSync(tmpPath);
-        console.log('[SPAWN] Successfully uploaded Cupid.json to Nitrado');
+        console.log('[SPAWN] Successfully uploaded spawn.json to Nitrado');
         
     } catch (err) {
         console.error('[SPAWN] Error adding spawn entry:', err.response ? err.response.data : err.message);
