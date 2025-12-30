@@ -158,11 +158,11 @@ module.exports = {
             case "clear":
                 await handleClearCommand(interaction);
                 break;
-            case 'map':
-                awviewconfig":
+            case 'viewconfig':
                 await handleViewConfigCommand(interaction);
                 break;
-            case "ait handleMapChange(interaction);
+            case 'map':
+                await handleMapChange(interaction);
                 break;
             case "setup":
                 await handleSetupCommand(interaction);
