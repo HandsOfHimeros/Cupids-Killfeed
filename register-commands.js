@@ -26,11 +26,13 @@ const rest = new REST({ version: '10' }).setToken(TOKEN);
 (async () => {
     try {
         console.log(`Started refreshing ${commands.length} application (/) commands.`);
+        
+        // Register commands globally (works on all servers)
         await rest.put(
-            Routes.applicationGuildCommands(CLIENTID, GUILDID),
+            Routes.applicationCommands(CLIENTID),
             { body: commands },
         );
-        console.log('Successfully reloaded application (/) commands.');
+        console.log('Successfully reloaded application (/) commands GLOBALLY.');
     } catch (error) {
         console.error(error);
     }
