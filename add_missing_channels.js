@@ -17,12 +17,13 @@ bot.once('ready', async () => {
         const guilds = await db.getAllGuildConfigs();
         
         for (const guildConfig of guilds) {
-            const guild = await bot.guilds.fetch(guildConfig.guild_id);
-            
-            if (!guild) {
-                console.log(`Guild ${guildConfig.guild_id} not found, skipping`);
-                continue;
-            }
+            try {
+                const guild = await bot.guilds.fetch(guildConfig.guild_id);
+                
+                if (!guild) {
+                    console.log(`Guild ${guildConfig.guild_id} not found, skipping`);
+                    continue;
+                }
             
             console.log(`\nProcessing guild: ${guild.name}`);
             
@@ -75,6 +76,9 @@ bot.once('ready', async () => {
                     suicidelogChannel: suicidelogChannelId
                 });
                 console.log('  ✅ Database updated');
+            }
+            } catch (error) {
+                console.log(`Error processing guild ${guildConfig.guild_id}: ${error.message}, skipping`);
             }
         }
         
