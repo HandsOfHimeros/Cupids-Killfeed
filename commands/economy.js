@@ -300,6 +300,9 @@ module.exports = {
             .setName('myname')
             .setDescription('Check your registered DayZ player name'),
         new SlashCommandBuilder()
+            .setName('imhere')
+            .setDescription('Check your last known location on the server'),
+        new SlashCommandBuilder()
             .setName('shophelp')
             .setDescription('Learn how to use the shop and spawn system'),
     ],
@@ -822,6 +825,46 @@ module.exports = {
                             .setColor('#00aaff')
                             .setTitle('Your DayZ Name')
                             .setDescription(`**${dayzName}**\n\nYou can change it anytime with \`/setname\``)
+                    ], ephemeral: true
+                });
+            }
+        } else if (commandName === 'imhere') {
+            const dayzName = getDayZName(userId);
+            if (!dayzName) {
+                await interaction.reply({
+                    embeds: [
+                        new MessageEmbed()
+                            .setColor('#ffaa00')
+                            .setTitle('❌ No DayZ Name Set')
+                            .setDescription('You need to set your DayZ name first!\n\nUse `/setname name:YourDayZName`')
+                    ], ephemeral: true
+                });
+                return;
+            }
+
+            // Get location from index.js
+            const { getPlayerLocation } = require('../index.js');
+            const location = getPlayerLocation(dayzName);
+            
+            if (!location) {
+                await interaction.reply({
+                    embeds: [
+                        new MessageEmbed()
+                            .setColor('#ffaa00')
+                            .setTitle('📍 No Location Found')
+                            .setDescription(`**DayZ Name:** ${dayzName}\n\nYour location hasn't been tracked yet. Make sure you:\n• Have been on the server recently\n• Are online so the bot can track you\n\nThe bot updates locations every 2 minutes from server logs.`)
+                    ], ephemeral: true
+                });
+            } else {
+                await interaction.reply({
+                    embeds: [
+                        new MessageEmbed()
+                            .setColor('#00ff99')
+                            .setTitle('📍 Your Last Known Location')
+                            .setDescription(`**DayZ Name:** ${dayzName}`)
+                            .addField('Position', `X: ${location.x}\nY: ${location.y}\nZ: ${location.z} (elevation)`, false)
+                            .addField('Spawn Format', `[${location.x}, ${location.z}, ${location.y}]`, false)
+                            .setFooter({ text: 'Items will spawn at this location after the next server restart' })
                     ], ephemeral: true
                 });
             }
