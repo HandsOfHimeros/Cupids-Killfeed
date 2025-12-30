@@ -145,7 +145,9 @@ class MultiGuildKillfeed {
     }
 
     parseKillfeedEvents(logText) {
-        const lines = logText.split(/\r?\n/);
+        // Ensure logText is a string
+        const logString = typeof logText === 'string' ? logText : String(logText);
+        const lines = logString.split(/\r?\n/);
         const events = [];
         
         for (const line of lines) {
