@@ -83,8 +83,13 @@ class MultiGuildKillfeed {
         const logData = await this.fetchGuildLog(guildConfig);
         if (!logData) return;
         
+        // Debug: Log first and last few lines
+        const lines = logData.split('\n');
+        console.log(`[MULTI-KILLFEED] Guild ${guildId}: Log has ${lines.length} lines`);
+        
         // Parse and post killfeed events
         const killfeedEvents = this.parseKillfeedEvents(logData);
+        console.log(`[MULTI-KILLFEED] Guild ${guildId}: Found ${killfeedEvents.length} total killfeed events`);
         let newKillfeedEvents = killfeedEvents;
         if (state.lastKillfeedLine) {
             const idx = killfeedEvents.findIndex(e => e.raw === state.lastKillfeedLine);
@@ -100,6 +105,7 @@ class MultiGuildKillfeed {
         
         // Parse and post buildlog events
         const buildlogEvents = this.parseBuildlogEvents(logData);
+        console.log(`[MULTI-KILLFEED] Guild ${guildId}: Found ${buildlogEvents.length} total buildlog events`);
         let newBuildlogEvents = buildlogEvents;
         if (state.lastBuildlogLine) {
             const idx = buildlogEvents.findIndex(e => e.raw === state.lastBuildlogLine);
@@ -115,6 +121,7 @@ class MultiGuildKillfeed {
         
         // Parse and post suicidelog events
         const suicidelogEvents = this.parseSuicidelogEvents(logData);
+        console.log(`[MULTI-KILLFEED] Guild ${guildId}: Found ${suicidelogEvents.length} total suicidelog events`);
         let newSuicidelogEvents = suicidelogEvents;
         if (state.lastSuicidelogLine) {
             const idx = suicidelogEvents.findIndex(e => e.raw === state.lastSuicidelogLine);
