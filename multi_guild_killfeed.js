@@ -78,6 +78,9 @@ class MultiGuildKillfeed {
         const logData = await this.fetchGuildLog(guildConfig);
         if (!logData) return;
         
+        // Parse and update player locations from log
+        await this.parseAndUpdateLocations(guildId, logData);
+        
         // Check for server restart and trigger cleanup if needed
         await this.checkRestartWindow(guildConfig, state, logData);
         
@@ -327,6 +330,46 @@ class MultiGuildKillfeed {
     stop() {
         this.isRunning = false;
         console.log('[MULTI-KILLFEED] Stopped multi-guild killfeed monitoring');
+    }
+
+    async parseAndUpdateLocations(guildId, logData) {
+        try {
+            const logString = typeof logData === 'string' ? logData : String(logData);
+            const lines = logString.split(/\r?\n/);
+            let locationCount = 0;
+            
+            for (const line of lines) {
+                const locInfo = this.parsePlayerLocation(line);
+                if (locInfo) {
+                    await db.setPlayerLocation(guildId, locInfo.name, locInfo.position.x, locInfo.position.y, locInfo.position.z);
+                    locationCount++;
+                }
+            }
+            
+            if (locationCount > 0) {
+                console.log(`[LOCATION] Guild ${guildId}: Updated ${locationCount} player locations`);
+            }
+        } catch (error) {
+            console.error(`[LOCATION] Guild ${guildId}: Error updating locations:`, error.message);
+        }
+    }
+
+    parsePlayerLocation(logEntry) {
+        const regex = /(\d{2}:\d{2}:\d{2}) \| Player "(.+?)" \(id=(.+?) pos=<(.+?), (.+?), (.+?)>\)/;
+        const match = logEntry.match(regex);
+        if (match) {
+            return {
+                timestamp: match[1],
+                name: match[2],
+                playerId: match[3],
+                position: {
+                    x: parseFloat(match[4]),
+                    y: parseFloat(match[5]),
+                    z: parseFloat(match[6])
+                }
+            };
+        }
+        return null;
     }
 
     async checkRestartWindow(guildConfig, state, logData) {
