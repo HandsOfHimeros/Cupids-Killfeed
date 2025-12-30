@@ -628,17 +628,14 @@ function checkForServerRestart(logText) {
     }
 }
 
-// Helper: Clear spawn.json afteclearAll = false) {
+// Helper: Clear spawn.json after restart (only remove old items)
+async function cleanupSpawnJson() {
     const FILE_PATH = `/games/${config.ID2}/ftproot/dayzps_missions/dayzOffline.chernarusplus/custom/spawn.json`;
     const FTP_FILE_PATH = `/dayzps_missions/dayzOffline.chernarusplus/custom/spawn.json`;
     const BASE_URL = 'https://api.nitrado.net/services';
     
     try {
-        if (clearAll) {
-            console.log('[RESTART] Clearing ALL spawn entries for scheduled restart...');
-        } else {
-            console.log('[RESTART] Cleaning up old spawn entries...');
-        }
+        console.log('[RESTART] Cleaning up old spawn entries...');
         
         // Step 1: Download current spawn.json
         let spawnJson = { Objects: [] };

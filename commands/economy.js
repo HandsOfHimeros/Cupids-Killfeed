@@ -438,94 +438,10 @@ module.exports = {
                 } catch {}
                 return;
             }
-        } else if (interaction.channelId !== ECONOMY_CHANNEL_ID) {
-        // --- SHOP COMMAND LOGIC ---
-        if (commandName === 'shop') {
-            // Use external shop_items.js for item list
-            const shopItems = require('../shop_items.js');
-            const itemName = interaction.options.getString('item');
-            if (!itemName) {
-                // Show shop menu
-                let desc = '';
-                for (const item of shopItems) {
-                    desc += `**${item.name}** — $${item.averagePrice}\n${item.description}\n\n`;
-                }
-                await interaction.reply({
-                    embeds: [
-                        new MessageEmbed()
-                            .setColor('#ff69b4')
-                            .setTitle('DayZ Shop')
-                            .setDescription(desc)
-                            .setFooter({ text: 'Use /shop item:<name> to purchase.' })
-                    ]
-                });
-                return;
-            }
-            
-            // Defer reply since FTP upload takes time
-            await interaction.deferReply();
-            
-            // Find item
-            const item = shopItems.find(i => i.name.toLowerCase() === itemName.toLowerCase());
-            if (!item) {
-                await interaction.editReply({
-                    embeds: [
-                        new MessageEmbed()
-                            .setColor('#ff5555')
-                            .setTitle('Item Not Found')
-                            .setDescription('That item does not exist in the shop.')
-                    ]
-                });
-                return;
-            }
-            // Check balance
-            const bal = getBalance(userId);
-            if (bal < item.averagePrice) {
-                await interaction.editReply({
-                    embeds: [
-                        new MessageEmbed()
-                            .setColor('#ffaa00')
-                            .setTitle('Insufficient Funds')
-                            .setDescription(`You need $${item.averagePrice} to buy ${item.name}. Your balance: $${bal}`)
-                    ]
-                });
-                return;
-            }
-            // Deduct money
-            addBalance(userId, -item.averagePrice);
-            // Write spawn entry to Cupid.json via Nitrado API
-            const { addCupidSpawnEntry } = require('../index.js');
-            // Example spawn entry: { userId, item: item.name, class: item.class, amount, timestamp, restart_id }
-            const spawnEntry = {
-                userId,
-                item: item.name,
-                class: item.class,
-                amount: item.amount || 1,
-                timestamp: Date.now(),
-                restart_id: Date.now().toString()
-            };
-            try {
-                await addCupidSpawnEntry(spawnEntry);
-                await interaction.editReply({
-                    embeds: [
-                        new MessageEmbed()
-                            .setColor('#00ff99')
-                            .setTitle('Purchase Successful!')
-                            .setDescription(`You bought **${item.name}** for $${item.averagePrice}. It will spawn at your location after the next restart!`)
-                    ]
-                });
-            } catch (err) {
-                await interaction.editReply({
-                    embeds: [
-                        new MessageEmbed()
-                            .setColor('#ff5555')
-                            .setTitle('Spawn Error')
-                            .setDescription('Purchase succeeded, but failed to write spawn entry. Please contact an admin.')
-                    ]
-                });
-            }
-            return;
         }
+        
+        // Check if command is in wrong channel (excluding shop which has its own check above)
+        if (interaction.channelId !== ECONOMY_CHANNEL_ID) {
             await interaction.reply({
                 embeds: [
                     new MessageEmbed()
