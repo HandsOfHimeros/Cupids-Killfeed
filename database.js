@@ -49,6 +49,14 @@ async function getAllGuildConfigs() {
     return result.rows;
 }
 
+async function updateKillfeedState(guildId, lastLogLine) {
+    await pool.query(`
+        UPDATE guild_configs 
+        SET last_killfeed_line = $2
+        WHERE guild_id = $1
+    `, [guildId, lastLogLine]);
+}
+
 // Balance operations
 async function getBalance(guildId, userId) {
     const result = await pool.query('SELECT balance FROM balances WHERE guild_id = $1 AND user_id = $2', [guildId, userId]);
@@ -171,11 +179,21 @@ async function setPlayerLocation(guildId, playerName, x, y, z) {
     `, [guildId, playerName.toLowerCase(), x, y, z, Date.now()]);
 }
 
+async function updateKillfeedState(guildId, lastLogLine) {
+    await pool.query(`
+        UPDATE guild_configs 
+        SET last_killfeed_line = $2
+        WHERE guild_id = $1
+    `, [guildId, lastLogLine]);
+}
+
 module.exports = {
     pool,
     getGuildConfig,
     setGuildConfig,
-    setGuildChannels,    getAllGuildConfigs,    getBalance,
+    setGuildChannels,    getAllGuildConfigs,
+    updateKillfeedState,
+    getBalance,
     setBalance,
     addBalance,
     getLeaderboard,

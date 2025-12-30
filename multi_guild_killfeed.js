@@ -31,7 +31,7 @@ class MultiGuildKillfeed {
             for (const guild of guilds) {
                 if (!this.guildStates.has(guild.guild_id)) {
                     this.guildStates.set(guild.guild_id, {
-                        lastLogLine: '',
+                        lastLogLine: guild.last_killfeed_line || '',
                         lastPollTime: 0
                     });
                 }
@@ -115,6 +115,8 @@ class MultiGuildKillfeed {
         // Always update last seen line if there are any events in the log
         if (events.length > 0) {
             state.lastLogLine = events[events.length - 1].raw;
+            // Persist to database
+            await db.updateKillfeedState(guildId, state.lastLogLine);
         }
         
         state.lastPollTime = Date.now();
