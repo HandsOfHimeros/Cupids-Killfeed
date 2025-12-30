@@ -6,7 +6,7 @@ const { MessageEmbed } = require('discord.js');
 class MultiGuildKillfeed {
     constructor(bot) {
         this.bot = bot;
-        this.guildStates = new Map(); // guild_id -> { lastKillfeedLine, lastBuildlogLine, lastSuicidelogLine, lastPollTime }
+        this.guildStates = new Map(); // guild_id -> { lastLogLine, lastPollTime }
         this.pollInterval = 120000; // 2 minutes
         this.isRunning = false;
     }
@@ -31,10 +31,7 @@ class MultiGuildKillfeed {
             for (const guild of guilds) {
                 if (!this.guildStates.has(guild.guild_id)) {
                     this.guildStates.set(guild.guild_id, {
-                        lastKillfeedLine: '',
-                        lastBuildlogLine: '',
-                        lastSuicidelogLine: '',
-                        lastConnectionsLine: '',
+                        lastLogLine: '',
                         lastPollTime: 0
                     });
                 }
@@ -71,13 +68,7 @@ class MultiGuildKillfeed {
 
     async pollGuild(guildConfig) {
         const guildId = guildConfig.guild_id;
-        const state = this.guildStates.get(guildId) || { 
-            lastKillfeedLine: '', 
-            lastBuildlogLine: '', 
-            lastSuicidelogLine: '',
-            lastConnectionsLine: '', 
-            lastPollTime: 0 
-        };
+        const state = this.guildStates.get(guildId) || { lastLogLine: '', lastPollTime: 0 };
         
         console.log(`[MULTI-KILLFEED] Polling guild ${guildId}...`);
         
@@ -85,78 +76,45 @@ class MultiGuildKillfeed {
         const logData = await this.fetchGuildLog(guildConfig);
         if (!logData) return;
         
-        // Debug: Log first and last few lines
-        const lines = logData.split('\n');
-        console.log(`[MULTI-KILLFEED] Guild ${guildId}: Log has ${lines.length} lines`);
-        if (lines.length > 0) {
-            console.log(`[MULTI-KILLFEED] Sample lines:`);
-            console.log(lines.slice(0, 3).join('\n'));
-            console.log('...');
-            console.log(lines.slice(-3).join('\n'));
+        // Parse events
+        const events = this.parseKillfeedEvents(logData);
+        
+        // Filter to only new events
+        let newEvents = events;
+        if (state.lastLogLine && events.length > 0) {
+            // Find where we left off - look from the end backwards for efficiency
+            let foundIndex = -1;
+            for (let i = events.length - 1; i >= 0; i--) {
+                if (events[i].raw === state.lastLogLine) {
+                    foundIndex = i;
+                    break;
+                }
+            }
+            
+            if (foundIndex !== -1) {
+                newEvents = events.slice(foundIndex + 1);
+            } else {
+                // If we can't find the last line, assume all events are old if last poll was recent
+                const timeSinceLastPoll = Date.now() - state.lastPollTime;
+                if (timeSinceLastPoll < 300000) { // Less than 5 minutes
+                    console.log(`[MULTI-KILLFEED] Guild ${guildId}: Can't find last line, assuming all are old`);
+                    newEvents = [];
+                }
+                // Otherwise, if it's been a while, post all events (might be new log file)
+            }
         }
         
-        // Parse and post killfeed events
-        const killfeedEvents = this.parseKillfeedEvents(logData);
-        console.log(`[MULTI-KILLFEED] Guild ${guildId}: Found ${killfeedEvents.length} total killfeed events`);
-        let newKillfeedEvents = killfeedEvents;
-        if (state.lastKillfeedLine) {
-            const idx = killfeedEvents.findIndex(e => e.raw === state.lastKillfeedLine);
-            if (idx !== -1) newKillfeedEvents = killfeedEvents.slice(idx + 1);
-        }
-        if (newKillfeedEvents.length > 0) {
-            console.log(`[MULTI-KILLFEED] Guild ${guildId}: ${newKillfeedEvents.length} new killfeed events`);
-            for (const event of newKillfeedEvents) {
-                await this.postKillfeedToGuild(guildConfig, event);
+        // Post new events to this guild's killfeed channel
+        if (newEvents.length > 0) {
+            console.log(`[MULTI-KILLFEED] Guild ${guildId}: ${newEvents.length} new events`);
+            for (const event of newEvents) {
+                await this.postEventToGuild(guildConfig, event);
             }
-            state.lastKillfeedLine = killfeedEvents[killfeedEvents.length - 1]?.raw || state.lastKillfeedLine;
         }
         
-        // Parse and post buildlog events
-        const buildlogEvents = this.parseBuildlogEvents(logData);
-        console.log(`[MULTI-KILLFEED] Guild ${guildId}: Found ${buildlogEvents.length} total buildlog events`);
-        let newBuildlogEvents = buildlogEvents;
-        if (state.lastBuildlogLine) {
-            const idx = buildlogEvents.findIndex(e => e.raw === state.lastBuildlogLine);
-            if (idx !== -1) newBuildlogEvents = buildlogEvents.slice(idx + 1);
-        }
-        if (newBuildlogEvents.length > 0) {
-            console.log(`[MULTI-KILLFEED] Guild ${guildId}: ${newBuildlogEvents.length} new buildlog events`);
-            for (const event of newBuildlogEvents) {
-                await this.postBuildlogToGuild(guildConfig, event);
-            }
-            state.lastBuildlogLine = buildlogEvents[buildlogEvents.length - 1]?.raw || state.lastBuildlogLine;
-        }
-        
-        // Parse and post suicidelog events
-        const suicidelogEvents = this.parseSuicidelogEvents(logData);
-        console.log(`[MULTI-KILLFEED] Guild ${guildId}: Found ${suicidelogEvents.length} total suicidelog events`);
-        let newSuicidelogEvents = suicidelogEvents;
-        if (state.lastSuicidelogLine) {
-            const idx = suicidelogEvents.findIndex(e => e.raw === state.lastSuicidelogLine);
-            if (idx !== -1) newSuicidelogEvents = suicidelogEvents.slice(idx + 1);
-        }
-        if (newSuicidelogEvents.length > 0) {
-            console.log(`[MULTI-KILLFEED] Guild ${guildId}: ${newSuicidelogEvents.length} new suicidelog events`);
-            for (const event of newSuicidelogEvents) {
-                await this.postSuicidelogToGuild(guildConfig, event);
-            }
-            state.lastSuicidelogLine = suicidelogEvents[suicidelogEvents.length - 1]?.raw || state.lastSuicidelogLine;
-        }
-        
-        // Parse and post connections events
-        const connectionsEvents = this.parseConnectionsEvents(logData);
-        console.log(`[MULTI-KILLFEED] Guild ${guildId}: Found ${connectionsEvents.length} total connections events`);
-        let newConnectionsEvents = connectionsEvents;
-        if (state.lastConnectionsLine) {
-            const idx = connectionsEvents.findIndex(e => e.raw === state.lastConnectionsLine);
-            if (idx !== -1) newConnectionsEvents = connectionsEvents.slice(idx + 1);
-        }
-        if (newConnectionsEvents.length > 0) {
-            console.log(`[MULTI-KILLFEED] Guild ${guildId}: ${newConnectionsEvents.length} new connections events`);
-            for (const event of newConnectionsEvents) {
-                await this.postConnectionsToGuild(guildConfig, event);
-            }
-            state.lastConnectionsLine = connectionsEvents[connectionsEvents.length - 1]?.raw || state.lastConnectionsLine;
+        // Always update last seen line if there are any events in the log
+        if (events.length > 0) {
+            state.lastLogLine = events[events.length - 1].raw;
         }
         
         state.lastPollTime = Date.now();
@@ -286,157 +244,6 @@ class MultiGuildKillfeed {
             await channel.send({ embeds: [embed] });
         } catch (error) {
             console.error(`[MULTI-KILLFEED] Error posting event for guild ${guildConfig.guild_id}:`, error.message);
-        }
-    }
-
-    // Rename to be more specific
-    async postKillfeedToGuild(guildConfig, event) {
-        return this.postEventToGuild(guildConfig, event);
-    }
-
-    parseBuildlogEvents(logText) {
-        const logString = typeof logText === 'string' ? logText : String(logText);
-        const lines = logString.split(/\r?\n/);
-        const events = [];
-        
-        for (const line of lines) {
-            if (line.includes('placed') || line.includes('raised')) {
-                // Format: HH:MM:SS | Player "Name"(id=...) placed/raised object
-                const match = line.match(/^(\d{2}:\d{2}:\d{2}) \| Player \"(.+?)\"\([^)]*\) (placed|raised) (.+)$/);
-                if (match) {
-                    events.push({ 
-                        time: match[1], 
-                        player: match[2], 
-                        action: match[3],
-                        details: match[4], 
-                        raw: line 
-                    });
-                }
-            }
-        }
-        
-        return events;
-    }
-
-    async postBuildlogToGuild(guildConfig, event) {
-        try {
-            const channelId = guildConfig.buildlog_channel_id;
-            if (!channelId) return;
-            
-            const channel = await this.bot.channels.fetch(channelId);
-            if (!channel) return;
-            
-            let embed = new MessageEmbed()
-                .setColor('#7289da')
-                .setTitle('🏗️ Build Log')
-                .setDescription(event.details)
-                .setTimestamp();
-            
-            if (event.player) embed.addField('Player', event.player, true);
-            if (event.time) embed.addField('Time', event.time, true);
-            
-            await channel.send({ embeds: [embed] });
-        } catch (error) {
-            console.error(`[MULTI-KILLFEED] Error posting buildlog for guild ${guildConfig.guild_id}:`, error.message);
-        }
-    }
-
-    parseSuicidelogEvents(logText) {
-        const logString = typeof logText === 'string' ? logText : String(logText);
-        const lines = logString.split(/\r?\n/);
-        const events = [];
-        
-        for (const line of lines) {
-            if (line.includes('committed suicide')) {
-                const match = line.match(/^(\d{2}:\d{2}:\d{2}) \| Player \"(.+?)\"\([^)]*\) committed suicide(.*)$/);
-                if (match) {
-                    events.push({ 
-                        time: match[1], 
-                        player: match[2], 
-                        reason: match[3].trim(), 
-                        raw: line 
-                    });
-                }
-            }
-        }
-        
-        return events;
-    }
-
-    async postSuicidelogToGuild(guildConfig, event) {
-        try {
-            const channelId = guildConfig.suicidelog_channel_id;
-            if (!channelId) return;
-            
-            const channel = await this.bot.channels.fetch(channelId);
-            if (!channel) return;
-            
-            let embed = new MessageEmbed()
-                .setColor('#ff6b6b')
-                .setTitle('💔 Suicide Log')
-                .setDescription(`**${event.player}** died`)
-                .setTimestamp();
-            
-            if (event.reason) embed.addField('Reason', event.reason, true);
-            if (event.time) embed.addField('Time', event.time, true);
-            
-            await channel.send({ embeds: [embed] });
-        } catch (error) {
-            console.error(`[MULTI-KILLFEED] Error posting suicidelog for guild ${guildConfig.guild_id}:`, error.message);
-        }
-    }
-
-    parseConnectionsEvents(logText) {
-        const logString = typeof logText === 'string' ? logText : String(logText);
-        const lines = logString.split(/\r?\n/);
-        const events = [];
-        
-        for (const line of lines) {
-            if (line.includes('is connected')) {
-                const match = line.match(/^(\d{2}:\d{2}:\d{2}) \| Player \"(.+?)\"\([^)]*\) is connected$/);
-                if (match) {
-                    events.push({ 
-                        type: 'connect',
-                        time: match[1], 
-                        player: match[2], 
-                        raw: line 
-                    });
-                }
-            } else if (line.includes('has been disconnected')) {
-                const match = line.match(/^(\d{2}:\d{2}:\d{2}) \| Player \"(.+?)\"\([^)]*\) has been disconnected$/);
-                if (match) {
-                    events.push({ 
-                        type: 'disconnect',
-                        time: match[1], 
-                        player: match[2], 
-                        raw: line 
-                    });
-                }
-            }
-        }
-        
-        return events;
-    }
-
-    async postConnectionsToGuild(guildConfig, event) {
-        try {
-            const channelId = guildConfig.connections_channel_id;
-            if (!channelId) return;
-            
-            const channel = await this.bot.channels.fetch(channelId);
-            if (!channel) return;
-            
-            let embed = new MessageEmbed()
-                .setColor(event.type === 'connect' ? '#00ff00' : '#ff0000')
-                .setTitle(event.type === 'connect' ? '🟢 Player Connected' : '🔴 Player Disconnected')
-                .setDescription(`**${event.player}**`)
-                .setTimestamp();
-            
-            if (event.time) embed.addField('Time', event.time, true);
-            
-            await channel.send({ embeds: [embed] });
-        } catch (error) {
-            console.error(`[MULTI-KILLFEED] Error posting connections for guild ${guildConfig.guild_id}:`, error.message);
         }
     }
 
