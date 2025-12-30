@@ -182,21 +182,6 @@ module.exports = {
     }
 };
 
-// Modal handlers must be defined before export
-async function handleSetupModalSubmit(interaction) {
-    const guildId = interaction.guildId;
-    if (guildId && guildId === GUILDID) {
-        const integer = interaction.options.getInteger('value');
-        if (integer > 100) {
-            return interaction.reply('The max number of messages you can delete is 100')
-                .catch(console.error);
-        }
-        await interaction.channel.bulkDelete(integer).catch(console.error);
-        await interaction.reply('clearing messages...').catch(console.error);
-        await interaction.deleteReply().catch(console.error);
-    }
-}
-
 async function handleMapChange(interaction) {
     const guildId = interaction.guildId;
     if (guildId && guildId === GUILDID) {
