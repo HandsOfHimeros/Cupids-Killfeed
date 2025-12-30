@@ -461,29 +461,33 @@ module.exports = {
                 });
                 return;
             }
+            
+            // Defer reply since FTP upload takes time
+            await interaction.deferReply();
+            
             // Find item
             const item = shopItems.find(i => i.name.toLowerCase() === itemName.toLowerCase());
             if (!item) {
-                await interaction.reply({
+                await interaction.editReply({
                     embeds: [
                         new MessageEmbed()
                             .setColor('#ff5555')
                             .setTitle('Item Not Found')
                             .setDescription('That item does not exist in the shop.')
-                    ], ephemeral: true
+                    ]
                 });
                 return;
             }
             // Check balance
             const bal = getBalance(userId);
             if (bal < item.averagePrice) {
-                await interaction.reply({
+                await interaction.editReply({
                     embeds: [
                         new MessageEmbed()
                             .setColor('#ffaa00')
                             .setTitle('Insufficient Funds')
                             .setDescription(`You need $${item.averagePrice} to buy ${item.name}. Your balance: $${bal}`)
-                    ], ephemeral: true
+                    ]
                 });
                 return;
             }
@@ -502,7 +506,7 @@ module.exports = {
             };
             try {
                 await addCupidSpawnEntry(spawnEntry);
-                await interaction.reply({
+                await interaction.editReply({
                     embeds: [
                         new MessageEmbed()
                             .setColor('#00ff99')
@@ -511,13 +515,13 @@ module.exports = {
                     ]
                 });
             } catch (err) {
-                await interaction.reply({
+                await interaction.editReply({
                     embeds: [
                         new MessageEmbed()
                             .setColor('#ff5555')
                             .setTitle('Spawn Error')
                             .setDescription('Purchase succeeded, but failed to write spawn entry. Please contact an admin.')
-                    ], ephemeral: true
+                    ]
                 });
             }
             return;
