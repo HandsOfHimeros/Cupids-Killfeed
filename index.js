@@ -706,6 +706,15 @@ async function cleanupSpawnJson() {
     }
 }
 
+// Helper: Convert military time to 12-hour format
+function convertTo12Hour(time24) {
+    const [hours, minutes, seconds] = time24.split(':');
+    const hour = parseInt(hours);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const hour12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+    return `${hour12}:${minutes}:${seconds} ${ampm}`;
+}
+
 // Helper: Parse connection/disconnection events from log text
 function parseConnectionEvents(logText) {
     const lines = logText.split(/\r?\n/);
@@ -713,12 +722,12 @@ function parseConnectionEvents(logText) {
     for (const line of lines) {
         let match = line.match(/^(\d{2}:\d{2}:\d{2}) \| Player \"(.+?)\"\(id=[^)]*\) is connected/);
         if (match) {
-            events.push({ type: 'connect', time: match[1], player: match[2], raw: line });
+            events.push({ type: 'connect', time: convertTo12Hour(match[1]), player: match[2], raw: line });
             continue;
         }
         match = line.match(/^(\d{2}:\d{2}:\d{2}) \| Player \"(.+?)\"\(id=[^)]*\) has been disconnected/);
         if (match) {
-            events.push({ type: 'disconnect', time: match[1], player: match[2], raw: line });
+            events.push({ type: 'disconnect', time: convertTo12Hour(match[1]), player: match[2], raw: line });
         }
     }
     return events;
