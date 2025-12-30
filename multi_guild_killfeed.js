@@ -388,9 +388,9 @@ class MultiGuildKillfeed {
         const currentHour = now.getHours();
         const currentMinutes = now.getMinutes();
         
-        // Check if we're in a cleanup window (5-15 minutes after restart)
+        // Check if we're in a cleanup window (15-25 minutes after restart to allow server to fully restart and load spawn.json)
         for (const restartHour of restartHours) {
-            if (currentHour === restartHour && currentMinutes >= 5 && currentMinutes <= 15) {
+            if (currentHour === restartHour && currentMinutes >= 15 && currentMinutes <= 25) {
                 // Check if we already did cleanup for this restart
                 const timeSinceLastCleanup = Date.now() - state.lastCleanupCheck;
                 if (timeSinceLastCleanup < 30 * 60 * 1000) { // Skip if cleaned up in last 30 minutes
