@@ -1,6 +1,7 @@
 // Add buildlog and suicidelog channels to existing configured guilds
 const { Client, Intents, MessageEmbed } = require('discord.js');
 const db = require('./database.js');
+const config = require('./config.json');
 
 const bot = new Client({
     intents: [
@@ -85,4 +86,4 @@ bot.once('ready', async () => {
     }
 });
 
-bot.login(process.env.DISCORD_TOKEN);
+bot.login(config.TOKEN);
