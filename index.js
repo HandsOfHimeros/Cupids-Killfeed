@@ -2,6 +2,7 @@
 const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
+const db = require('./database.js');
 const KILLFEED_CHANNEL_ID = '1404256735245373511'; // Discord channel for Killfeed
 let lastSeenKillfeedLogLine = '';
 
@@ -73,12 +74,12 @@ async function pollDayZLogForKillfeed() {
         const logText = resp.data;
         
         // Parse player locations from log
-        const lines = logText.split(/\r?\n/);
-        let locationCount = 0;
+        const lines = logText.split(/\r?\n/);\n        let locationCount = 0;
+        const guildId = '1392564838925914142'; // Default guild
         for (const line of lines) {
             const locInfo = parsePlayerLocation(line);
             if (locInfo) {
-                updatePlayerLocation(locInfo.name, locInfo.position);
+                updatePlayerLocation(guildId, locInfo.name, locInfo.position);
                 locationCount++;
             }
         }
@@ -261,9 +262,15 @@ async function fetchMostRecentDayZLog() {
 module.exports.fetchMostRecentDayZLog = fetchMostRecentDayZLog;
 
 // Function to add a spawn entry to spawn.json on Nitrado server
-async function addCupidSpawnEntry(spawnEntry) {
-    const FILE_PATH = `/games/${config.ID2}/ftproot/dayzps_missions/dayzOffline.chernarusplus/custom/spawn.json`;
-    const FTP_FILE_PATH = `/dayzps_missions/dayzOffline.chernarusplus/custom/spawn.json`;
+async function addCupidSpawnEntry(spawnEntry, guildId) {
+    // Get guild configuration
+    const guildConfig = await db.getGuildConfig(guildId);
+    if (!guildConfig) {
+        throw new Error('Guild not configured. Please run /admin killfeed setup first.');
+    }
+    
+    const FILE_PATH = `/games/${guildConfig.nitrado_instance}/ftproot/dayzps_missions/dayzOffline.${guildConfig.map_name}/custom/spawn.json`;
+    const FTP_FILE_PATH = `/dayzps_missions/dayzOffline.${guildConfig.map_name}/custom/spawn.json`;
     const BASE_URL = 'https://api.nitrado.net/services';
     
     try {
@@ -290,9 +297,9 @@ async function addCupidSpawnEntry(spawnEntry) {
         // Step 2: Download current spawn.json from Nitrado
         let spawnJson = { Objects: [] };
         try {
-            const downloadUrl = `${BASE_URL}/${config.ID1}/gameservers/file_server/download?file=${encodeURIComponent(FILE_PATH)}`;
+            const downloadUrl = `${BASE_URL}/${guildConfig.nitrado_service_id}/gameservers/file_server/download?file=${encodeURIComponent(FILE_PATH)}`;
             const downloadResp = await axios.get(downloadUrl, {
-                headers: { 'Authorization': `Bearer ${config.NITRATOKEN}` }
+                headers: { 'Authorization': `Bearer ${guildConfig.nitrado_token}` }
             });
             
             const fileUrl = downloadResp.data.data.token.url;
@@ -312,12 +319,11 @@ async function addCupidSpawnEntry(spawnEntry) {
         // Step 3: Get spawn template for this item class
         const template = spawnTemplates[spawnEntry.class] || { ...defaultTemplate, name: spawnEntry.class };
         
-        // Step 3.5: Try to get player's actual location
+        // Step 3.5: Try to get player's actual location from database
         let playerPos = template.pos || [0, 0, 0];
         if (spawnEntry.dayzPlayerName) {
             console.log(`[SPAWN] Looking up location for: "${spawnEntry.dayzPlayerName}"`);
-            console.log(`[SPAWN] Available players:`, Object.keys(playerLocations));
-            const location = getPlayerLocation(spawnEntry.dayzPlayerName);
+            const location = await db.getPlayerLocation(guildId, spawnEntry.dayzPlayerName);
             if (location) {
                 // DayZ spawn format is [X, Z, Y] where Z is elevation
                 playerPos = [location.x, location.z, location.y];
@@ -401,8 +407,6 @@ async function addCupidSpawnEntry(spawnEntry) {
 module.exports.addCupidSpawnEntry = addCupidSpawnEntry;
 
 // --- Player Location Tracking ---
-const playerLocations = {};
-
 function parsePlayerLocation(logEntry) {
     const regex = /(\d{2}:\d{2}:\d{2}) \| Player "(.+?)" \(id=(.+?) pos=<(.+?), (.+?), (.+?)>\)/;
     const match = logEntry.match(regex);
@@ -421,38 +425,15 @@ function parsePlayerLocation(logEntry) {
     return null;
 }
 
-function updatePlayerLocation(playerName, position) {
-    playerLocations[playerName.toLowerCase()] = {
-        position: position,
-        timestamp: Date.now()
-    };
-    // Save to file for persistence
+async function updatePlayerLocation(guildId, playerName, position) {
     try {
-        fs.writeFileSync('./player_locations.json', JSON.stringify(playerLocations, null, 2));
+        await db.setPlayerLocation(guildId, playerName, position.x, position.y, position.z);
     } catch (err) {
-        console.error('[LOCATION] Error saving locations:', err.message);
+        console.error('[LOCATION] Error saving location:', err.message);
     }
 }
 
-function getPlayerLocation(playerName) {
-    const loc = playerLocations[playerName.toLowerCase()];
-    if (!loc) return null;
-    // Always return last known location, regardless of age
-    return loc.position;
-}
-
-// Load saved locations on startup
-try {
-    if (fs.existsSync('./player_locations.json')) {
-        const saved = JSON.parse(fs.readFileSync('./player_locations.json', 'utf8'));
-        Object.assign(playerLocations, saved);
-        console.log('[LOCATION] Loaded saved player locations');
-    }
-} catch (err) {
-    console.error('[LOCATION] Error loading saved locations:', err.message);
-}
-
-module.exports.getPlayerLocation = getPlayerLocation;
+// getPlayerLocation is now accessed via database in economy.js
 
 /* DayZero KillFeed (DZK) DIY Project 2.1
 Copyright (c) 2023 TheCodeGang LLC.
@@ -614,7 +595,7 @@ function checkScheduledCleanup() {
             lastCleanupCheck = Date.now();
             
             console.log(`[RESTART] Cleanup window detected after ${restartHour}:00 restart`);
-            cleanupSpawnJson(false); // Use time-based filtering to preserve new purchases
+            cleanupSpawnJson(guildId); // Use time-based filtering to preserve new purchases
             return;
         }
     }
@@ -640,9 +621,16 @@ function checkForServerRestart(logText) {
 }
 
 // Helper: Clear spawn.json after restart (only remove old items)
-async function cleanupSpawnJson() {
-    const FILE_PATH = `/games/${config.ID2}/ftproot/dayzps_missions/dayzOffline.chernarusplus/custom/spawn.json`;
-    const FTP_FILE_PATH = `/dayzps_missions/dayzOffline.chernarusplus/custom/spawn.json`;
+async function cleanupSpawnJson(guildId) {
+    // Get guild configuration
+    const guildConfig = await db.getGuildConfig(guildId);
+    if (!guildConfig) {
+        console.log('[RESTART] Guild not configured, skipping cleanup');
+        return;
+    }
+    
+    const FILE_PATH = `/games/${guildConfig.nitrado_instance}/ftproot/dayzps_missions/dayzOffline.${guildConfig.map_name}/custom/spawn.json`;
+    const FTP_FILE_PATH = `/dayzps_missions/dayzOffline.${guildConfig.map_name}/custom/spawn.json`;
     const BASE_URL = 'https://api.nitrado.net/services';
     
     try {
@@ -651,9 +639,9 @@ async function cleanupSpawnJson() {
         // Step 1: Download current spawn.json
         let spawnJson = { Objects: [] };
         try {
-            const downloadUrl = `${BASE_URL}/${config.ID1}/gameservers/file_server/download?file=${encodeURIComponent(FILE_PATH)}`;
+            const downloadUrl = `${BASE_URL}/${guildConfig.nitrado_service_id}/gameservers/file_server/download?file=${encodeURIComponent(FILE_PATH)}`;
             const downloadResp = await axios.get(downloadUrl, {
-                headers: { 'Authorization': `Bearer ${config.NITRATOKEN}` }
+                headers: { 'Authorization': `Bearer ${guildConfig.nitrado_token}` }
             });
             
             const fileUrl = downloadResp.data.data.token.url;
@@ -687,9 +675,9 @@ async function cleanupSpawnJson() {
         console.log(`[RESTART] Removed ${removedCount} old spawn entries, kept ${spawnJson.Objects.length} new ones`);
         
         // Step 3: Upload cleaned spawn.json via FTP
-        const infoUrl = `${BASE_URL}/${config.ID1}/gameservers`;
+        const infoUrl = `${BASE_URL}/${guildConfig.nitrado_service_id}/gameservers`;
         const infoResp = await axios.get(infoUrl, {
-            headers: { 'Authorization': `Bearer ${config.NITRATOKEN}` }
+            headers: { 'Authorization': `Bearer ${guildConfig.nitrado_token}` }
         });
         
         const ftpCreds = infoResp.data.data.gameserver.credentials.ftp;

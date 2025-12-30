@@ -408,7 +408,7 @@ module.exports = {
                 
                 try {
                     console.log('[SHOP] Adding Cupid spawn entry:', spawnEntry);
-                    await addCupidSpawnEntry(spawnEntry);
+                    await addCupidSpawnEntry(spawnEntry, guildId);
                     console.log('[SHOP] Purchase successful, spawn entry written');
                     // Update the message to confirm spawn was written
                     await interaction.editReply({
