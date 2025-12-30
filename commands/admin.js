@@ -179,11 +179,11 @@ module.exports = {
             default:
                 break;
         }
-    },
-    handleSetupModalSubmit
+    }
 };
 
-async function handleClearCommand(interaction) {
+// Modal handlers must be defined before export
+async function handleSetupModalSubmit(interaction) {
     const guildId = interaction.guildId;
     if (guildId && guildId === GUILDID) {
         const integer = interaction.options.getInteger('value');
