@@ -598,8 +598,9 @@ function checkScheduledCleanup() {
         if (adjustedDiff === 0 && currentMinute >= 15 && currentMinute <= 20) {
             // We're in the cleanup window
             lastCleanupCheck = Date.now();
+            lastRestartTime = Date.now(); // Set restart time for cleanup filtering
             console.log(`[RESTART] Cleanup window detected after ${restartHour}:00 restart`);
-            cleanupSpawnJson();
+            cleanupSpawnJson(true); // Pass true to clear ALL items
             return;
         }
     }
@@ -624,14 +625,17 @@ function checkForServerRestart(logText) {
     }
 }
 
-// Helper: Clear spawn.json after restart (only remove old items)
-async function cleanupSpawnJson() {
+// Helper: Clear spawn.json afteclearAll = false) {
     const FILE_PATH = `/games/${config.ID2}/ftproot/dayzps_missions/dayzOffline.chernarusplus/custom/spawn.json`;
     const FTP_FILE_PATH = `/dayzps_missions/dayzOffline.chernarusplus/custom/spawn.json`;
     const BASE_URL = 'https://api.nitrado.net/services';
     
     try {
-        console.log('[RESTART] Cleaning up old spawn entries...');
+        if (clearAll) {
+            console.log('[RESTART] Clearing ALL spawn entries for scheduled restart...');
+        } else {
+            console.log('[RESTART] Cleaning up old spawn entries...');
+        }
         
         // Step 1: Download current spawn.json
         let spawnJson = { Objects: [] };
@@ -652,20 +656,28 @@ async function cleanupSpawnJson() {
             return;
         }
         
-        // Step 2: Filter out items purchased before this restart
+        // Step 2: Filter items based on mode
         const originalCount = spawnJson.Objects.length;
-        spawnJson.Objects = spawnJson.Objects.filter(obj => {
-            if (!obj.customString) return true; // Keep non-shop items
-            
-            try {
-                const data = JSON.parse(obj.customString);
-                const itemTimestamp = parseInt(data.restart_id) || 0;
+        
+        if (clearAll) {
+            // Remove ALL shop items (anything with customString)
+            spawnJson.Objects = spawnJson.Objects.filter(obj => !obj.customString);
+        } else {
+            // Only remove items purchased before this restart
+            spawnJson.Objects = spawnJson.Objects.filter(obj => {
+                if (!obj.customString) return true; // Keep non-shop items
                 
-                // Keep items purchased after restart was detected (within last 10 minutes)
-                return itemTimestamp > lastRestartTime;
-            } catch {
-                return true; // Keep if can't parse
-            }
+                try {
+                    const data = JSON.parse(obj.customString);
+                    const itemTimestamp = parseInt(data.restart_id) || 0;
+                    
+                    // Keep items purchased after restart was detected (within last 10 minutes)
+                    return itemTimestamp > lastRestartTime;
+                } catch {
+                    return true; // Keep if can't parse
+                }
+            });
+        } }
         });
         
         const removedCount = originalCount - spawnJson.Objects.length;
