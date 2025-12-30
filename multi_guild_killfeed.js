@@ -210,6 +210,48 @@ class MultiGuildKillfeed {
                         raw: line 
                     });
                 }
+            } else if (line.includes('is connected')) {
+                match = line.match(/^(\d{2}:\d{2}:\d{2}) \| Player \"(.+?)\"\(id=[^)]*\) is connected$/);
+                if (match) {
+                    events.push({
+                        type: 'connected',
+                        time: match[1],
+                        player: match[2],
+                        raw: line
+                    });
+                }
+            } else if (line.includes('has been disconnected')) {
+                match = line.match(/^(\d{2}:\d{2}:\d{2}) \| Player \"(.+?)\"\(id=[^)]*\) has been disconnected$/);
+                if (match) {
+                    events.push({
+                        type: 'disconnected',
+                        time: match[1],
+                        player: match[2],
+                        raw: line
+                    });
+                }
+            } else if (line.includes('committed suicide')) {
+                match = line.match(/^(\d{2}:\d{2}:\d{2}) \| Player \"(.+?)\"\(id=[^)]*\) committed suicide$/);
+                if (match) {
+                    events.push({
+                        type: 'suicide',
+                        time: match[1],
+                        player: match[2],
+                        raw: line
+                    });
+                }
+            } else if (line.includes('placed') || line.includes('raised')) {
+                match = line.match(/^(\d{2}:\d{2}:\d{2}) \| Player \"(.+?)\"\(id=[^)]*\) (placed|raised) (.+) at position/);
+                if (match) {
+                    events.push({
+                        type: 'build',
+                        time: match[1],
+                        player: match[2],
+                        action: match[3],
+                        item: match[4],
+                        raw: line
+                    });
+                }
             }
         }
         
@@ -218,17 +260,24 @@ class MultiGuildKillfeed {
 
     async postEventToGuild(guildConfig, event) {
         try {
-            const channelId = guildConfig.killfeed_channel_id;
+            let channelId;
+            
+            // Route to appropriate channel based on event type
+            if (event.type === 'connected' || event.type === 'disconnected') {
+                channelId = guildConfig.connections_channel_id;
+            } else {
+                channelId = guildConfig.killfeed_channel_id;
+            }
+            
             if (!channelId) return;
             
             const channel = await this.bot.channels.fetch(channelId);
             if (!channel) return;
             
-            let embed = new MessageEmbed()
-                .setColor(event.type === 'kill' ? '#ff0000' : '#ffaa00')
-                .setTimestamp();
+            let embed = new MessageEmbed().setTimestamp();
             
             if (event.type === 'kill') {
+                embed.setColor('#ff0000');
                 if (event.killer && event.victim && event.weapon) {
                     embed.setTitle('☠️ Killfeed')
                         .setDescription(`**${event.killer}** killed **${event.victim}**`)
@@ -238,6 +287,7 @@ class MultiGuildKillfeed {
                     embed.setTitle('☠️ Killfeed').setDescription(event.raw);
                 }
             } else if (event.type === 'hit') {
+                embed.setColor('#ffaa00');
                 if (event.attacker && event.victim && event.weapon) {
                     embed.setTitle('💥 Hitfeed')
                         .setDescription(`**${event.attacker}** hit **${event.victim}**`)
@@ -246,6 +296,26 @@ class MultiGuildKillfeed {
                 } else {
                     embed.setTitle('💥 Hitfeed').setDescription(event.raw);
                 }
+            } else if (event.type === 'connected') {
+                embed.setColor('#00ff00')
+                    .setTitle('🟢 Player Connected')
+                    .setDescription(`**${event.player}** joined the server`)
+                    .addField('Time', event.time, true);
+            } else if (event.type === 'disconnected') {
+                embed.setColor('#ff0000')
+                    .setTitle('🔴 Player Disconnected')
+                    .setDescription(`**${event.player}** left the server`)
+                    .addField('Time', event.time, true);
+            } else if (event.type === 'suicide') {
+                embed.setColor('#800080')
+                    .setTitle('💀 Suicide')
+                    .setDescription(`**${event.player}** committed suicide`)
+                    .addField('Time', event.time, true);
+            } else if (event.type === 'build') {
+                embed.setColor('#0099ff')
+                    .setTitle('🔨 Build Event')
+                    .setDescription(`**${event.player}** ${event.action} **${event.item}**`)
+                    .addField('Time', event.time, true);
             }
             
             await channel.send({ embeds: [embed] });
