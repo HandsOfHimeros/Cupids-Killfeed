@@ -360,9 +360,9 @@ async function addCupidSpawnEntry(spawnEntry, guildId) {
         
         // Step 6: Get FTP credentials from Nitrado API
         console.log('[SPAWN] Getting FTP credentials...');
-        const infoUrl = `${BASE_URL}/${config.ID1}/gameservers`;
+        const infoUrl = `${BASE_URL}/${guildConfig.nitrado_service_id}/gameservers`;
         const infoResp = await axios.get(infoUrl, {
-            headers: { 'Authorization': `Bearer ${config.NITRATOKEN}` }
+            headers: { 'Authorization': `Bearer ${guildConfig.nitrado_token}` }
         });
         
         const ftpCreds = infoResp.data.data.gameserver.credentials.ftp;
