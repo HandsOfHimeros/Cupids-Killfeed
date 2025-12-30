@@ -18,7 +18,7 @@ require('dotenv').config();
 const { SlashCommandBuilder, hyperlink } = require('@discordjs/builders');
 const fs = require('fs');
 const ini = require('ini');
-const { Client, Intents, MessageEmbed } = require('discord.js');
+const { Client, Intents, MessageEmbed, MessageActionRow, MessageButton, Modal, TextInputComponent } = require('discord.js');
 const nodeoutlook = require('nodejs-nodemailer-outlook');
 const axios = require('axios');
 const path = require('path');
@@ -26,6 +26,7 @@ const Tail = require('tail').Tail;
 const readline = require('readline');
 const colors = require('colors');
 const moment = require('moment-timezone');
+const db = require('../database.js');
 
 var config = ini.parse(fs.readFileSync('./config.ini', 'utf-8'));
 var admRegex  = null, admPlat = null;
@@ -140,7 +141,12 @@ module.exports = {
                 .addSubcommand(subcommand =>
                     subcommand
                         .setName('setup')
-                        .setDescription('Set up Discord channels required by Killfeed')
+                        .setDescription('Set up bot for this Discord server with Nitrado credentials')
+                )
+                .addSubcommand(subcommand =>
+                    subcommand
+                        .setName('viewconfig')
+                        .setDescription('View current server configuration')
                 )
         ),
 
@@ -153,7 +159,10 @@ module.exports = {
                 await handleClearCommand(interaction);
                 break;
             case 'map':
-                await handleMapChange(interaction);
+                awviewconfig":
+                await handleViewConfigCommand(interaction);
+                break;
+            case "ait handleMapChange(interaction);
                 break;
             case "setup":
                 await handleSetupCommand(interaction);
@@ -171,6 +180,7 @@ module.exports = {
                 break;
         }
     },
+    handleSetupModalSubmit
 };
 
 async function handleClearCommand(interaction) {
@@ -207,6 +217,242 @@ async function handleMapChange(interaction) {
         if (choice === "sakhal") {
             config.mapLoc = 2;
             fs.writeFileSync('./config.ini', ini.stringify(config, { mapLoc: `2`}))
+    
+    try {
+        // Check if guild already configured
+        const existingConfig = await db.getGuildConfig(guildId);
+        
+        if (existingConfig) {
+            await interaction.reply({
+                embeds: [
+                    new MessageEmbed()
+                        .setColor('#ffaa00')
+                        .setTitle('Server Already Configured')
+                        .setDescription('This server is already set up. Use `/admin killfeed viewconfig` to see your configuration.\n\nTo reconfigure, please contact bot administrator.')
+                ],
+                ephemeral: true
+            });
+            return;
+        }
+        
+        // Show modal for credentials
+        const modal = new Modal()
+            .setCustomId('guild_setup_modal')
+            .setTitle('DayZ Server Setup')
+            .addComponents(
+                new MessageActionRow().addComponents(
+                    new TextInputComponent()
+                        .setCustomId('nitrado_service_id')
+                        .setLabel('Nitrado Service ID')
+                        .setStyle('SHORT')
+                        .setPlaceholder('e.g., 17292046')
+                        .setRequired(true)
+                ),
+                new MessageActionRow().addComponents(
+                    new TextInputComponent()
+                        .setCustomId('nitrado_instance')
+                        .setLabel('Nitrado Instance ID')
+                        .setStyle('SHORT')
+                        .setPlaceholder('e.g., ni11886592_1')
+                        .setRequired(true)
+                ),
+                new MessageActionRow().addComponents(
+                    new TextInputComponent()
+                        .setCustomId('nitrado_token')
+                        .setLabel('Nitrado API Token')
+                        .setStyle('SHORT')
+                        .setPlaceholder('Your Nitrado API token')
+                        .setRequired(true)
+                ),
+                new MessageActionRow().addComponents(
+                    new TextInputComponent()
+                        .setCustomId('map_name')
+                        .setLabel('Map Name')
+                        .setStyle('SHORT')
+                        .setPlaceholder('chernarusplus, enoch, or sakhal')
+                        .setValue('chernarusplus')
+                        .setRequired(true)
+                ),
+                new MessageActionRow().addComponents(
+                    new TextInputComponent()
+                        .setCustomId('restart_hours')
+                        .setLabel('Restart Hours (UTC, comma separated)')
+                        .setStyle('SHORT')
+                        .setPlaceholder('8,11,14,17,20,23,2,5')
+                        .setValue('8,11,14,17,20,23,2,5')
+                        .setRequired(true)
+                )
+            );
+        
+        await interaction.showModal(modal);
+    } catch (error) {
+        console.error('[SETUP] Error:', error);
+        await interaction.reply({
+            content: 'Error showing setup modal: ' + error.message,
+            ephemeral: true
+        });
+    }
+}
+
+async function handleViewConfigCommand(interaction) {
+    const guildId = interaction.guildId;
+    
+    try {
+        const config = await db.getGuildConfig(guildId);
+        
+        if (!config) {
+            await interaction.reply({
+                embeds: [
+                    new MessageEmbed()
+                        .setColor('#ff5555')
+                        .setTitle('Not Configured')
+                        .setDescription('This server has not been set up yet. Use `/admin killfeed setup` to configure.')
+                ],
+                ephemeral: true
+            });
+            return;
+        }
+        
+        await interaction.reply({
+            embeds: [
+                new MessageEmbed()
+                    .setColor('#00ff99')
+                    .setTitle('Server Configuration')
+                    .addFields(
+                        { name: 'Nitrado Service ID', value: config.nitrado_service_id, inline: true },
+                        { name: 'Nitrado Instance', value: config.nitrado_instance, inline: true },
+                        { name: 'Map', value: config.map_name, inline: true },
+                        { name: 'Platform', value: config.platform, inline: true },
+                        { name: 'Economy Channel', value: config.economy_channel_id ? `<#${config.economy_channel_id}>` : 'Not set', inline: true },
+                        { name: 'Shop Channel', value: config.shop_channel_id ? `<#${config.shop_channel_id}>` : 'Not set', inline: true },
+                        { name: 'Killfeed Channel', value: config.killfeed_channel_id ? `<#${config.killfeed_channel_id}>` : 'Not set', inline: true },
+                        { name: 'Connections Channel', value: config.connections_channel_id ? `<#${config.connections_channel_id}>` : 'Not set', inline: true },
+                        { name: 'Restart Hours (UTC)', value: config.restart_hours, inline: false }
+                    )
+                    .setFooter({ text: `Configured: ${new Date(config.created_at).toLocaleString()}` })
+            ],
+            ephemeral: true
+        });
+    } catch (error) {
+        console.error('[VIEWCONFIG] Error:', error);
+        await interaction.reply({
+            content: 'Error retrieving configuration: ' + error.message,
+            ephemeral: true
+        });
+    }
+}
+
+async function handleSetupModalSubmit(interaction) {
+    const guildId = interaction.guildId;
+    
+    try {
+        await interaction.deferReply({ ephemeral: true });
+        
+        // Get modal values
+        const serviceId = interaction.fields.getTextInputValue('nitrado_service_id');
+        const instance = interaction.fields.getTextInputValue('nitrado_instance');
+        const token = interaction.fields.getTextInputValue('nitrado_token');
+        const mapName = interaction.fields.getTextInputValue('map_name').toLowerCase();
+        const restartHours = interaction.fields.getTextInputValue('restart_hours');
+        
+        // Validate map name
+        const validMaps = ['chernarusplus', 'enoch', 'sakhal'];
+        if (!validMaps.includes(mapName)) {
+            await interaction.editReply({
+                content: `Invalid map name. Must be one of: ${validMaps.join(', ')}`
+            });
+            return;
+        }
+        
+        // Save guild config to database
+        await db.setGuildConfig(guildId, {
+            nitratoServiceId: serviceId,
+            nitratoInstance: instance,
+            nitratoToken: token,
+            mapName: mapName,
+            platform: 'PS4',
+            restartHours: restartHours,
+            timezone: 'UTC'
+        });
+        
+        // Create channels
+        await interaction.editReply({ content: 'Creating Discord channels...' });
+        
+        const channels = {};
+        
+        // Create economy channel
+        const economyChannel = await interaction.guild.channels.create('💰-economy', {
+            type: 'GUILD_TEXT',
+            permissionOverwrites: [{
+                id: interaction.guild.roles.everyone,
+                allow: ['VIEW_CHANNEL', 'SEND_MESSAGES', 'READ_MESSAGE_HISTORY']
+            }]
+        });
+        channels.economyChannel = economyChannel.id;
+        
+        // Create shop channel
+        const shopChannel = await interaction.guild.channels.create('🛒-shop', {
+            type: 'GUILD_TEXT',
+            permissionOverwrites: [{
+                id: interaction.guild.roles.everyone,
+                allow: ['VIEW_CHANNEL', 'SEND_MESSAGES', 'READ_MESSAGE_HISTORY']
+            }]
+        });
+        channels.shopChannel = shopChannel.id;
+        
+        // Create killfeed channel
+        const killfeedChannel = await interaction.guild.channels.create('💀-killfeed', {
+            type: 'GUILD_TEXT',
+            permissionOverwrites: [{
+                id: interaction.guild.roles.everyone,
+                allow: ['VIEW_CHANNEL', 'SEND_MESSAGES', 'READ_MESSAGE_HISTORY']
+            }]
+        });
+        channels.killfeedChannel = killfeedChannel.id;
+        
+        // Create connections channel
+        const connectionsChannel = await interaction.guild.channels.create('🔌-connections', {
+            type: 'GUILD_TEXT',
+            permissionOverwrites: [{
+                id: interaction.guild.roles.everyone,
+                allow: ['VIEW_CHANNEL', 'READ_MESSAGE_HISTORY']
+            }]
+        });
+        channels.connectionsChannel = connectionsChannel.id;
+        
+        // Save channel IDs to database
+        await db.setGuildChannels(guildId, channels);
+        
+        await interaction.editReply({
+            embeds: [
+                new MessageEmbed()
+                    .setColor('#00ff99')
+                    .setTitle('✅ Setup Complete!')
+                    .setDescription('Your DayZ server has been configured successfully!')
+                    .addFields(
+                        { name: 'Economy Channel', value: `<#${economyChannel.id}>`, inline: true },
+                        { name: 'Shop Channel', value: `<#${shopChannel.id}>`, inline: true },
+                        { name: 'Killfeed Channel', value: `<#${killfeedChannel.id}>`, inline: true },
+                        { name: 'Connections Channel', value: `<#${connectionsChannel.id}>`, inline: true },
+                        { name: 'Map', value: mapName, inline: true },
+                        { name: 'Platform', value: 'PS4', inline: true }
+                    )
+                    .setFooter({ text: 'Bot is now ready to use!' })
+            ]
+        });
+        
+        console.log(`[SETUP] Guild ${guildId} configured successfully`);
+    } catch (error) {
+        console.error('[SETUP] Error processing modal:', error);
+        await interaction.editReply({
+            content: 'Error during setup: ' + error.message
+        });
+    }
+}
+
+// Original setup command for backward compatibility
+async function handleSetupCommandLegacy(interaction) {
+    const guildId = interaction.guildId;
             interaction.reply("Killfeed Map set to **Sakhal**").catch(function (error) {console.log(error);});
             return;
         }

@@ -520,6 +520,17 @@ for (const file of commandFiles) {
 }
 
 bot.on('interactionCreate', async interaction => {
+    // Handle modal submissions
+    if (interaction.isModalSubmit()) {
+        if (interaction.customId === 'guild_setup_modal') {
+            const adminCommand = bot.commands.get('admin');
+            if (adminCommand && adminCommand.handleSetupModalSubmit) {
+                await adminCommand.handleSetupModalSubmit(interaction);
+            }
+        }
+        return;
+    }
+    
     if (!interaction.isCommand()) return;
 
     const command = bot.commands.get(interaction.commandName);
