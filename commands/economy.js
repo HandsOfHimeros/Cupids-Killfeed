@@ -821,7 +821,7 @@ module.exports = {
                         new MessageEmbed()
                             .setColor('#00aaff')
                             .setTitle('Your DayZ Name')
-                            .setDescription(`**${dayzName}**\n\nYou can change it anytime with `/setname``)
+                            .setDescription(`**${dayzName}**\n\nYou can change it anytime with \`/setname\``)
                     ], ephemeral: true
                 });
             }
