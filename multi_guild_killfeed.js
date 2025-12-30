@@ -102,14 +102,24 @@ class MultiGuildKillfeed {
             if (foundIndex !== -1) {
                 newEvents = events.slice(foundIndex + 1);
             } else {
-                // If we can't find the last line, assume all events are old if last poll was recent
+                // If we can't find the last line, the log file might have rotated
+                // Only post events if this is the first poll (lastPollTime is recent startup)
                 const timeSinceLastPoll = Date.now() - state.lastPollTime;
-                if (timeSinceLastPoll < 300000) { // Less than 5 minutes
-                    console.log(`[MULTI-KILLFEED] Guild ${guildId}: Can't find last line, assuming all are old`);
+                if (state.lastPollTime > 0 && timeSinceLastPoll < 300000) {
+                    // Recently polled but can't find last line - log rotated, skip to avoid duplicates
+                    console.log(`[MULTI-KILLFEED] Guild ${guildId}: Can't find last line, log may have rotated. Skipping to prevent duplicates.`);
+                    newEvents = [];
+                } else if (state.lastPollTime === 0) {
+                    // First poll after bot startup - don't spam old events
+                    console.log(`[MULTI-KILLFEED] Guild ${guildId}: First poll after startup, skipping old events`);
                     newEvents = [];
                 }
-                // Otherwise, if it's been a while, post all events (might be new log file)
+                // Otherwise post all (rare case of very long time since last poll)
             }
+        } else if (state.lastLogLine === '' && events.length > 0) {
+            // Empty lastLogLine means never polled before - skip old events
+            console.log(`[MULTI-KILLFEED] Guild ${guildId}: No previous state, skipping old events`);
+            newEvents = [];
         }
         
         // Post new events to this guild's killfeed channel
