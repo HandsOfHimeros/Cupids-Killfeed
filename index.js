@@ -736,15 +736,13 @@ async function postConnectionEventToDiscord(event) {
                 .setColor('#43b581') // Discord green
                 .setTitle('🟢 Player Connected')
                 .setDescription(`**${event.player}** joined the server.`)
-                .addField('Time', event.time, true)
-                .setTimestamp();
+                .addField('Time', event.time, true);
         } else if (event.type === 'disconnect') {
             embed = new MessageEmbed()
                 .setColor('#ff5555') // Discord red
                 .setTitle('🔴 Player Disconnected')
                 .setDescription(`**${event.player}** left the server.`)
-                .addField('Time', event.time, true)
-                .setTimestamp();
+                .addField('Time', event.time, true);
         }
         if (embed) await channel.send({ embeds: [embed] });
     } catch (err) {
