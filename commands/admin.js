@@ -963,6 +963,24 @@ async function handleSetupModalSubmit(interaction) {
         });
         channels.connectionsChannel = connectionsChannel.id;
         
+        const buildlogChannel = await interaction.guild.channels.create('🏗️-buildlog', {
+            type: 'GUILD_TEXT',
+            permissionOverwrites: [{
+                id: interaction.guild.roles.everyone,
+                allow: ['VIEW_CHANNEL', 'READ_MESSAGE_HISTORY']
+            }]
+        });
+        channels.buildlogChannel = buildlogChannel.id;
+        
+        const suicidelogChannel = await interaction.guild.channels.create('💔-suicidelog', {
+            type: 'GUILD_TEXT',
+            permissionOverwrites: [{
+                id: interaction.guild.roles.everyone,
+                allow: ['VIEW_CHANNEL', 'READ_MESSAGE_HISTORY']
+            }]
+        });
+        channels.suicidelogChannel = suicidelogChannel.id;
+        
         await db.setGuildChannels(guildId, channels);
         
         await interaction.editReply({
@@ -976,6 +994,8 @@ async function handleSetupModalSubmit(interaction) {
                         { name: 'Shop Channel', value: `<#${shopChannel.id}>`, inline: true },
                         { name: 'Killfeed Channel', value: `<#${killfeedChannel.id}>`, inline: true },
                         { name: 'Connections Channel', value: `<#${connectionsChannel.id}>`, inline: true },
+                        { name: 'Build Log Channel', value: `<#${channels.buildlogChannel}>`, inline: true },
+                        { name: 'Suicide Log Channel', value: `<#${channels.suicidelogChannel}>`, inline: true },
                         { name: 'Map', value: mapName, inline: true },
                         { name: 'Platform', value: 'PS4', inline: true }
                     )
