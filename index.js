@@ -74,7 +74,8 @@ async function pollDayZLogForKillfeed() {
         const logText = resp.data;
         
         // Parse player locations from log
-        const lines = logText.split(/\r?\n/);\n        let locationCount = 0;
+        const lines = logText.split(/\r?\n/);
+        let locationCount = 0;
         const guildId = '1392564838925914142'; // Default guild
         for (const line of lines) {
             const locInfo = parsePlayerLocation(line);
