@@ -803,9 +803,9 @@ async function pollDayZLogForConnections() {
 
 bot.on('ready', () => {
     setInterval(pollDayZLogForConnections, 120 * 1000); // poll every 120 seconds
-    setInterval(pollDayZLogForBuilds, 120 * 1000); // poll build-log every 120 seconds
-    setInterval(pollDayZLogForSuicides, 120 * 1000); // poll suicide-log every 120 seconds
-    // OLD SINGLE-SERVER KILLFEED: Replaced by MultiGuildKillfeed
+    // OLD SINGLE-SERVER LOGS: Replaced by MultiGuildKillfeed
+    // setInterval(pollDayZLogForBuilds, 120 * 1000);
+    // setInterval(pollDayZLogForSuicides, 120 * 1000);
     // setInterval(pollDayZLogForKillfeed, 120 * 1000);
 });
 
