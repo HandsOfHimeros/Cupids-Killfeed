@@ -25,12 +25,9 @@ async function fixPrimaryKeys() {
         await client.query(`ALTER TABLE banks ADD PRIMARY KEY (guild_id, user_id)`);
         console.log('✓ banks table updated');
         
-        // Fix cooldowns table
-        console.log('Updating cooldowns table...');
-        await client.query(`ALTER TABLE cooldowns DROP CONSTRAINT IF EXISTS cooldowns_pkey`);
-        // Cooldowns doesn't need a primary key, just an index for efficient lookups
-        await client.query(`CREATE INDEX IF NOT EXISTS idx_cooldowns_guild_user_game ON cooldowns (guild_id, user_id, game_name)`);
-        console.log('✓ cooldowns table updated');
+        // Fix cooldowns table - skip for now, will fix separately
+        console.log('Skipping cooldowns table (has different structure)...');
+        console.log('✓ cooldowns table skipped');
         
         // Fix dayz_names table
         console.log('Updating dayz_names table...');
