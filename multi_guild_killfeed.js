@@ -86,6 +86,12 @@ class MultiGuildKillfeed {
         // Debug: Log first and last few lines
         const lines = logData.split('\n');
         console.log(`[MULTI-KILLFEED] Guild ${guildId}: Log has ${lines.length} lines`);
+        if (lines.length > 0) {
+            console.log(`[MULTI-KILLFEED] Sample lines:`);
+            console.log(lines.slice(0, 3).join('\n'));
+            console.log('...');
+            console.log(lines.slice(-3).join('\n'));
+        }
         
         // Parse and post killfeed events
         const killfeedEvents = this.parseKillfeedEvents(logData);
