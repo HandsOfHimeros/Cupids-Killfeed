@@ -34,6 +34,7 @@ class MultiGuildKillfeed {
                         lastKillfeedLine: '',
                         lastBuildlogLine: '',
                         lastSuicidelogLine: '',
+                        lastConnectionsLine: '',
                         lastPollTime: 0
                     });
                 }
@@ -73,7 +74,8 @@ class MultiGuildKillfeed {
         const state = this.guildStates.get(guildId) || { 
             lastKillfeedLine: '', 
             lastBuildlogLine: '', 
-            lastSuicidelogLine: '', 
+            lastSuicidelogLine: '',
+            lastConnectionsLine: '', 
             lastPollTime: 0 
         };
         
@@ -139,6 +141,22 @@ class MultiGuildKillfeed {
                 await this.postSuicidelogToGuild(guildConfig, event);
             }
             state.lastSuicidelogLine = suicidelogEvents[suicidelogEvents.length - 1]?.raw || state.lastSuicidelogLine;
+        }
+        
+        // Parse and post connections events
+        const connectionsEvents = this.parseConnectionsEvents(logData);
+        console.log(`[MULTI-KILLFEED] Guild ${guildId}: Found ${connectionsEvents.length} total connections events`);
+        let newConnectionsEvents = connectionsEvents;
+        if (state.lastConnectionsLine) {
+            const idx = connectionsEvents.findIndex(e => e.raw === state.lastConnectionsLine);
+            if (idx !== -1) newConnectionsEvents = connectionsEvents.slice(idx + 1);
+        }
+        if (newConnectionsEvents.length > 0) {
+            console.log(`[MULTI-KILLFEED] Guild ${guildId}: ${newConnectionsEvents.length} new connections events`);
+            for (const event of newConnectionsEvents) {
+                await this.postConnectionsToGuild(guildConfig, event);
+            }
+            state.lastConnectionsLine = connectionsEvents[connectionsEvents.length - 1]?.raw || state.lastConnectionsLine;
         }
         
         state.lastPollTime = Date.now();
@@ -282,14 +300,15 @@ class MultiGuildKillfeed {
         const events = [];
         
         for (const line of lines) {
-            if (line.includes('Built')) {
-                // Format: HH:MM:SS | Player "Name"(id=... pos=<...>)Built item on object with tool
-                const match = line.match(/^(\d{2}:\d{2}:\d{2}) \| Player \"(.+?)\"\([^)]*\)Built (.+)$/);
+            if (line.includes('placed') || line.includes('raised')) {
+                // Format: HH:MM:SS | Player "Name"(id=...) placed/raised object
+                const match = line.match(/^(\d{2}:\d{2}:\d{2}) \| Player \"(.+?)\"\([^)]*\) (placed|raised) (.+)$/);
                 if (match) {
                     events.push({ 
                         time: match[1], 
                         player: match[2], 
-                        details: match[3], 
+                        action: match[3],
+                        details: match[4], 
                         raw: line 
                     });
                 }
@@ -328,13 +347,13 @@ class MultiGuildKillfeed {
         const events = [];
         
         for (const line of lines) {
-            if (line.includes('died')) {
-                const match = line.match(/^(\d{2}:\d{2}:\d{2}) \| Player \"(.+?)\"\(id=[^)]*\) died. (.*)$/);
+            if (line.includes('committed suicide')) {
+                const match = line.match(/^(\d{2}:\d{2}:\d{2}) \| Player \"(.+?)\"\([^)]*\) committed suicide(.*)$/);
                 if (match) {
                     events.push({ 
                         time: match[1], 
                         player: match[2], 
-                        reason: match[3], 
+                        reason: match[3].trim(), 
                         raw: line 
                     });
                 }
@@ -364,6 +383,60 @@ class MultiGuildKillfeed {
             await channel.send({ embeds: [embed] });
         } catch (error) {
             console.error(`[MULTI-KILLFEED] Error posting suicidelog for guild ${guildConfig.guild_id}:`, error.message);
+        }
+    }
+
+    parseConnectionsEvents(logText) {
+        const logString = typeof logText === 'string' ? logText : String(logText);
+        const lines = logString.split(/\r?\n/);
+        const events = [];
+        
+        for (const line of lines) {
+            if (line.includes('is connected')) {
+                const match = line.match(/^(\d{2}:\d{2}:\d{2}) \| Player \"(.+?)\"\([^)]*\) is connected$/);
+                if (match) {
+                    events.push({ 
+                        type: 'connect',
+                        time: match[1], 
+                        player: match[2], 
+                        raw: line 
+                    });
+                }
+            } else if (line.includes('has been disconnected')) {
+                const match = line.match(/^(\d{2}:\d{2}:\d{2}) \| Player \"(.+?)\"\([^)]*\) has been disconnected$/);
+                if (match) {
+                    events.push({ 
+                        type: 'disconnect',
+                        time: match[1], 
+                        player: match[2], 
+                        raw: line 
+                    });
+                }
+            }
+        }
+        
+        return events;
+    }
+
+    async postConnectionsToGuild(guildConfig, event) {
+        try {
+            const channelId = guildConfig.connections_channel_id;
+            if (!channelId) return;
+            
+            const channel = await this.bot.channels.fetch(channelId);
+            if (!channel) return;
+            
+            let embed = new MessageEmbed()
+                .setColor(event.type === 'connect' ? '#00ff00' : '#ff0000')
+                .setTitle(event.type === 'connect' ? '🟢 Player Connected' : '🔴 Player Disconnected')
+                .setDescription(`**${event.player}**`)
+                .setTimestamp();
+            
+            if (event.time) embed.addField('Time', event.time, true);
+            
+            await channel.send({ embeds: [embed] });
+        } catch (error) {
+            console.error(`[MULTI-KILLFEED] Error posting connections for guild ${guildConfig.guild_id}:`, error.message);
         }
     }
 
