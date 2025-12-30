@@ -134,7 +134,8 @@ class MultiGuildKillfeed {
                 headers: {
                     'Authorization': `Bearer ${guildConfig.nitrado_token}`,
                     'Accept': 'text/plain'
-                }
+                },
+                responseType: 'text'
             });
             
             return logResp.data;
