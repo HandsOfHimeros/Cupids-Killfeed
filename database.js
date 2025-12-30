@@ -116,7 +116,10 @@ async function getCooldowns(guildId, userId, game) {
 
 async function addCooldown(guildId, userId, game, timestamp) {
     await pool.query(
-        'INSERT INTO cooldowns (guild_id, user_id, game, timestamp) VALUES ($1, $2, $3, $4)',
+        `INSERT INTO cooldowns (guild_id, user_id, game, timestamp) 
+         VALUES ($1, $2, $3, $4)
+         ON CONFLICT (guild_id, user_id, game) 
+         DO UPDATE SET timestamp = $4`,
         [guildId, userId, game, timestamp]
     );
 }
