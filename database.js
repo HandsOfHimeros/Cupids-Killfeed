@@ -44,6 +44,11 @@ async function setGuildChannels(guildId, channels) {
     `, [guildId, economyChannel, shopChannel, killfeedChannel, connectionsChannel]);
 }
 
+async function getAllGuildConfigs() {
+    const result = await pool.query('SELECT * FROM guild_configs');
+    return result.rows;
+}
+
 // Balance operations
 async function getBalance(guildId, userId) {
     const result = await pool.query('SELECT balance FROM balances WHERE guild_id = $1 AND user_id = $2', [guildId, userId]);
@@ -170,8 +175,7 @@ module.exports = {
     pool,
     getGuildConfig,
     setGuildConfig,
-    setGuildChannels,
-    getBalance,
+    setGuildChannels,    getAllGuildConfigs,    getBalance,
     setBalance,
     addBalance,
     getLeaderboard,

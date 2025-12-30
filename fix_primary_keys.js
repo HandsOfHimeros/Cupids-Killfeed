@@ -35,13 +35,12 @@ async function fixPrimaryKeys() {
         await client.query(`ALTER TABLE dayz_names ADD PRIMARY KEY (guild_id, user_id)`);
         console.log('✓ dayz_names table updated');
         
-        // Fix player_locations table
-        console.log('Updating player_locations table...');
-        await client.query(`ALTER TABLE player_locations DROP CONSTRAINT IF EXISTS player_locations_pkey`);
-        await client.query(`ALTER TABLE player_locations ADD PRIMARY KEY (guild_id, steam_id)`);
-        console.log('✓ player_locations table updated');
+        // Fix player_locations table - skip for now
+        console.log('Skipping player_locations table (has different structure)...');
+        console.log('✓ player_locations table skipped');
         
-        console.log('\n✅ All primary keys fixed successfully!');
+        console.log('\n✅ All critical primary keys fixed successfully!');
+        console.log('(cooldowns and player_locations skipped - will fix separately if needed)');
     } catch (error) {
         console.error('❌ Error fixing primary keys:', error);
         throw error;

@@ -3,8 +3,10 @@ const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
 const db = require('./database.js');
-const KILLFEED_CHANNEL_ID = '1404256735245373511'; // Discord channel for Killfeed
+const MultiGuildKillfeed = require('./multi_guild_killfeed.js');
+const KILLFEED_CHANNEL_ID = '1404256735245373511'; // Discord channel for Killfeed (legacy)
 let lastSeenKillfeedLogLine = '';
+let multiGuildKillfeed = null; // Will be initialized on bot ready
 
 function parseKillfeedLogEvents(logText) {
     const lines = logText.split(/\r?\n/);
@@ -554,6 +556,12 @@ bot.login(config.TOKEN).catch(error => {
 bot.on('ready', () => {
     console.info(`Logged in as ${bot.user.tag}!`);
     console.log('KILLFEED IS ACTIVE!');
+    
+    // Start multi-guild killfeed monitoring
+    if (!multiGuildKillfeed) {
+        multiGuildKillfeed = new MultiGuildKillfeed(bot);
+        multiGuildKillfeed.start();
+    }
 });
 
 bot.on('error', err => {
@@ -797,7 +805,8 @@ bot.on('ready', () => {
     setInterval(pollDayZLogForConnections, 120 * 1000); // poll every 120 seconds
     setInterval(pollDayZLogForBuilds, 120 * 1000); // poll build-log every 120 seconds
     setInterval(pollDayZLogForSuicides, 120 * 1000); // poll suicide-log every 120 seconds
-    setInterval(pollDayZLogForKillfeed, 120 * 1000); // poll killfeed every 120 seconds
+    // OLD SINGLE-SERVER KILLFEED: Replaced by MultiGuildKillfeed
+    // setInterval(pollDayZLogForKillfeed, 120 * 1000);
 });
 
 // TEST: Show most recent DayZ log file and download URL on startup
