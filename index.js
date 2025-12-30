@@ -656,28 +656,20 @@ async function cleanupSpawnJson() {
             return;
         }
         
-        // Step 2: Filter items based on mode
+        // Step 2: Only remove items purchased before this restart
         const originalCount = spawnJson.Objects.length;
-        
-        if (clearAll) {
-            // Remove ALL shop items (anything with customString)
-            spawnJson.Objects = spawnJson.Objects.filter(obj => !obj.customString);
-        } else {
-            // Only remove items purchased before this restart
-            spawnJson.Objects = spawnJson.Objects.filter(obj => {
-                if (!obj.customString) return true; // Keep non-shop items
+        spawnJson.Objects = spawnJson.Objects.filter(obj => {
+            if (!obj.customString) return true; // Keep non-shop items
+            
+            try {
+                const data = JSON.parse(obj.customString);
+                const itemTimestamp = parseInt(data.restart_id) || 0;
                 
-                try {
-                    const data = JSON.parse(obj.customString);
-                    const itemTimestamp = parseInt(data.restart_id) || 0;
-                    
-                    // Keep items purchased after restart was detected (within last 10 minutes)
-                    return itemTimestamp > lastRestartTime;
-                } catch {
-                    return true; // Keep if can't parse
-                }
-            });
-        } }
+                // Keep items purchased after the restart time
+                return itemTimestamp > lastRestartTime;
+            } catch {
+                return true; // Keep if can't parse
+            }
         });
         
         const removedCount = originalCount - spawnJson.Objects.length;
