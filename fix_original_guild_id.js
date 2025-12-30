@@ -41,13 +41,13 @@ async function fixOriginalGuildId() {
         // Merge banks (keep the higher amount)
         console.log('Merging bank accounts...');
         const mergeBanks = await client.query(`
-            INSERT INTO banks (guild_id, user_id, bank)
-            SELECT $1, user_id, bank
+            INSERT INTO banks (guild_id, user_id, bank_balance)
+            SELECT $1, user_id, bank_balance
             FROM banks
             WHERE guild_id = $2
             ON CONFLICT (guild_id, user_id) 
-            DO UPDATE SET bank = GREATEST(banks.bank, EXCLUDED.bank)
-            RETURNING user_id, bank
+            DO UPDATE SET bank_balance = GREATEST(banks.bank_balance, EXCLUDED.bank_balance)
+            RETURNING user_id, bank_balance
         `, [correctGuildId, defaultGuildId]);
         console.log(`✓ Merged ${mergeBanks.rows.length} bank accounts`);
         
