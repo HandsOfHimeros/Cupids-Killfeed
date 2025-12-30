@@ -319,7 +319,8 @@ async function addCupidSpawnEntry(spawnEntry) {
             console.log(`[SPAWN] Available players:`, Object.keys(playerLocations));
             const location = getPlayerLocation(spawnEntry.dayzPlayerName);
             if (location) {
-                playerPos = [location.x, location.y, location.z];
+                // DayZ spawn format is [X, Z, Y] where Z is elevation
+                playerPos = [location.x, location.z, location.y];
                 console.log(`[SPAWN] Found location for ${spawnEntry.dayzPlayerName}:`, playerPos);
             } else {
                 console.log(`[SPAWN] No location found for ${spawnEntry.dayzPlayerName}, using template position`);
