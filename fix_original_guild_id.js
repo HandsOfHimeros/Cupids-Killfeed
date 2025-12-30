@@ -21,19 +21,39 @@ async function fixOriginalGuildId() {
         console.log('To correct guild ID:', correctGuildId);
         console.log('');
         
-        // Update balances
-        const balances = await client.query(
-            'UPDATE balances SET guild_id = $1 WHERE guild_id = $2 RETURNING user_id, balance',
-            [correctGuildId, defaultGuildId]
-        );
-        console.log(`✓ Updated ${balances.rows.length} balances`);
+        // First, merge balances (keep the higher balance)
+        console.log('Merging balances...');
+        const mergeBalances = await client.query(`
+            INSERT INTO balances (guild_id, user_id, balance)
+            SELECT $1, user_id, balance
+            FROM balances
+            WHERE guild_id = $2
+            ON CONFLICT (guild_id, user_id) 
+            DO UPDATE SET balance = GREATEST(balances.balance, EXCLUDED.balance)
+            RETURNING user_id, balance
+        `, [correctGuildId, defaultGuildId]);
+        console.log(`✓ Merged ${mergeBalances.rows.length} balances`);
         
-        // Update banks
-        const banks = await client.query(
-            'UPDATE banks SET guild_id = $1 WHERE guild_id = $2 RETURNING user_id, bank',
-            [correctGuildId, defaultGuildId]
-        );
-        console.log(`✓ Updated ${banks.rows.length} bank accounts`);
+        // Delete old default guild balances
+        await client.query('DELETE FROM balances WHERE guild_id = $1', [defaultGuildId]);
+        console.log(`✓ Cleaned up old balance records`);
+        
+        // Merge banks (keep the higher amount)
+        console.log('Merging bank accounts...');
+        const mergeBanks = await client.query(`
+            INSERT INTO banks (guild_id, user_id, bank)
+            SELECT $1, user_id, bank
+            FROM banks
+            WHERE guild_id = $2
+            ON CONFLICT (guild_id, user_id) 
+            DO UPDATE SET bank = GREATEST(banks.bank, EXCLUDED.bank)
+            RETURNING user_id, bank
+        `, [correctGuildId, defaultGuildId]);
+        console.log(`✓ Merged ${mergeBanks.rows.length} bank accounts`);
+        
+        // Delete old default guild banks
+        await client.query('DELETE FROM banks WHERE guild_id = $1', [defaultGuildId]);
+        console.log(`✓ Cleaned up old bank records`);
         
         // Update cooldowns
         const cooldowns = await client.query(
