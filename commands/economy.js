@@ -1,6 +1,7 @@
 // economy_backup.js restored content
 const path = require('path');
 const fs = require('fs');
+const db = require('../database.js');
 const COOLDOWN_FILE = path.join(__dirname, '../logs/economy_cooldowns.json');
 const MINI_GAMES = ['slots','rob','golf','cards','job','blackjack','crime','theft','bribe','work'];
 const COOLDOWN_LIMIT = 1; // times allowed
@@ -367,7 +368,7 @@ module.exports = {
                     return;
                 }
                 // Check balance
-                const bal = getBalance(userId);
+                const bal = await db.getBalance(guildId, userId);
                 if (bal < item.averagePrice) {
                     console.log('[SHOP] Insufficient funds:', bal, 'needed:', item.averagePrice);
                     await interaction.reply({
@@ -381,9 +382,9 @@ module.exports = {
                     return;
                 }
                 // Deduct money
-                addBalance(userId, -item.averagePrice);
+                await db.addBalance(guildId, userId, -item.averagePrice);
                 // Get registered DayZ name or use Discord username
-                const dayzName = getDayZName(userId) || interaction.user.username;
+                const dayzName = await db.getDayZName(guildId, userId) || interaction.user.username;
                 // Write spawn entry to Cupid.json via Nitrado API
                 const { addCupidSpawnEntry } = require('../index.js');
                 const spawnEntry = {
@@ -456,8 +457,13 @@ module.exports = {
         }
         // Mini-game cooldown check
         if (MINI_GAMES.includes(commandName)) {
-            if (!canPlayMiniGame(userId, commandName)) {
-                const ms = nextAvailableMiniGame(userId, commandName);
+            const cooldowns = await db.getCooldowns(guildId, userId, commandName);
+            const now = Date.now();
+            const recentPlays = cooldowns.filter(ts => now - ts < COOLDOWN_WINDOW);
+            
+            if (recentPlays.length >= COOLDOWN_LIMIT) {
+                const oldest = Math.min(...recentPlays);
+                const ms = oldest + COOLDOWN_WINDOW - now;
                 const h = Math.floor(ms / (60*60*1000));
                 const m = Math.floor((ms % (60*60*1000)) / (60*1000));
                 await interaction.reply({
@@ -472,12 +478,15 @@ module.exports = {
                 });
                 return;
             }
-            recordMiniGamePlay(userId, commandName);
+            // Record cooldown in database
+            await db.addCooldown(guildId, userId, commandName, Date.now());
+            // Clean old cooldowns
+            await db.cleanOldCooldowns(guildId, userId, commandName, COOLDOWN_WINDOW);
         }
 
         if (commandName === 'balance') {
-            const bal = getBalance(userId);
-            const bank = getBank(userId);
+            const bal = await db.getBalance(guildId, userId);
+            const bank = await db.getBank(guildId, userId);
             await interaction.reply({
                 embeds: [
                     new MessageEmbed()
@@ -489,7 +498,7 @@ module.exports = {
                 ]
             });
         } else if (commandName === 'wallet') {
-            const bal = getBalance(userId);
+            const bal = await db.getBalance(guildId, userId);
             await interaction.reply({
                 embeds: [
                     new MessageEmbed()
@@ -500,7 +509,7 @@ module.exports = {
                 ]
             });
         } else if (commandName === 'bank') {
-            const bank = getBank(userId);
+            const bank = await db.getBank(guildId, userId);
             await interaction.reply({
                 embeds: [
                     new MessageEmbed()
@@ -512,7 +521,7 @@ module.exports = {
             });
         } else if (commandName === 'deposit') {
             const amount = interaction.options.getInteger('amount');
-            const bal = getBalance(userId);
+            const bal = await db.getBalance(guildId, userId);
             const { MessageEmbed } = require('discord.js');
             if (amount <= 0) {
                 await interaction.reply({ embeds: [new MessageEmbed().setColor('#ffaa00').setTitle('Deposit Failed').setDescription('Amount must be positive.')] });
@@ -522,12 +531,12 @@ module.exports = {
                 await interaction.reply({ embeds: [new MessageEmbed().setColor('#ffaa00').setTitle('Deposit Failed').setDescription('You do not have enough in your wallet.')] });
                 return;
             }
-            addBalance(userId, -amount);
-            const newBank = addBank(userId, amount);
+            await db.addBalance(guildId, userId, -amount);
+            const newBank = await db.addBank(guildId, userId, amount);
             await interaction.reply({ embeds: [new MessageEmbed().setColor('#00aaff').setTitle('💸 Deposit Successful').addField('Amount', `$${amount}`, true).addField('New Bank Balance', `$${newBank}`, true)] });
         } else if (commandName === 'withdraw') {
             const amount = interaction.options.getInteger('amount');
-            const bank = getBank(userId);
+            const bank = await db.getBank(guildId, userId);
             const { MessageEmbed } = require('discord.js');
             if (amount <= 0) {
                 await interaction.reply({ embeds: [new MessageEmbed().setColor('#ffaa00').setTitle('Withdraw Failed').setDescription('Amount must be positive.')] });
@@ -537,20 +546,12 @@ module.exports = {
                 await interaction.reply({ embeds: [new MessageEmbed().setColor('#ffaa00').setTitle('Withdraw Failed').setDescription('You do not have enough in your bank.')] });
                 return;
             }
-            addBank(userId, -amount);
-            const newBal = addBalance(userId, amount);
+            await db.addBank(guildId, userId, -amount);
+            const newBal = await db.addBalance(guildId, userId, amount);
             await interaction.reply({ embeds: [new MessageEmbed().setColor('#00aaff').setTitle('🏦 Withdraw Successful').addField('Amount', `$${amount}`, true).addField('New Wallet Balance', `$${newBal}`, true)] });
         } else if (commandName === 'work') {
-            if (!canPlayMiniGame(userId, 'work')) {
-                const msRemaining = nextAvailableMiniGame(userId, 'work');
-                const hours = Math.floor(msRemaining / (60 * 60 * 1000));
-                const minutes = Math.floor((msRemaining % (60 * 60 * 1000)) / (60 * 1000));
-                await interaction.reply(`⏳ You must wait **${hours}h ${minutes}m** before working again.`);
-                return;
-            }
-            recordMiniGamePlay(userId, 'work');
             const earned = Math.floor(Math.random() * 100) + 50;
-            const bal = addBalance(userId, earned);
+            const bal = await db.addBalance(guildId, userId, earned);
             const { MessageEmbed } = require('discord.js');
             await interaction.reply({ embeds: [new MessageEmbed().setColor('#43b581').setTitle('🛠️ Work').setDescription(`You worked and earned **$${earned}**!`).addField('New Balance', `$${bal}`, true)] });
         } else if (commandName === 'pay') {
@@ -561,16 +562,16 @@ module.exports = {
                 await interaction.reply({ embeds: [new MessageEmbed().setColor('#ffaa00').setTitle('Payment Failed').setDescription('Amount must be positive.')] });
                 return;
             }
-            const bal = getBalance(userId);
+            const bal = await db.getBalance(guildId, userId);
             if (bal < amount) {
                 await interaction.reply({ embeds: [new MessageEmbed().setColor('#ffaa00').setTitle('Payment Failed').setDescription('You do not have enough funds.')] });
                 return;
             }
-            addBalance(userId, -amount);
-            addBalance(target.id, amount);
+            await db.addBalance(guildId, userId, -amount);
+            await db.addBalance(guildId, target.id, amount);
             await interaction.reply({ embeds: [new MessageEmbed().setColor('#00ff99').setTitle('💸 Payment Sent').setDescription(`You paid **$${amount}** to <@${target.id}>.`)] });
         } else if (commandName === 'leaderboard') {
-            const top = getLeaderboard();
+            const top = await db.getLeaderboard(guildId, 10);
             const { MessageEmbed } = require('discord.js');
             let desc = '';
             for (let i = 0; i < top.length; i++) {
@@ -584,7 +585,6 @@ module.exports = {
             let reward = 0;
             if (spin[0] === spin[1] && spin[1] === spin[2]) reward = 500;
             else if (spin[0] === spin[1] || spin[1] === spin[2] || spin[0] === spin[2]) reward = 100;
-            const bal = addBalance(userId, reward);
             const { MessageEmbed } = require('discord.js');
             await interaction.reply({ embeds: [
                 new MessageEmbed()
@@ -592,7 +592,7 @@ module.exports = {
                     .setTitle('🎰 Slot Machine')
                     .setDescription(`[${spin.join(' ')}]`)
                     .addField('Result', reward > 0 ? `You won **$${reward}**!` : 'No win this time.', true)
-                    .addField('Balance', `$${bal}`, true)
+                    .addField('Balance', `$${await db.addBalance(guildId, userId, reward)}`, true)
             ] });
         } else if (commandName === 'rob') {
             const target = interaction.options.getUser('user');
@@ -600,7 +600,7 @@ module.exports = {
                 await interaction.reply('You cannot rob yourself!');
                 return;
             }
-            const targetBal = getBalance(target.id);
+            const targetBal = await db.getBalance(guildId, target.id);
             if (targetBal < 100) {
                 await interaction.reply('Target is too poor to rob!');
                 return;
@@ -608,18 +608,18 @@ module.exports = {
             const success = Math.random() < 0.5;
             if (success) {
                 const amount = Math.floor(Math.random() * Math.min(200, targetBal));
-                addBalance(userId, amount);
-                addBalance(target.id, -amount);
+                await db.addBalance(guildId, userId, amount);
+                await db.addBalance(guildId, target.id, -amount);
                 await interaction.reply(`You robbed ${target.username} and got $${amount}!`);
             } else {
                 const penalty = Math.floor(Math.random() * 100) + 20;
-                addBalance(userId, -penalty);
+                await db.addBalance(guildId, userId, -penalty);
                 await interaction.reply(`Robbery failed! You lost $${penalty}.`);
             }
         } else if (commandName === 'golf') {
             const strokes = Math.floor(Math.random() * 5) + 1;
             const reward = 150 - strokes * 20;
-            const bal = addBalance(userId, reward);
+            const bal = await db.addBalance(guildId, userId, reward);
             await interaction.reply(`⛳ You played golf and finished in ${strokes} strokes! You earned $${reward}. Balance: $${bal}`);
         } else if (commandName === 'cards') {
             const suits = ['♠', '♥', '♦', '♣'];
@@ -637,7 +637,7 @@ module.exports = {
                 { name: 'Guard', pay: 130 }
             ];
             const job = jobs[Math.floor(Math.random() * jobs.length)];
-            const bal = addBalance(userId, job.pay);
+            const bal = await db.addBalance(guildId, userId, job.pay);
             await interaction.reply(`👷 You worked as a ${job.name} and earned $${job.pay}! Balance: $${bal}`);
         } else if (commandName === 'blackjack') {
             // Simple blackjack: player vs bot, one round
@@ -650,10 +650,10 @@ module.exports = {
             let result = '';
             if (player > 21) result = 'You busted!';
             else if (bot > 21 || player > bot) {
-                addBalance(userId, 200);
+                await db.addBalance(guildId, userId, 200);
                 result = 'You win $200!';
             } else if (player < bot) {
-                addBalance(userId, -100);
+                await db.addBalance(guildId, userId, -100);
                 result = 'You lose $100!';
             } else {
                 result = 'It\'s a tie!';
@@ -670,10 +670,10 @@ module.exports = {
             const crime = crimes[Math.floor(Math.random() * crimes.length)];
             const success = Math.random() < 0.5;
             if (success) {
-                const bal = addBalance(userId, crime.reward);
+                const bal = await db.addBalance(guildId, userId, crime.reward);
                 await interaction.reply(`🚨 You successfully committed ${crime.name} and earned $${crime.reward}! Balance: $${bal}`);
             } else {
-                const bal = addBalance(userId, -crime.penalty);
+                const bal = await db.addBalance(guildId, userId, -crime.penalty);
                 await interaction.reply(`🚓 You got caught committing ${crime.name} and lost $${crime.penalty}! Balance: $${bal}`);
             }
         } else if (commandName === 'theft') {
@@ -682,12 +682,12 @@ module.exports = {
             const success = Math.random() < 0.4;
             if (success) {
                 const reward = Math.floor(Math.random() * 300) + 50;
-                const bal = addBalance(userId, reward);
+                const bal = await db.addBalance(guildId, userId, reward);
                 await interaction.reply(`🕵️ You successfully stole from ${target} and got $${reward}! Balance: $${bal}`);
             } else {
                 const penalty = Math.floor(Math.random() * 100) + 20;
-                const bal = addBalance(userId, -penalty);
-                await interaction.reply(`🚔 You failed to steal from ${target} and lost $${penalty}! Balance: $${bal}`);
+                const failBal = await db.addBalance(guildId, userId, -penalty);
+                await interaction.reply(`🚔 You failed to steal from ${target} and lost $${penalty}! Balance: $${failBal}`);
             }
         } else if (commandName === 'bribe') {
             const officials = ['a police officer', 'a mayor', 'a guard', 'a judge'];
@@ -695,11 +695,11 @@ module.exports = {
             const success = Math.random() < 0.3;
             if (success) {
                 const reward = Math.floor(Math.random() * 400) + 100;
-                const bal = addBalance(userId, reward);
+                const bal = await db.addBalance(guildId, userId, reward);
                 await interaction.reply(`💸 You bribed ${official} and gained $${reward}! Balance: $${bal}`);
             } else {
                 const penalty = Math.floor(Math.random() * 200) + 50;
-                const bal = addBalance(userId, -penalty);
+                const bal = await db.addBalance(guildId, userId, -penalty);
                 await interaction.reply(`❌ Your bribe to ${official} failed and you lost $${penalty}! Balance: $${bal}`);
             }
         } else if (commandName === 'addmoney') {
@@ -714,11 +714,11 @@ module.exports = {
                 await interaction.reply('Amount must not be zero.');
                 return;
             }
-            addBalance(target.id, amount);
+            await db.addBalance(guildId, target.id, amount);
             await interaction.reply(`Added $${amount} to ${target.username}'s balance.`);
         } else if (commandName === 'setname') {
             const dayzName = interaction.options.getString('name');
-            setDayZName(userId, dayzName);
+            await db.setDayZName(guildId, userId, dayzName);
             await interaction.reply({
                 embeds: [
                     new MessageEmbed()
@@ -728,7 +728,7 @@ module.exports = {
                 ], ephemeral: true
             });
         } else if (commandName === 'myname') {
-            const dayzName = getDayZName(userId);
+            const dayzName = await db.getDayZName(guildId, userId);
             if (!dayzName) {
                 await interaction.reply({
                     embeds: [
@@ -749,7 +749,7 @@ module.exports = {
                 });
             }
         } else if (commandName === 'imhere') {
-            const dayzName = getDayZName(userId);
+            const dayzName = await db.getDayZName(guildId, userId);
             if (!dayzName) {
                 await interaction.reply({
                     embeds: [
@@ -762,9 +762,8 @@ module.exports = {
                 return;
             }
 
-            // Get location from index.js
-            const { getPlayerLocation } = require('../index.js');
-            const location = getPlayerLocation(dayzName);
+            // Get location from database
+            const location = await db.getPlayerLocation(guildId, dayzName);
             
             if (!location) {
                 await interaction.reply({
