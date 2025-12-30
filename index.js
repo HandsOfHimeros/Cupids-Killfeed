@@ -596,11 +596,14 @@ function checkScheduledCleanup() {
         const adjustedDiff = hourDiff < 0 ? hourDiff + 24 : hourDiff;
         
         if (adjustedDiff === 0 && currentMinute >= 15 && currentMinute <= 20) {
-            // We're in the cleanup window
+            // We're in the cleanup window - calculate actual restart time
+            const restartDate = new Date(now);
+            restartDate.setHours(restartHour, 0, 0, 0);
+            lastRestartTime = restartDate.getTime();
             lastCleanupCheck = Date.now();
-            lastRestartTime = Date.now(); // Set restart time for cleanup filtering
+            
             console.log(`[RESTART] Cleanup window detected after ${restartHour}:00 restart`);
-            cleanupSpawnJson(true); // Pass true to clear ALL items
+            cleanupSpawnJson(false); // Use time-based filtering to preserve new purchases
             return;
         }
     }
