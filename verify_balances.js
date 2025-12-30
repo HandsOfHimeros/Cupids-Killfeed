@@ -17,12 +17,12 @@ async function verifyBalances() {
             }
             
             const originalBanks = await client.query(
-                'SELECT user_id, bank FROM banks WHERE guild_id = $1 ORDER BY bank DESC',
+                'SELECT user_id, bank_balance FROM banks WHERE guild_id = $1 ORDER BY bank_balance DESC',
                 ['1386432422744162476']
             );
             console.log(`\nTotal players with banks: ${originalBanks.rows.length}`);
             for (const row of originalBanks.rows) {
-                console.log(`  User ${row.user_id}: ${row.bank} coins in bank`);
+                console.log(`  User ${row.user_id}: ${row.bank_balance} coins in bank`);
             }
             
             // Check balances for new server
@@ -37,12 +37,12 @@ async function verifyBalances() {
             }
             
             const newBanks = await client.query(
-                'SELECT user_id, bank FROM banks WHERE guild_id = $1 ORDER BY bank DESC',
+                'SELECT user_id, bank_balance FROM banks WHERE guild_id = $1 ORDER BY bank_balance DESC',
                 ['1445943557020979274']
             );
             console.log(`\nTotal players with banks: ${newBanks.rows.length}`);
             for (const row of newBanks.rows) {
-                console.log(`  User ${row.user_id}: ${row.bank} coins in bank`);
+                console.log(`  User ${row.user_id}: ${row.bank_balance} coins in bank`);
             }
             
             console.log('\n✅ All economy data verified!');
