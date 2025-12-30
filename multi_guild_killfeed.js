@@ -282,8 +282,9 @@ class MultiGuildKillfeed {
         const events = [];
         
         for (const line of lines) {
-            if (line.includes('placed')) {
-                const match = line.match(/^(\d{2}:\d{2}:\d{2}) \| Player \"(.+?)\"\(id=[^)]*\) placed (.+)$/);
+            if (line.includes('Built')) {
+                // Format: HH:MM:SS | Player "Name"(id=... pos=<...>)Built item on object with tool
+                const match = line.match(/^(\d{2}:\d{2}:\d{2}) \| Player \"(.+?)\"\([^)]*\)Built (.+)$/);
                 if (match) {
                     events.push({ 
                         time: match[1], 
