@@ -46,7 +46,6 @@ const { Client, Intents } = require('discord.js');
 const BALANCES_FILE = path.join(__dirname, '../logs/economy_balances.json');
 const BANK_FILE = path.join(__dirname, '../logs/economy_banks.json');
 const DAYZ_NAMES_FILE = path.join(__dirname, '../dayz_names.json');
-const ECONOMY_CHANNEL_ID = '1404621573498863806';
 
 // Ensure logs directory exists
 const logsDir = path.join(__dirname, '../logs');
@@ -311,9 +310,27 @@ module.exports = {
         console.log(`[ECONOMY] execute called for command: ${interaction.commandName}, channel: ${interaction.channelId}`);
         const { commandName } = interaction;
         const userId = interaction.user.id;
+        const guildId = interaction.guildId;
         const { MessageEmbed } = require('discord.js');
-        // Allow /shop in the shop channel (ID: 1392604466766807051) or economy channel
-        const SHOP_CHANNEL_ID = '1392604466766807051';
+        
+        // Get guild config for channel IDs
+        const guildConfig = await db.getGuildConfig(guildId);
+        if (!guildConfig) {
+            await interaction.reply({
+                embeds: [
+                    new MessageEmbed()
+                        .setColor('#ff5555')
+                        .setTitle('Server Not Configured')
+                        .setDescription('This server has not been set up yet. An admin must run `/admin killfeed setup` first.')
+                ],
+                ephemeral: true
+            });
+            return;
+        }
+        
+        const SHOP_CHANNEL_ID = guildConfig.shop_channel_id;
+        const ECONOMY_CHANNEL_ID = guildConfig.economy_channel_id;
+        
         if (interaction.commandName === 'shop') {
             console.log('[SHOP] Entered /shop logic');
             try {
