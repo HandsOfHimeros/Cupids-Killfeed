@@ -6,7 +6,7 @@ const { MessageEmbed } = require('discord.js');
 class MultiGuildKillfeed {
     constructor(bot) {
         this.bot = bot;
-        this.guildStates = new Map(); // guild_id -> { lastLogLine, lastPollTime }
+        this.guildStates = new Map(); // guild_id -> { lastLogLine, lastPollTime, lastRestartTime, lastCleanupCheck }
         this.pollInterval = 120000; // 2 minutes
         this.isRunning = false;
     }
@@ -32,7 +32,9 @@ class MultiGuildKillfeed {
                 if (!this.guildStates.has(guild.guild_id)) {
                     this.guildStates.set(guild.guild_id, {
                         lastLogLine: guild.last_killfeed_line || '',
-                        lastPollTime: 0
+                        lastPollTime: 0,
+                        lastRestartTime: 0,
+                        lastCleanupCheck: 0
                     });
                 }
             }
@@ -68,13 +70,16 @@ class MultiGuildKillfeed {
 
     async pollGuild(guildConfig) {
         const guildId = guildConfig.guild_id;
-        const state = this.guildStates.get(guildId) || { lastLogLine: '', lastPollTime: 0 };
+        const state = this.guildStates.get(guildId) || { lastLogLine: '', lastPollTime: 0, lastRestartTime: 0, lastCleanupCheck: 0 };
         
         console.log(`[MULTI-KILLFEED] Polling guild ${guildId}...`);
         
         // Fetch log from this guild's Nitrado server
         const logData = await this.fetchGuildLog(guildConfig);
         if (!logData) return;
+        
+        // Check for server restart and trigger cleanup if needed
+        await this.checkRestartWindow(guildConfig, state, logData);
         
         // Parse events
         const events = this.parseKillfeedEvents(logData);
@@ -252,6 +257,118 @@ class MultiGuildKillfeed {
     stop() {
         this.isRunning = false;
         console.log('[MULTI-KILLFEED] Stopped multi-guild killfeed monitoring');
+    }
+
+    async checkRestartWindow(guildConfig, state, logData) {
+        const restartHours = guildConfig.restart_hours ? guildConfig.restart_hours.split(',').map(h => parseInt(h.trim())) : [3, 9, 15, 21];
+        const now = new Date();
+        const currentHour = now.getHours();
+        const currentMinutes = now.getMinutes();
+        
+        // Check if we're in a cleanup window (5-15 minutes after restart)
+        for (const restartHour of restartHours) {
+            if (currentHour === restartHour && currentMinutes >= 5 && currentMinutes <= 15) {
+                // Check if we already did cleanup for this restart
+                const timeSinceLastCleanup = Date.now() - state.lastCleanupCheck;
+                if (timeSinceLastCleanup < 30 * 60 * 1000) { // Skip if cleaned up in last 30 minutes
+                    return;
+                }
+                
+                const restartDate = new Date(now);
+                restartDate.setHours(restartHour, 0, 0, 0);
+                state.lastRestartTime = restartDate.getTime();
+                state.lastCleanupCheck = Date.now();
+                
+                console.log(`[RESTART] Guild ${guildConfig.guild_id}: Cleanup window detected after ${restartHour}:00 restart`);
+                await this.cleanupSpawnJson(guildConfig, state);
+                return;
+            }
+        }
+    }
+
+    async cleanupSpawnJson(guildConfig, state) {
+        const FILE_PATH = `/games/${guildConfig.nitrado_instance}/ftproot/dayzps_missions/dayzOffline.${guildConfig.map_name}/custom/spawn.json`;
+        const FTP_FILE_PATH = `/dayzps_missions/dayzOffline.${guildConfig.map_name}/custom/spawn.json`;
+        const BASE_URL = 'https://api.nitrado.net/services';
+        const axios = require('axios');
+        const fs = require('fs');
+        const path = require('path');
+        
+        try {
+            console.log(`[RESTART] Guild ${guildConfig.guild_id}: Cleaning up old spawn entries...`);
+            
+            // Step 1: Download current spawn.json
+            let spawnJson = { Objects: [] };
+            try {
+                const downloadUrl = `${BASE_URL}/${guildConfig.nitrado_service_id}/gameservers/file_server/download?file=${encodeURIComponent(FILE_PATH)}`;
+                const downloadResp = await axios.get(downloadUrl, {
+                    headers: { 'Authorization': `Bearer ${guildConfig.nitrado_token}` }
+                });
+                
+                const fileUrl = downloadResp.data.data.token.url;
+                const fileResp = await axios.get(fileUrl);
+                
+                if (fileResp.data && Array.isArray(fileResp.data.Objects)) {
+                    spawnJson = fileResp.data;
+                }
+            } catch (downloadErr) {
+                console.log(`[RESTART] Guild ${guildConfig.guild_id}: Could not download spawn.json:`, downloadErr.message);
+                return;
+            }
+            
+            // Step 2: Only remove items purchased before this restart
+            const originalCount = spawnJson.Objects.length;
+            spawnJson.Objects = spawnJson.Objects.filter(obj => {
+                if (!obj.customString) return true; // Keep non-shop items
+                
+                try {
+                    const data = JSON.parse(obj.customString);
+                    const itemTimestamp = parseInt(data.restart_id) || 0;
+                    
+                    // Keep items purchased after the restart time
+                    return itemTimestamp > state.lastRestartTime;
+                } catch {
+                    return true; // Keep if can't parse
+                }
+            });
+            
+            const removedCount = originalCount - spawnJson.Objects.length;
+            console.log(`[RESTART] Guild ${guildConfig.guild_id}: Removed ${removedCount} old spawn entries, kept ${spawnJson.Objects.length} new ones`);
+            
+            // Step 3: Upload cleaned spawn.json via FTP
+            const infoUrl = `${BASE_URL}/${guildConfig.nitrado_service_id}/gameservers`;
+            const infoResp = await axios.get(infoUrl, {
+                headers: { 'Authorization': `Bearer ${guildConfig.nitrado_token}` }
+            });
+            
+            const ftpCreds = infoResp.data.data.gameserver.credentials.ftp;
+            
+            const { Client } = require('basic-ftp');
+            const client = new Client();
+            client.ftp.verbose = false;
+            
+            try {
+                await client.access({
+                    host: ftpCreds.hostname,
+                    user: ftpCreds.username,
+                    password: ftpCreds.password,
+                    port: ftpCreds.port || 21,
+                    secure: false
+                });
+                
+                const tmpPath = path.join(__dirname, `spawn_temp_cleanup_${guildConfig.guild_id}.json`);
+                fs.writeFileSync(tmpPath, JSON.stringify(spawnJson, null, 2));
+                
+                await client.uploadFrom(tmpPath, FTP_FILE_PATH);
+                fs.unlinkSync(tmpPath);
+                
+                console.log(`[RESTART] Guild ${guildConfig.guild_id}: spawn.json cleanup complete`);
+            } finally {
+                client.close();
+            }
+        } catch (err) {
+            console.error(`[RESTART] Guild ${guildConfig.guild_id}: Error cleaning spawn.json:`, err.message);
+        }
     }
 }
 
