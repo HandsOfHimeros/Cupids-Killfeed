@@ -127,14 +127,18 @@ class MultiGuildKillfeed {
             
             const latestFile = admFiles[0];
             
-            // Download log file
+            // Download log file - first get the temporary download URL
             const downloadUrl = `https://api.nitrado.net/services/${guildConfig.nitrado_service_id}/gameservers/file_server/download?file=/games/${guildConfig.nitrado_instance}/noftp/dayzps/config/${latestFile.name}`;
             
-            const logResp = await axios.get(downloadUrl, {
-                headers: {
-                    'Authorization': `Bearer ${guildConfig.nitrado_token}`,
-                    'Accept': 'text/plain'
-                },
+            const downloadResp = await axios.get(downloadUrl, {
+                headers: { 'Authorization': `Bearer ${guildConfig.nitrado_token}` }
+            });
+            
+            // The actual file URL is in downloadResp.data.data.token.url
+            const fileUrl = downloadResp.data.data.token.url;
+            
+            // Now fetch the actual log file content
+            const logResp = await axios.get(fileUrl, {
                 responseType: 'text'
             });
             
