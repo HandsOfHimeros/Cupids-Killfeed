@@ -19,7 +19,14 @@ async function checkSakhalLogs() {
         );
         
         // Find most recent log
-        const logFiles = listResp.data.data.entries.filter(f => f.name.endsWith('.ADM'));
+        const logFiles = listResp.data.data.entries.filter(f => f.name && f.name.endsWith('.ADM'));
+        
+        if (logFiles.length === 0) {
+            console.log('No log files found!');
+            await pool.end();
+            process.exit(1);
+        }
+        
         logFiles.sort((a, b) => b.modified_at - a.modified_at);
         const mostRecent = logFiles[0];
         
