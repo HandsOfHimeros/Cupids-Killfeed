@@ -237,6 +237,7 @@ class MultiGuildKillfeed {
                     }
                 }
             } else if (line.includes('hit by')) {
+                // Try PvP hit format: Player "name" hit by Player "name" with weapon
                 match = line.match(/^(\d{2}:\d{2}:\d{2}) \| Player \"(.+?)\"\(id=[^)]*\) hit by Player \"(.+?)\"\(id=[^)]*\) with (.+)$/);
                 if (match) {
                     events.push({ 
@@ -247,6 +248,19 @@ class MultiGuildKillfeed {
                         weapon: match[4], 
                         raw: line 
                     });
+                } else {
+                    // Try environmental/fall damage format: "name" (DEAD) (id=...) [HP: X] hit by FallDamageHealth
+                    match = line.match(/^(\d{2}:\d{2}:\d{2}) \| (?:Player )?\"(.+?)\"(?:\s*\(DEAD\))?\s*\(id=[^)]*(?:\s+pos=[^)]+)?\)(?:\[HP:\s*\d+\])?\s+hit by (.+)$/);
+                    if (match) {
+                        events.push({ 
+                            type: 'hit', 
+                            time: match[1], 
+                            victim: match[2], 
+                            attacker: 'Environment', 
+                            weapon: match[3], 
+                            raw: line 
+                        });
+                    }
                 }
             } else if (line.includes('is connected')) {
                 match = line.match(/^(\d{2}:\d{2}:\d{2}) \| Player \"(.+?)\"\(id=[^)]*\) is connected$/);
