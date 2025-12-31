@@ -108,9 +108,17 @@ class MultiGuildKillfeed {
                 // Only post events if this is the first poll (lastPollTime is recent startup)
                 const timeSinceLastPoll = Date.now() - state.lastPollTime;
                 if (state.lastPollTime > 0 && timeSinceLastPoll < 300000) {
-                    // Recently polled but can't find last line - log rotated, skip to avoid duplicates
-                    console.log(`[MULTI-KILLFEED] Guild ${guildId}: Can't find last line, log may have rotated. Skipping to prevent duplicates.`);
+                    // Recently polled but can't find last line - log rotated
+                    // Skip this batch to avoid duplicates, but update tracking to last event in current log
+                    // so we can continue detecting new events going forward
+                    console.log(`[MULTI-KILLFEED] Guild ${guildId}: Can't find last line, log may have rotated. Resetting tracking to current log.`);
                     newEvents = [];
+                    // Update lastLogLine to the most recent event in the current log
+                    if (events.length > 0) {
+                        state.lastLogLine = events[events.length - 1].raw;
+                        await this.updateGuildState(guildId, { lastLogLine: state.lastLogLine });
+                        console.log(`[MULTI-KILLFEED] Guild ${guildId}: Tracking reset to latest event, will detect new events on next poll`);
+                    }
                 } else if (state.lastPollTime === 0) {
                     // First poll after bot startup - skip all old events to avoid duplicates
                     console.log(`[MULTI-KILLFEED] Guild ${guildId}: First poll after startup, skipping old events to prevent duplicates`);
