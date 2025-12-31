@@ -537,54 +537,6 @@ bot.on('messageCreate', async message => {
     if (message.author.bot) return;
 
     const guildId = message.guild.id;
-    
-    // Check if message is in general channels for AI responses
-    const generalChannels = ['general', 'general-chat', '💬general', '💬-general', 'wop-general'];
-    const isGeneralChannel = generalChannels.includes(message.channel.name);
-    
-    if (isGeneralChannel) {
-        // Only respond if message is a question
-        const content = message.content.toLowerCase();
-        let response = null;
-        // Check for question mark or question word
-        const questionWords = ['who', 'what', 'when', 'where', 'why', 'how', 'does', 'do', 'can', 'is', 'are', 'will', 'should', 'could', 'would', 'did'];
-        const words = content.split(/\s+/);
-        const isQuestion = content.includes('?') || words.some(word => questionWords.includes(word));
-        if (isQuestion) {
-            if (content.includes('who are you') || content.includes('what are you')) {
-                response = "I am **Cupid**, the divine archer of love and keeper of your killfeed! Alongside my brother Himeros, we watch over this realm. 🏹💘";
-            } else if (content.includes('help') || content.includes('commands')) {
-                response = "Use `/shop` to browse items, `/balance` to check your coins, `/location` to find players, and many more slash commands! Type `/` to see them all. ⚔️";
-            } else if (content.includes('server') || content.includes('restart')) {
-                response = "The server restarts every 3 hours (12am, 3am, 6am, 9am, 12pm, 3pm, 6pm, 9pm EST). Prepare accordingly, warriors! 🛡️";
-            } else if (content.includes('rules')) {
-                response = "Check the rules channel for server guidelines. Remember: respect, honor, and survival above all! ⚔️";
-            } else if (content.includes('thank')) {
-                response = "Your gratitude honors me, warrior. May your aim be true and your heart courageous! 🏹✨";
-            } else if (content.includes('love') || content.includes('desire')) {
-                response = "Ah, you speak of my domain! Love and desire are what drive us all. Even in the wasteland, the heart seeks connection. 💘";
-            } else {
-                // If no specific answer, make up a creative one
-                const madeUpAnswers = [
-                    "Legend has it, the answer lies somewhere between the stars and the wasteland. Only the bravest will discover it! ✨",
-                    "If I had to guess, I'd say it's because the gods are feeling playful today. Trust in Cupid! 🏹",
-                    "The answer is simple: love conquers all, even confusion! 💘",
-                    "Ask Himeros, he probably knows. But if not, just follow your heart! ❤️",
-                    "In this realm, anything is possible. The answer is yes, unless it's no. Or maybe! 🤔",
-                    "I believe the answer is hidden in the next killfeed event. Stay tuned! ☠️",
-                    "Only the wise survive, and only the survivors know the truth. You are wise, so you already know! 🦉"
-                ];
-                response = madeUpAnswers[Math.floor(Math.random() * madeUpAnswers.length)];
-            }
-            await message.reply(response);
-            return;
-        }
-            await message.reply(response);
-            return;
-        }
-    }
-    
-    // Original admin role checking logic (preserved)
     if (servCheck != guildId) return;
 
     const adminRole = message.guild.roles.cache.find(r => r.name === 'Admin');
@@ -846,8 +798,8 @@ async function pollDayZLogForConnections() {
         if (events.length > 0) lastSeenLogLine = events[events.length - 1].raw;
     } catch (err) {
         console.error('Error polling DayZ log:', err.message);
+        }
     }
-}
 
 bot.on('ready', () => {
     // OLD SINGLE-SERVER SYSTEMS: Replaced by MultiGuildKillfeed
