@@ -265,9 +265,10 @@ class MultiGuildKillfeed {
                     raw: line 
                 });
             } else if (line.includes('is connected')) {
-                // Parse player name
+                // Parse player name - try both quote types
                 let player;
-                const connectMatch = line.match(/Player \"(.+?)\"/);
+                let connectMatch = line.match(/Player \"(.+?)\"/);
+                if (!connectMatch) connectMatch = line.match(/Player '(.+?)'/);
                 if (connectMatch) player = connectMatch[1];
                 
                 events.push({
@@ -277,9 +278,10 @@ class MultiGuildKillfeed {
                     raw: line
                 });
             } else if (line.includes('has been disconnected')) {
-                // Parse player name
+                // Parse player name - try both quote types
                 let player;
-                const disconnectMatch = line.match(/Player '(.+?)'/);
+                let disconnectMatch = line.match(/Player '(.+?)'/);
+                if (!disconnectMatch) disconnectMatch = line.match(/Player \"(.+?)\"/);
                 if (disconnectMatch) player = disconnectMatch[1];
                 
                 events.push({
@@ -398,68 +400,75 @@ class MultiGuildKillfeed {
             let embed = new MessageEmbed().setTimestamp();
             
             if (event.type === 'kill') {
-                embed.setColor('#ff0000')
-                    .setTitle('☠️ Killfeed');
+                embed.setColor('#DC143C')
+                    .setTitle('☠️ 💀 KILL CONFIRMED 💀 ☠️');
                 
                 if (event.victim && event.killer) {
-                    embed.setDescription(`**${event.killer}** killed **${event.victim}**`);
+                    embed.setDescription(`\`\`\`diff\n- ${event.victim}\n\`\`\`\n🔫 **Killed by:** \`${event.killer}\``);
                     if (event.weapon) {
-                        embed.addFields({ name: 'Weapon', value: event.weapon, inline: true });
+                        embed.addFields({ name: '⚔️ Weapon Used', value: `\`${event.weapon}\``, inline: true });
                     }
-                    embed.addFields({ name: 'Time', value: event.time, inline: true });
+                    embed.addFields({ name: '🕐 Time', value: `\`${event.time}\``, inline: true });
                 } else {
-                    // Fallback to raw line if parsing failed
-                    embed.setDescription(event.raw);
+                    embed.setDescription(`\`\`\`\n${event.raw}\n\`\`\``);
                 }
             } else if (event.type === 'hit') {
-                embed.setColor('#ffaa00')
-                    .setTitle('💥 Hitfeed');
+                embed.setColor('#FF4500')
+                    .setTitle('💥 ⚡ PLAYER HIT ⚡ 💥');
                 
                 if (event.victim && event.source) {
-                    embed.setDescription(`**${event.victim}** was hit by **${event.source}**`);
-                    embed.addFields({ name: 'Time', value: event.time, inline: true });
+                    embed.setDescription(`🎯 **${event.victim}**\n\`\`\`fix\nHit by: ${event.source}\n\`\`\``);
+                    embed.addFields({ name: '🕐 Time', value: `\`${event.time}\``, inline: true });
                 } else {
-                    embed.setDescription(event.raw);
+                    embed.setDescription(`\`\`\`\n${event.raw}\n\`\`\``);
                 }
             } else if (event.type === 'connected') {
-                embed.setColor('#00ff00')
-                    .setTitle('🟢 Player Connected');
+                embed.setColor('#00FF00')
+                    .setTitle('🟢 ✅ PLAYER JOINED ✅ 🟢');
                 
                 if (event.player) {
-                    embed.setDescription(`**${event.player}** connected to the server`);
-                    embed.addFields({ name: 'Time', value: event.time, inline: true });
+                    embed.setDescription(`\`\`\`diff\n+ ${event.player}\n\`\`\`\n👋 **Welcome to the server!**`);
+                    embed.addFields({ name: '🕐 Time', value: `\`${event.time}\``, inline: true });
                 } else {
-                    embed.setDescription(event.raw);
+                    embed.setDescription(`\`\`\`\n${event.raw}\n\`\`\``);
                 }
             } else if (event.type === 'disconnected') {
-                embed.setColor('#ff0000')
-                    .setTitle('🔴 Player Disconnected');
+                embed.setColor('#8B0000')
+                    .setTitle('🔴 ❌ PLAYER LEFT ❌ 🔴');
                 
                 if (event.player) {
-                    embed.setDescription(`**${event.player}** disconnected from the server`);
-                    embed.addFields({ name: 'Time', value: event.time, inline: true });
+                    embed.setDescription(`\`\`\`diff\n- ${event.player}\n\`\`\`\n👋 **Left the server**`);
+                    embed.addFields({ name: '🕐 Time', value: `\`${event.time}\``, inline: true });
                 } else {
-                    embed.setDescription(event.raw);
+                    embed.setDescription(`\`\`\`\n${event.raw}\n\`\`\``);
                 }
             } else if (event.type === 'suicide') {
-                embed.setColor('#800080')
-                    .setTitle('💀 Suicide');
+                embed.setColor('#9400D3')
+                    .setTitle('💀 ⚰️ SUICIDE ⚰️ 💀');
                 
                 if (event.player) {
-                    embed.setDescription(`**${event.player}** committed suicide`);
-                    embed.addFields({ name: 'Time', value: event.time, inline: true });
+                    embed.setDescription(`\`\`\`fix\n${event.player}\n\`\`\`\n💔 **Took their own life**`);
+                    embed.addFields({ name: '🕐 Time', value: `\`${event.time}\``, inline: true });
                 } else {
-                    embed.setDescription(event.raw);
+                    embed.setDescription(`\`\`\`\n${event.raw}\n\`\`\``);
                 }
             } else if (event.type === 'build') {
-                embed.setColor('#0099ff')
-                    .setTitle('🔨 Build Event');
+                const actionEmoji = {
+                    'placed': '📦',
+                    'raised': '⬆️',
+                    'dismantled': '💥',
+                    'built': '🏗️'
+                };
+                const emoji = actionEmoji[event.action?.toLowerCase()] || '🔨';
+                
+                embed.setColor('#1E90FF')
+                    .setTitle(`${emoji} 🛠️ BUILD EVENT 🛠️ ${emoji}`);
                 
                 if (event.player && event.action && event.item) {
-                    embed.setDescription(`**${event.player}** ${event.action} **${event.item}**`);
-                    embed.addFields({ name: 'Time', value: event.time, inline: true });
+                    embed.setDescription(`👷 **${event.player}**\n\`\`\`yaml\n${event.action.toUpperCase()}: ${event.item}\n\`\`\``);
+                    embed.addFields({ name: '🕐 Time', value: `\`${event.time}\``, inline: true });
                 } else {
-                    embed.setDescription(event.raw);
+                    embed.setDescription(`\`\`\`\n${event.raw}\n\`\`\``);
                 }
             }
             
