@@ -100,17 +100,9 @@ class MultiGuildKillfeed {
             }
             
             if (foundIndex !== -1) {
+                // Only post events AFTER the last known line (foundIndex + 1 onwards)
+                // This ensures no duplicates - we already posted everything up to foundIndex
                 newEvents = events.slice(foundIndex + 1);
-                
-                // On startup, also re-scan last 50 events for all missed events
-                if (state.lastPollTime === 0) {
-                    const rescanStart = Math.max(0, foundIndex - 50);
-                    const rescanEvents = events.slice(rescanStart, foundIndex + 1);
-                    if (rescanEvents.length > 0) {
-                        console.log(`[MULTI-KILLFEED] Guild ${guildId}: Re-scanning last 50 lines on startup, found ${rescanEvents.length} events to reprocess`);
-                        newEvents = [...rescanEvents, ...newEvents];
-                    }
-                }
             } else {
                 // If we can't find the last line, the log file might have rotated
                 // Only post events if this is the first poll (lastPollTime is recent startup)
@@ -120,26 +112,16 @@ class MultiGuildKillfeed {
                     console.log(`[MULTI-KILLFEED] Guild ${guildId}: Can't find last line, log may have rotated. Skipping to prevent duplicates.`);
                     newEvents = [];
                 } else if (state.lastPollTime === 0) {
-                    // First poll after bot startup - scan for all recent events (last 100)
-                    console.log(`[MULTI-KILLFEED] Guild ${guildId}: First poll after startup, scanning for recent events`);
-                    newEvents = events.slice(-100);
-                    if (newEvents.length > 0) {
-                        console.log(`[MULTI-KILLFEED] Guild ${guildId}: Found ${newEvents.length} recent events`);
-                    } else {
-                        newEvents = [];
-                    }
+                    // First poll after bot startup - skip all old events to avoid duplicates
+                    console.log(`[MULTI-KILLFEED] Guild ${guildId}: First poll after startup, skipping old events to prevent duplicates`);
+                    newEvents = [];
                 }
                 // Otherwise post all (rare case of very long time since last poll)
             }
         } else if (state.lastLogLine === '' && events.length > 0) {
-            // Empty lastLogLine means never polled before - scan for recent events
-            console.log(`[MULTI-KILLFEED] Guild ${guildId}: No previous state, scanning for recent events`);
-            newEvents = events.slice(-100);
-            if (newEvents.length > 0) {
-                console.log(`[MULTI-KILLFEED] Guild ${guildId}: Found ${newEvents.length} recent events`);
-            } else {
-                newEvents = [];
-            }
+            // Empty lastLogLine means never polled before - skip old events to avoid initial spam
+            console.log(`[MULTI-KILLFEED] Guild ${guildId}: No previous state, skipping old events`);
+            newEvents = [];
         }
         
         // Post new events to this guild's killfeed channel
