@@ -433,7 +433,7 @@ class MultiGuildKillfeed {
                     embed.setDescription(`\`\`\`\n${event.raw}\n\`\`\``);
                 }
             } else if (event.type === 'disconnected') {
-                embed.setColor('#8B0000')
+                embed.setColor('#FF0000')
                     .setTitle('🔴 ❌ PLAYER LEFT ❌ 🔴');
                 
                 if (event.player) {
