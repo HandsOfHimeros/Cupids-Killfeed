@@ -126,6 +126,7 @@ class MultiGuildKillfeed {
         if (newEvents.length > 0) {
             console.log(`[MULTI-KILLFEED] Guild ${guildId}: ${newEvents.length} new events`);
             for (const event of newEvents) {
+                console.log(`[MULTI-KILLFEED] Posting event type: ${event.type}`);
                 await this.postEventToGuild(guildConfig, event);
             }
         }
@@ -273,6 +274,8 @@ class MultiGuildKillfeed {
 
     async postEventToGuild(guildConfig, event) {
         try {
+            console.log(`[MULTI-KILLFEED] postEventToGuild called for guild ${guildConfig.guild_id}, event type: ${event.type}`);
+            
             let channelId;
             
             // Route to appropriate channel based on event type
@@ -282,10 +285,20 @@ class MultiGuildKillfeed {
                 channelId = guildConfig.killfeed_channel_id;
             }
             
-            if (!channelId) return;
+            console.log(`[MULTI-KILLFEED] Using channel ID: ${channelId}`);
+            
+            if (!channelId) {
+                console.log(`[MULTI-KILLFEED] No channel ID for event type ${event.type}, skipping`);
+                return;
+            }
             
             const channel = await this.bot.channels.fetch(channelId);
-            if (!channel) return;
+            if (!channel) {
+                console.log(`[MULTI-KILLFEED] Channel ${channelId} not found, skipping`);
+                return;
+            }
+            
+            console.log(`[MULTI-KILLFEED] Channel found: ${channel.name}, preparing embed...`);
             
             let embed = new MessageEmbed().setTimestamp();
             
@@ -331,9 +344,12 @@ class MultiGuildKillfeed {
                     .addField('Time', event.time, true);
             }
             
+            console.log(`[MULTI-KILLFEED] Sending embed to channel ${channelId}...`);
             await channel.send({ embeds: [embed] });
+            console.log(`[MULTI-KILLFEED] Successfully posted ${event.type} event to guild ${guildConfig.guild_id}`);
         } catch (error) {
             console.error(`[MULTI-KILLFEED] Error posting event for guild ${guildConfig.guild_id}:`, error.message);
+            console.error(`[MULTI-KILLFEED] Error stack:`, error.stack);
         }
     }
 
