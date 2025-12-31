@@ -116,7 +116,7 @@ class MultiGuildKillfeed {
                     // Update lastLogLine to the most recent event in the current log
                     if (events.length > 0) {
                         state.lastLogLine = events[events.length - 1].raw;
-                        await this.updateGuildState(guildId, { lastLogLine: state.lastLogLine });
+                        await db.updateKillfeedState(guildId, state.lastLogLine);
                         console.log(`[MULTI-KILLFEED] Guild ${guildId}: Tracking reset to latest event, will detect new events on next poll`);
                     }
                 } else if (state.lastPollTime === 0) {
