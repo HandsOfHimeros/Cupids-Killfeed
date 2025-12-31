@@ -6,8 +6,7 @@ async function createSakhalChannels() {
     const bot = new Client({
         intents: [
             Intents.FLAGS.GUILDS,
-            Intents.FLAGS.GUILD_MESSAGES,
-            Intents.FLAGS.MANAGE_CHANNELS
+            Intents.FLAGS.GUILD_MESSAGES
         ]
     });
 
