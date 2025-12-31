@@ -301,7 +301,7 @@ class MultiGuildKillfeed {
                     raw: line
                 });
             } else if (line.includes('placed') || line.includes('raised') || line.includes('dismantled') || line.includes('Built')) {
-                // Parse build event details
+                // Parse build event details (optional - for formatted output)
                 let player, action, item;
                 
                 // Try: Player "name" (id=X pos=Y) has placed/raised ITEM on/at
@@ -328,6 +328,7 @@ class MultiGuildKillfeed {
                     }
                 }
                 
+                // ALWAYS add event if keyword was found, parsing is just for formatting
                 events.push({
                     type: 'build',
                     time: time,
