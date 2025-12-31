@@ -1,4 +1,4 @@
-const db = require('./database');
+const { pool } = require('./database');
 
 async function setAllGuildsActive() {
     const guilds = [
@@ -10,8 +10,8 @@ async function setAllGuildsActive() {
     console.log('Setting all guilds to active...\n');
 
     for (const guildId of guilds) {
-        await db.run(
-            'UPDATE guild_configs SET is_active = 1 WHERE guild_id = ?',
+        await pool.query(
+            'UPDATE guild_configs SET is_active = TRUE WHERE guild_id = $1',
             [guildId]
         );
         console.log(`✅ Set guild ${guildId} to active`);
