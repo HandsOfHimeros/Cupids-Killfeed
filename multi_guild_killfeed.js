@@ -368,7 +368,26 @@ class MultiGuildKillfeed {
                 return;
             }
             
-            const channel = await this.bot.channels.fetch(channelId);
+            let channel;
+            try {
+                channel = await this.bot.channels.fetch(channelId);
+            } catch (error) {
+                console.log(`[MULTI-KILLFEED] Channel ${channelId} not found (${error.message}), trying killfeed fallback`);
+                // If build/suicide channel doesn't exist, fall back to killfeed
+                if (event.type === 'build' || event.type === 'suicide') {
+                    channelId = guildConfig.killfeed_channel_id;
+                    try {
+                        channel = await this.bot.channels.fetch(channelId);
+                        console.log(`[MULTI-KILLFEED] Using killfeed channel ${channelId} as fallback`);
+                    } catch (e) {
+                        console.log(`[MULTI-KILLFEED] Killfeed channel also not found, skipping`);
+                        return;
+                    }
+                } else {
+                    return;
+                }
+            }
+            
             if (!channel) {
                 console.log(`[MULTI-KILLFEED] Channel ${channelId} not found, skipping`);
                 return;
