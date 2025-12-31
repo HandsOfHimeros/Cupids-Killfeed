@@ -1,5 +1,6 @@
 const { Client, Intents, MessageEmbed } = require('discord.js');
 const db = require('./database');
+const config = require('./config.json');
 
 // Test posting to the killfeed channel
 async function testPostKillfeed() {
@@ -10,7 +11,7 @@ async function testPostKillfeed() {
         ]
     });
 
-    await bot.login(process.env.BOT_TOKEN);
+    await bot.login(config.TOKEN);
 
     // Wait for bot to be ready
     await new Promise(resolve => {
