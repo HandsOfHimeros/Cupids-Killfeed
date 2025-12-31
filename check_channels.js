@@ -6,7 +6,7 @@ async function checkChannels() {
         
         try {
             const result = await client.query(
-                'SELECT guild_id, killfeed_channel_id, connections_channel_id, admin_channel_id FROM guild_configs WHERE guild_id = $1',
+                'SELECT guild_id, killfeed_channel_id, connections_channel_id FROM guild_configs WHERE guild_id = $1',
                 ['1386432422744162476']
             );
             
@@ -17,7 +17,6 @@ async function checkChannels() {
                 console.log('\n=== ORIGINAL SERVER CHANNELS ===');
                 console.log('Killfeed Channel ID:', config.killfeed_channel_id);
                 console.log('Connections Channel ID:', config.connections_channel_id);
-                console.log('Admin Channel ID:', config.admin_channel_id);
             }
             
         } finally {
