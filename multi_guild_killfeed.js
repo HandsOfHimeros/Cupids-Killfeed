@@ -301,33 +301,41 @@ class MultiGuildKillfeed {
                     raw: line
                 });
             } else if (line.includes('placed') || line.includes('raised') || line.includes('dismantled') || line.includes('Built')) {
-                // Match: Player "name" (id=X pos=Y) placed/raised ITEM<ClassName>
-                // Or: Player "name" (id=X) placed/raised ITEM at position
-                // Or: Player "name" (id=X) dismantled/Built ITEM
-                match = line.match(/^(\d{2}:\d{2}:\d{2}) \| Player \"(.+?)\"\s*\(id=[^)]*(?:pos=[^)]+)?\)\s+(placed|raised)\s+(.+?)(?:<|at position)/);
+                // Parse build event details
+                let player, action, item;
+                
+                // Try: Player "name" (id=X pos=Y) has placed/raised ITEM on/at
+                match = line.match(/Player \"(.+?)\"\s*\(id=[^)]*(?:pos=[^)]+)?\)\s+has\s+(placed|raised)\s+(.+?)\s+(?:on|at)/);
                 if (match) {
-                    events.push({
-                        type: 'build',
-                        time: match[1],
-                        player: match[2],
-                        action: match[3],
-                        item: match[4].trim(),
-                        raw: line
-                    });
+                    player = match[1];
+                    action = match[2];
+                    item = match[3].trim();
                 } else {
-                    // Try dismantled or Built patterns
-                    match = line.match(/^(\d{2}:\d{2}:\d{2}) \| Player \"(.+?)\"\s*\(id=[^)]*\)\s*([Dd]ismantled|[Bb]uilt)\s+(.+)/);
+                    // Try: Player "name" (id=X pos=Y) placed/raised ITEM<ClassName>
+                    match = line.match(/Player \"(.+?)\"\s*\(id=[^)]*(?:pos=[^)]+)?\)\s+(placed|raised)\s+(.+?)(?:<|at position)/);
                     if (match) {
-                        events.push({
-                            type: 'build',
-                            time: match[1],
-                            player: match[2],
-                            action: match[3].toLowerCase(),
-                            item: match[4].replace(/<.*$/, '').trim(),
-                            raw: line
-                        });
+                        player = match[1];
+                        action = match[2];
+                        item = match[3].trim();
+                    } else {
+                        // Try: Player "name" (id=X) dismantled/Built ITEM
+                        match = line.match(/Player \"(.+?)\"\s*\(id=[^)]*\)\s*([Dd]ismantled|[Bb]uilt)\s+(.+)/);
+                        if (match) {
+                            player = match[1];
+                            action = match[2].toLowerCase();
+                            item = match[3].replace(/<.*$/, '').trim();
+                        }
                     }
                 }
+                
+                events.push({
+                    type: 'build',
+                    time: time,
+                    player: player,
+                    action: action,
+                    item: item,
+                    raw: line
+                });
             }
         }
         
