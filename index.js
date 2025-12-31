@@ -564,7 +564,17 @@ bot.on('messageCreate', async message => {
             const questionWords = ['who', 'what', 'when', 'where', 'why', 'how', 'does', 'do', 'can', 'is', 'are', 'will', 'should', 'could', 'would', 'did'];
             const words = content.split(/\s+/);
             if (words.some(word => questionWords.includes(word))) {
-                response = "You have asked a question, mortal. Cupid is here to help! 🏹";
+                // If no specific answer, make up a creative one
+                const madeUpAnswers = [
+                    "Legend has it, the answer lies somewhere between the stars and the wasteland. Only the bravest will discover it! ✨",
+                    "If I had to guess, I'd say it's because the gods are feeling playful today. Trust in Cupid! 🏹",
+                    "The answer is simple: love conquers all, even confusion! 💘",
+                    "Ask Himeros, he probably knows. But if not, just follow your heart! ❤️",
+                    "In this realm, anything is possible. The answer is yes, unless it's no. Or maybe! 🤔",
+                    "I believe the answer is hidden in the next killfeed event. Stay tuned! ☠️",
+                    "Only the wise survive, and only the survivors know the truth. You are wise, so you already know! 🦉"
+                ];
+                response = madeUpAnswers[Math.floor(Math.random() * madeUpAnswers.length)];
             }
         }
         if (response) {
