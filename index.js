@@ -549,7 +549,7 @@ bot.on('messageCreate', async message => {
         // Check for question mark or question word
         const questionWords = ['who', 'what', 'when', 'where', 'why', 'how', 'does', 'do', 'can', 'is', 'are', 'will', 'should', 'could', 'would', 'did'];
         const words = content.split(/\s+/);
-        const isQuestion = content.endsWith('?') || words.some(word => questionWords.includes(word));
+        const isQuestion = content.includes('?') || words.some(word => questionWords.includes(word));
         if (isQuestion) {
             if (content.includes('who are you') || content.includes('what are you')) {
                 response = "I am **Cupid**, the divine archer of love and keeper of your killfeed! Alongside my brother Himeros, we watch over this realm. 🏹💘";
