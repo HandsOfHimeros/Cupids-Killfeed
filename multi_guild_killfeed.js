@@ -255,29 +255,29 @@ class MultiGuildKillfeed {
                     });
                 }
             } else if (line.includes('placed') || line.includes('raised') || line.includes('dismantled') || line.includes('Built')) {
-                // Match: Player "name" placed/raised X at position
-                // Or: Player "name" dismantled X
-                // Or: Player "name"Built X on Y with Z
-                match = line.match(/^(\d{2}:\d{2}:\d{2}) \| Player \"(.+?)\"\(id=[^)]*\) (placed|raised) (.+) at position/);
+                // Match: Player "name" (id=X pos=Y) placed/raised ITEM<ClassName>
+                // Or: Player "name" (id=X) placed/raised ITEM at position
+                // Or: Player "name" (id=X) dismantled/Built ITEM
+                match = line.match(/^(\d{2}:\d{2}:\d{2}) \| Player \"(.+?)\"\s*\(id=[^)]*(?:pos=[^)]+)?\)\s+(placed|raised)\s+(.+?)(?:<|at position)/);
                 if (match) {
                     events.push({
                         type: 'build',
                         time: match[1],
                         player: match[2],
                         action: match[3],
-                        item: match[4],
+                        item: match[4].trim(),
                         raw: line
                     });
                 } else {
                     // Try dismantled or Built patterns
-                    match = line.match(/^(\d{2}:\d{2}:\d{2}) \| Player \"(.+?)\"\(id=[^)]*\) ?([Dd]ismantled|[Bb]uilt) (.+)/);
+                    match = line.match(/^(\d{2}:\d{2}:\d{2}) \| Player \"(.+?)\"\s*\(id=[^)]*\)\s*([Dd]ismantled|[Bb]uilt)\s+(.+)/);
                     if (match) {
                         events.push({
                             type: 'build',
                             time: match[1],
                             player: match[2],
                             action: match[3].toLowerCase(),
-                            item: match[4],
+                            item: match[4].replace(/<.*$/, '').trim(),
                             raw: line
                         });
                     }
