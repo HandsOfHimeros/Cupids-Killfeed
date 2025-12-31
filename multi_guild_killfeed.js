@@ -211,6 +211,7 @@ class MultiGuildKillfeed {
             
             let match;
             if (line.includes('killed by')) {
+                // Try PvP kill format: Player "name" killed by Player "name" with weapon
                 match = line.match(/^(\d{2}:\d{2}:\d{2}) \| Player \"(.+?)\"\(id=[^)]*\) killed by Player \"(.+?)\"\(id=[^)]*\) with (.+)$/);
                 if (match) {
                     events.push({ 
@@ -221,6 +222,19 @@ class MultiGuildKillfeed {
                         weapon: match[4], 
                         raw: line 
                     });
+                } else {
+                    // Try zombie/AI kill format: "name" (DEAD) (id=...) killed by ZombieName or just killed by ZombieName
+                    match = line.match(/^(\d{2}:\d{2}:\d{2}) \| (?:Player )?\"(.+?)\"(?:\s*\(DEAD\))?\s*\(id=[^)]*(?:\s+pos=[^)]+)?\)\s+killed by (.+)$/);
+                    if (match) {
+                        events.push({ 
+                            type: 'kill', 
+                            time: match[1], 
+                            victim: match[2], 
+                            killer: match[3], 
+                            weapon: 'Zombie/AI', 
+                            raw: line 
+                        });
+                    }
                 }
             } else if (line.includes('hit by')) {
                 match = line.match(/^(\d{2}:\d{2}:\d{2}) \| Player \"(.+?)\"\(id=[^)]*\) hit by Player \"(.+?)\"\(id=[^)]*\) with (.+)$/);
