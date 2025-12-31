@@ -559,8 +559,13 @@ bot.on('messageCreate', async message => {
             response = "Your gratitude honors me, warrior. May your aim be true and your heart courageous! 🏹✨";
         } else if (content.includes('love') || content.includes('desire')) {
             response = "Ah, you speak of my domain! Love and desire are what drive us all. Even in the wasteland, the heart seeks connection. 💘";
-        } else if (content.endsWith('?')) {
-            response = "You have asked a question, mortal. Cupid is here to help! 🏹";
+        } else {
+            // Check for common question words
+            const questionWords = ['who', 'what', 'when', 'where', 'why', 'how', 'does', 'do', 'can', 'is', 'are', 'will', 'should', 'could', 'would', 'did'];
+            const words = content.split(/\s+/);
+            if (words.some(word => questionWords.includes(word))) {
+                response = "You have asked a question, mortal. Cupid is here to help! 🏹";
+            }
         }
         if (response) {
             await message.reply(response);
