@@ -210,88 +210,41 @@ class MultiGuildKillfeed {
             if (line.includes('transporthit')) continue;
             
             let match;
+            // Extract timestamp from line
+            const timeMatch = line.match(/^(\d{2}:\d{2}:\d{2})/);
+            if (!timeMatch) continue;
+            const time = timeMatch[1];
+            
             if (line.includes('killed by')) {
-                // Try PvP kill format: Player "name" killed by Player "name" with weapon
-                match = line.match(/^(\d{2}:\d{2}:\d{2}) \| Player \"(.+?)\"\(id=[^)]*\) killed by Player \"(.+?)\"\(id=[^)]*\) with (.+)$/);
-                if (match) {
-                    events.push({ 
-                        type: 'kill', 
-                        time: match[1], 
-                        victim: match[2], 
-                        killer: match[3], 
-                        weapon: match[4], 
-                        raw: line 
-                    });
-                } else {
-                    // Try zombie/AI kill format: "name" (DEAD) (id=...) killed by ZombieName or just killed by ZombieName
-                    match = line.match(/^(\d{2}:\d{2}:\d{2}) \| (?:Player )?\"(.+?)\"(?:\s*\(DEAD\))?\s*\(id=[^)]*(?:\s+pos=[^)]+)?\)\s+killed by (.+)$/);
-                    if (match) {
-                        events.push({ 
-                            type: 'kill', 
-                            time: match[1], 
-                            victim: match[2], 
-                            killer: match[3], 
-                            weapon: 'Zombie/AI', 
-                            raw: line 
-                        });
-                    }
-                }
+                events.push({ 
+                    type: 'kill', 
+                    time: time, 
+                    raw: line 
+                });
             } else if (line.includes('hit by')) {
-                // Try PvP hit format: Player "name" hit by Player "name" with weapon
-                match = line.match(/^(\d{2}:\d{2}:\d{2}) \| Player \"(.+?)\"\(id=[^)]*\) hit by Player \"(.+?)\"\(id=[^)]*\) with (.+)$/);
-                if (match) {
-                    events.push({ 
-                        type: 'hit', 
-                        time: match[1], 
-                        victim: match[2], 
-                        attacker: match[3], 
-                        weapon: match[4], 
-                        raw: line 
-                    });
-                } else {
-                    // Try environmental/fall damage format: "name" (DEAD) (id=...) [HP: X] hit by FallDamageHealth
-                    match = line.match(/^(\d{2}:\d{2}:\d{2}) \| (?:Player )?\"(.+?)\"(?:\s*\(DEAD\))?\s*\(id=[^)]*(?:\s+pos=[^)]+)?\)(?:\[HP:\s*\d+\])?\s+hit by (.+)$/);
-                    if (match) {
-                        events.push({ 
-                            type: 'hit', 
-                            time: match[1], 
-                            victim: match[2], 
-                            attacker: 'Environment', 
-                            weapon: match[3], 
-                            raw: line 
-                        });
-                    }
-                }
+                events.push({ 
+                    type: 'hit', 
+                    time: time, 
+                    raw: line 
+                });
             } else if (line.includes('is connected')) {
-                match = line.match(/^(\d{2}:\d{2}:\d{2}) \| Player \"(.+?)\"\(id=[^)]*\) is connected$/);
-                if (match) {
-                    events.push({
-                        type: 'connected',
-                        time: match[1],
-                        player: match[2],
-                        raw: line
-                    });
-                }
+                events.push({
+                    type: 'connected',
+                    time: time,
+                    raw: line
+                });
             } else if (line.includes('has been disconnected')) {
-                match = line.match(/^(\d{2}:\d{2}:\d{2}) \| Player \"(.+?)\"\(id=[^)]*\) has been disconnected$/);
-                if (match) {
-                    events.push({
-                        type: 'disconnected',
-                        time: match[1],
-                        player: match[2],
-                        raw: line
-                    });
-                }
+                events.push({
+                    type: 'disconnected',
+                    time: time,
+                    raw: line
+                });
             } else if (line.includes('committed suicide')) {
-                match = line.match(/^(\d{2}:\d{2}:\d{2}) \| Player \"(.+?)\"\(id=[^)]*\) committed suicide$/);
-                if (match) {
-                    events.push({
-                        type: 'suicide',
-                        time: match[1],
-                        player: match[2],
-                        raw: line
-                    });
-                }
+                events.push({
+                    type: 'suicide',
+                    time: time,
+                    raw: line
+                });
             } else if (line.includes('placed') || line.includes('raised') || line.includes('dismantled') || line.includes('Built')) {
                 // Match: Player "name" (id=X pos=Y) placed/raised ITEM<ClassName>
                 // Or: Player "name" (id=X) placed/raised ITEM at position
@@ -362,45 +315,29 @@ class MultiGuildKillfeed {
             let embed = new MessageEmbed().setTimestamp();
             
             if (event.type === 'kill') {
-                embed.setColor('#ff0000');
-                if (event.killer && event.victim && event.weapon) {
-                    embed.setTitle('☠️ Killfeed')
-                        .setDescription(`**${event.killer}** killed **${event.victim}**`)
-                        .addField('Weapon', event.weapon, true)
-                        .addField('Time', event.time, true);
-                } else {
-                    embed.setTitle('☠️ Killfeed').setDescription(event.raw);
-                }
+                embed.setColor('#ff0000')
+                    .setTitle('☠️ Killfeed')
+                    .setDescription(event.raw);
             } else if (event.type === 'hit') {
-                embed.setColor('#ffaa00');
-                if (event.attacker && event.victim && event.weapon) {
-                    embed.setTitle('💥 Hitfeed')
-                        .setDescription(`**${event.attacker}** hit **${event.victim}**`)
-                        .addField('Weapon', event.weapon, true)
-                        .addField('Time', event.time, true);
-                } else {
-                    embed.setTitle('💥 Hitfeed').setDescription(event.raw);
-                }
+                embed.setColor('#ffaa00')
+                    .setTitle('💥 Hitfeed')
+                    .setDescription(event.raw);
             } else if (event.type === 'connected') {
                 embed.setColor('#00ff00')
                     .setTitle('🟢 Player Connected')
-                    .setDescription(`**${event.player}** joined the server`)
-                    .addField('Time', event.time, true);
+                    .setDescription(event.raw);
             } else if (event.type === 'disconnected') {
                 embed.setColor('#ff0000')
                     .setTitle('🔴 Player Disconnected')
-                    .setDescription(`**${event.player}** left the server`)
-                    .addField('Time', event.time, true);
+                    .setDescription(event.raw);
             } else if (event.type === 'suicide') {
                 embed.setColor('#800080')
                     .setTitle('💀 Suicide')
-                    .setDescription(`**${event.player}** committed suicide`)
-                    .addField('Time', event.time, true);
+                    .setDescription(event.raw);
             } else if (event.type === 'build') {
                 embed.setColor('#0099ff')
                     .setTitle('🔨 Build Event')
-                    .setDescription(`**${event.player}** ${event.action} **${event.item}**`)
-                    .addField('Time', event.time, true);
+                    .setDescription(event.raw);
             }
             
             console.log(`[MULTI-KILLFEED] Sending embed to channel ${channelId}...`);
