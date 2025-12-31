@@ -23,8 +23,7 @@ async function testPostKillfeed() {
 
     // Get the guild config
     const guildId = '1386432422744162476';
-    const guilds = await db.getActiveGuilds();
-    const guildConfig = guilds.find(g => g.guild_id === guildId);
+    const guildConfig = await db.getGuildConfig(guildId);
 
     if (!guildConfig) {
         console.log('❌ Guild not found in database');
