@@ -32,16 +32,18 @@ async function setGuildConfig(guildId, config) {
 }
 
 async function setGuildChannels(guildId, channels) {
-    const { economyChannel, shopChannel, killfeedChannel, connectionsChannel } = channels;
+    const { economyChannel, shopChannel, killfeedChannel, connectionsChannel, buildChannel, suicideChannel } = channels;
     await pool.query(`
         UPDATE guild_configs 
         SET economy_channel_id = $2,
             shop_channel_id = $3,
             killfeed_channel_id = $4,
             connections_channel_id = $5,
+            build_channel_id = $6,
+            suicide_channel_id = $7,
             updated_at = CURRENT_TIMESTAMP
         WHERE guild_id = $1
-    `, [guildId, economyChannel, shopChannel, killfeedChannel, connectionsChannel]);
+    `, [guildId, economyChannel, shopChannel, killfeedChannel, connectionsChannel, buildChannel, suicideChannel]);
 }
 
 async function getAllGuildConfigs() {
