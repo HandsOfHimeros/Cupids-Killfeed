@@ -1,11 +1,11 @@
-const { Client, GatewayIntentBits, EmbedBuilder } = require('discord.js');
+const Discord = require('discord.js');
 const db = require('./database.js');
 require('dotenv').config();
 
-const bot = new Client({
+const bot = new Discord.Client({
     intents: [
-        GatewayIntentBits.Guilds,
-        GatewayIntentBits.GuildMessages
+        Discord.Intents.FLAGS.GUILDS,
+        Discord.Intents.FLAGS.GUILD_MESSAGES
     ]
 });
 
@@ -43,7 +43,7 @@ async function sendAnnouncement() {
                     continue;
                 }
                 
-                const embed = new EmbedBuilder()
+                const embed = new Discord.MessageEmbed()
                     .setColor('#FF1493')
                     .setTitle('⚔️ **HEED THIS CALL, SURVIVORS!** ⚔️')
                     .setDescription(`**Cupid's Divine Shop System Has Arrived!**\n\nThe gods have blessed this realm with a legendary economy system. Prove your worth on the battlefield and reap the rewards!`)
