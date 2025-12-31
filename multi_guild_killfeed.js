@@ -101,6 +101,17 @@ class MultiGuildKillfeed {
             
             if (foundIndex !== -1) {
                 newEvents = events.slice(foundIndex + 1);
+                
+                // On startup, also re-scan last 50 events for missed build events only
+                if (state.lastPollTime === 0) {
+                    const rescanStart = Math.max(0, foundIndex - 50);
+                    const rescanEvents = events.slice(rescanStart, foundIndex + 1);
+                    const missedBuildEvents = rescanEvents.filter(e => e.type === 'build');
+                    if (missedBuildEvents.length > 0) {
+                        console.log(`[MULTI-KILLFEED] Guild ${guildId}: Re-scanning last 50 lines on startup, found ${missedBuildEvents.length} missed build events`);
+                        newEvents = [...missedBuildEvents, ...newEvents];
+                    }
+                }
             } else {
                 // If we can't find the last line, the log file might have rotated
                 // Only post events if this is the first poll (lastPollTime is recent startup)
@@ -110,16 +121,28 @@ class MultiGuildKillfeed {
                     console.log(`[MULTI-KILLFEED] Guild ${guildId}: Can't find last line, log may have rotated. Skipping to prevent duplicates.`);
                     newEvents = [];
                 } else if (state.lastPollTime === 0) {
-                    // First poll after bot startup - don't spam old events
-                    console.log(`[MULTI-KILLFEED] Guild ${guildId}: First poll after startup, skipping old events`);
-                    newEvents = [];
+                    // First poll after bot startup - scan for recent build events only (last 100 events)
+                    console.log(`[MULTI-KILLFEED] Guild ${guildId}: First poll after startup, scanning for recent build events`);
+                    const recentEvents = events.slice(-100);
+                    newEvents = recentEvents.filter(e => e.type === 'build');
+                    if (newEvents.length > 0) {
+                        console.log(`[MULTI-KILLFEED] Guild ${guildId}: Found ${newEvents.length} recent build events`);
+                    } else {
+                        newEvents = [];
+                    }
                 }
                 // Otherwise post all (rare case of very long time since last poll)
             }
         } else if (state.lastLogLine === '' && events.length > 0) {
-            // Empty lastLogLine means never polled before - skip old events
-            console.log(`[MULTI-KILLFEED] Guild ${guildId}: No previous state, skipping old events`);
-            newEvents = [];
+            // Empty lastLogLine means never polled before - scan for recent build events only
+            console.log(`[MULTI-KILLFEED] Guild ${guildId}: No previous state, scanning for recent build events`);
+            const recentEvents = events.slice(-100);
+            newEvents = recentEvents.filter(e => e.type === 'build');
+            if (newEvents.length > 0) {
+                console.log(`[MULTI-KILLFEED] Guild ${guildId}: Found ${newEvents.length} recent build events`);
+            } else {
+                newEvents = [];
+            }
         }
         
         // Post new events to this guild's killfeed channel
