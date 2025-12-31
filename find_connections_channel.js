@@ -16,7 +16,7 @@ bot.once('ready', async () => {
         
         const channels = await guild.channels.fetch();
         channels.forEach(channel => {
-            if (channel.type === 'GUILD_TEXT') {
+            if (channel && channel.type === 'GUILD_TEXT') {
                 const name = channel.name.toLowerCase();
                 if (name.includes('connect') || name.includes('join') || name.includes('player')) {
                     console.log(`🔍 ${channel.name} - ID: ${channel.id}`);
@@ -26,7 +26,7 @@ bot.once('ready', async () => {
         
         console.log('\n\n📋 ALL TEXT CHANNELS:');
         channels.forEach(channel => {
-            if (channel.type === 'GUILD_TEXT') {
+            if (channel && channel.type === 'GUILD_TEXT') {
                 console.log(`${channel.name} - ${channel.id}`);
             }
         });
