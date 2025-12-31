@@ -6,7 +6,7 @@ async function checkSakhalConfig() {
         
         try {
             const result = await client.query(
-                'SELECT guild_id, nitrado_service_id, map_name, channels, restart_hours FROM guild_configs WHERE guild_id = $1',
+                'SELECT guild_id, nitrado_service_id, map_name, killfeed_channel_id, connections_channel_id, admin_channel_id, restart_hours FROM guild_configs WHERE guild_id = $1',
                 ['1445957198000820316']
             );
             
@@ -20,10 +20,9 @@ async function checkSakhalConfig() {
                 console.log('Map:', config.map_name);
                 console.log('Restart Hours:', config.restart_hours);
                 console.log('\nChannels:');
-                const channels = config.channels;
-                console.log('  Killfeed Channel:', channels.killfeed_channel_id);
-                console.log('  Connections Channel:', channels.connections_channel_id);
-                console.log('  Admin Channel:', channels.admin_channel_id);
+                console.log('  Killfeed Channel:', config.killfeed_channel_id);
+                console.log('  Connections Channel:', config.connections_channel_id);
+                console.log('  Admin Channel:', config.admin_channel_id);
             }
             
         } finally {
