@@ -542,8 +542,8 @@ bot.on('messageCreate', async message => {
     const generalChannels = ['general', 'general-chat', '💬general', '💬-general', 'wop-general'];
     const isGeneralChannel = generalChannels.includes(message.channel.name);
     
-    if (isGeneralChannel && message.mentions.has(bot.user)) {
-        // Bot was mentioned - respond with personality
+    if (isGeneralChannel) {
+        // Respond to questions in general channels
         const content = message.content.toLowerCase();
         let response = null;
         
@@ -559,12 +559,13 @@ bot.on('messageCreate', async message => {
             response = "Your gratitude honors me, warrior. May your aim be true and your heart courageous! 🏹✨";
         } else if (content.includes('love') || content.includes('desire')) {
             response = "Ah, you speak of my domain! Love and desire are what drive us all. Even in the wasteland, the heart seeks connection. 💘";
-        } else {
-            response = "You have summoned me, mortal. How may Cupid assist you today? 🏹";
+        } else if (content.endsWith('?')) {
+            response = "You have asked a question, mortal. Cupid is here to help! 🏹";
         }
-        
-        await message.reply(response);
-        return;
+        if (response) {
+            await message.reply(response);
+            return;
+        }
     }
     
     // Original admin role checking logic (preserved)
