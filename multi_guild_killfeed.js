@@ -447,7 +447,7 @@ class MultiGuildKillfeed {
                     .setTitle('💀 ⚰️ SUICIDE ⚰️ 💀');
                 
                 if (event.player) {
-                    embed.setDescription(`\`\`\`fix\n${event.player}\n\`\`\`\n💔 **Took their own life**`);
+                    embed.setDescription(`\`\`\`fix\n${event.player}\n\`\`\`\n💔 **${event.player} was a bitch and killed themselves**`);
                     embed.addFields({ name: '🕐 Time', value: `\`${event.time}\``, inline: true });
                 } else {
                     embed.setDescription(`\`\`\`\n${event.raw}\n\`\`\``);
