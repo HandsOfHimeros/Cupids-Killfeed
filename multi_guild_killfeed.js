@@ -254,7 +254,10 @@ class MultiGuildKillfeed {
                         raw: line
                     });
                 }
-            } else if (line.includes('placed') || line.includes('raised')) {
+            } else if (line.includes('placed') || line.includes('raised') || line.includes('dismantled') || line.includes('Built')) {
+                // Match: Player "name" placed/raised X at position
+                // Or: Player "name" dismantled X
+                // Or: Player "name"Built X on Y with Z
                 match = line.match(/^(\d{2}:\d{2}:\d{2}) \| Player \"(.+?)\"\(id=[^)]*\) (placed|raised) (.+) at position/);
                 if (match) {
                     events.push({
@@ -265,6 +268,19 @@ class MultiGuildKillfeed {
                         item: match[4],
                         raw: line
                     });
+                } else {
+                    // Try dismantled or Built patterns
+                    match = line.match(/^(\d{2}:\d{2}:\d{2}) \| Player \"(.+?)\"\(id=[^)]*\) ?([Dd]ismantled|[Bb]uilt) (.+)/);
+                    if (match) {
+                        events.push({
+                            type: 'build',
+                            time: match[1],
+                            player: match[2],
+                            action: match[3].toLowerCase(),
+                            item: match[4],
+                            raw: line
+                        });
+                    }
                 }
             }
         }
@@ -281,7 +297,12 @@ class MultiGuildKillfeed {
             // Route to appropriate channel based on event type
             if (event.type === 'connected' || event.type === 'disconnected') {
                 channelId = guildConfig.connections_channel_id;
+            } else if (event.type === 'suicide') {
+                channelId = guildConfig.suicide_channel_id || guildConfig.killfeed_channel_id;
+            } else if (event.type === 'build') {
+                channelId = guildConfig.build_channel_id || guildConfig.killfeed_channel_id;
             } else {
+                // kills and hits go to killfeed
                 channelId = guildConfig.killfeed_channel_id;
             }
             
