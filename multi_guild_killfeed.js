@@ -216,33 +216,88 @@ class MultiGuildKillfeed {
             const time = timeMatch[1];
             
             if (line.includes('killed by')) {
+                // Try to parse details for formatted output
+                let victim, killer, weapon;
+                let killMatch = line.match(/Player \"(.+?)\"\(id=[^)]*\) killed by Player \"(.+?)\"\(id=[^)]*\) with (.+)$/);
+                if (killMatch) {
+                    victim = killMatch[1];
+                    killer = killMatch[2];
+                    weapon = killMatch[3];
+                } else {
+                    // Try zombie/AI format
+                    killMatch = line.match(/(?:Player )?\"(.+?)\"(?:\s*\(DEAD\))?\s*\(id=[^)]*(?:\s+pos=[^)]+)?\)\s+killed by (.+)$/);
+                    if (killMatch) {
+                        victim = killMatch[1];
+                        killer = killMatch[2];
+                        weapon = 'Unknown';
+                    }
+                }
+                
                 events.push({ 
                     type: 'kill', 
                     time: time, 
+                    victim: victim,
+                    killer: killer,
+                    weapon: weapon,
                     raw: line 
                 });
             } else if (line.includes('hit by')) {
+                // Try to parse hit details
+                let victim, source;
+                let hitMatch = line.match(/Player \"(.+?)\"\(id=[^)]*\) hit by Player \"(.+?)\"\(id=[^)]*\) with (.+)$/);
+                if (hitMatch) {
+                    victim = hitMatch[1];
+                    source = `${hitMatch[2]} with ${hitMatch[3]}`;
+                } else {
+                    // Try environmental/zombie hit
+                    hitMatch = line.match(/(?:Player )?\"(.+?)\"(?:\s*\(DEAD\))?\s*(?:\(id=[^)]*(?:\s+pos=[^)]+)?\))?(?:\[HP:\s*\d+\])?\s+hit by (.+)$/);
+                    if (hitMatch) {
+                        victim = hitMatch[1];
+                        source = hitMatch[2];
+                    }
+                }
+                
                 events.push({ 
                     type: 'hit', 
                     time: time, 
+                    victim: victim,
+                    source: source,
                     raw: line 
                 });
             } else if (line.includes('is connected')) {
+                // Parse player name
+                let player;
+                const connectMatch = line.match(/Player \"(.+?)\"/);
+                if (connectMatch) player = connectMatch[1];
+                
                 events.push({
                     type: 'connected',
                     time: time,
+                    player: player,
                     raw: line
                 });
             } else if (line.includes('has been disconnected')) {
+                // Parse player name
+                let player;
+                const disconnectMatch = line.match(/Player '(.+?)'/);
+                if (disconnectMatch) player = disconnectMatch[1];
+                
                 events.push({
                     type: 'disconnected',
                     time: time,
+                    player: player,
                     raw: line
                 });
             } else if (line.includes('committed suicide')) {
+                // Parse player name
+                let player;
+                const suicideMatch = line.match(/Player \"(.+?)\"/);
+                if (suicideMatch) player = suicideMatch[1];
+                
                 events.push({
                     type: 'suicide',
                     time: time,
+                    player: player,
                     raw: line
                 });
             } else if (line.includes('placed') || line.includes('raised') || line.includes('dismantled') || line.includes('Built')) {
@@ -316,28 +371,68 @@ class MultiGuildKillfeed {
             
             if (event.type === 'kill') {
                 embed.setColor('#ff0000')
-                    .setTitle('☠️ Killfeed')
-                    .setDescription(event.raw);
+                    .setTitle('☠️ Killfeed');
+                
+                if (event.victim && event.killer) {
+                    embed.setDescription(`**${event.killer}** killed **${event.victim}**`);
+                    if (event.weapon) {
+                        embed.addFields({ name: 'Weapon', value: event.weapon, inline: true });
+                    }
+                    embed.addFields({ name: 'Time', value: event.time, inline: true });
+                } else {
+                    // Fallback to raw line if parsing failed
+                    embed.setDescription(event.raw);
+                }
             } else if (event.type === 'hit') {
                 embed.setColor('#ffaa00')
-                    .setTitle('💥 Hitfeed')
-                    .setDescription(event.raw);
+                    .setTitle('💥 Hitfeed');
+                
+                if (event.victim && event.source) {
+                    embed.setDescription(`**${event.victim}** was hit by **${event.source}**`);
+                    embed.addFields({ name: 'Time', value: event.time, inline: true });
+                } else {
+                    embed.setDescription(event.raw);
+                }
             } else if (event.type === 'connected') {
                 embed.setColor('#00ff00')
-                    .setTitle('🟢 Player Connected')
-                    .setDescription(event.raw);
+                    .setTitle('🟢 Player Connected');
+                
+                if (event.player) {
+                    embed.setDescription(`**${event.player}** connected to the server`);
+                    embed.addFields({ name: 'Time', value: event.time, inline: true });
+                } else {
+                    embed.setDescription(event.raw);
+                }
             } else if (event.type === 'disconnected') {
                 embed.setColor('#ff0000')
-                    .setTitle('🔴 Player Disconnected')
-                    .setDescription(event.raw);
+                    .setTitle('🔴 Player Disconnected');
+                
+                if (event.player) {
+                    embed.setDescription(`**${event.player}** disconnected from the server`);
+                    embed.addFields({ name: 'Time', value: event.time, inline: true });
+                } else {
+                    embed.setDescription(event.raw);
+                }
             } else if (event.type === 'suicide') {
                 embed.setColor('#800080')
-                    .setTitle('💀 Suicide')
-                    .setDescription(event.raw);
+                    .setTitle('💀 Suicide');
+                
+                if (event.player) {
+                    embed.setDescription(`**${event.player}** committed suicide`);
+                    embed.addFields({ name: 'Time', value: event.time, inline: true });
+                } else {
+                    embed.setDescription(event.raw);
+                }
             } else if (event.type === 'build') {
                 embed.setColor('#0099ff')
-                    .setTitle('🔨 Build Event')
-                    .setDescription(event.raw);
+                    .setTitle('🔨 Build Event');
+                
+                if (event.player && event.action && event.item) {
+                    embed.setDescription(`**${event.player}** ${event.action} **${event.item}**`);
+                    embed.addFields({ name: 'Time', value: event.time, inline: true });
+                } else {
+                    embed.setDescription(event.raw);
+                }
             }
             
             console.log(`[MULTI-KILLFEED] Sending embed to channel ${channelId}...`);
