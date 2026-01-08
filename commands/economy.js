@@ -2,6 +2,7 @@
 const path = require('path');
 const fs = require('fs');
 const db = require('../database.js');
+const { MessageActionRow, MessageButton } = require('discord.js');
 const COOLDOWN_FILE = path.join(__dirname, '../logs/economy_cooldowns.json');
 const MINI_GAMES = ['slots','rob','golf','cards','job','blackjack','crime','theft','bribe','work'];
 const COOLDOWN_LIMIT = 1; // times allowed
@@ -366,17 +367,92 @@ module.exports = {
                         pages.push(desc);
                     }
                     
-                    // Send first page
-                    const currentPage = 0;
-                    await interaction.reply({
+                    // Send first page with navigation buttons
+                    let currentPage = 0;
+                    const row = new MessageActionRow()
+                        .addComponents(
+                            new MessageButton()
+                                .setCustomId('prev_page')
+                                .setLabel('◀ Previous')
+                                .setStyle('PRIMARY')
+                                .setDisabled(true),
+                            new MessageButton()
+                                .setCustomId('next_page')
+                                .setLabel('Next ▶')
+                                .setStyle('PRIMARY')
+                                .setDisabled(pages.length <= 1)
+                        );
+                    
+                    const message = await interaction.reply({
                         embeds: [
                             new MessageEmbed()
                                 .setColor('#ff69b4')
                                 .setTitle('DayZ Shop')
                                 .setDescription(pages[currentPage])
                                 .setFooter({ text: `Page ${currentPage + 1}/${pages.length} • Use /shop item:<name> to purchase.` })
-                        ]
+                        ],
+                        components: [row],
+                        fetchReply: true
                     });
+                    
+                    // Create button collector
+                    const collector = message.createMessageComponentCollector({ time: 300000 }); // 5 minutes
+                    
+                    collector.on('collect', async i => {
+                        if (i.user.id !== interaction.user.id) {
+                            return i.reply({ content: 'These buttons are not for you!', ephemeral: true });
+                        }
+                        
+                        if (i.customId === 'prev_page') {
+                            currentPage = Math.max(0, currentPage - 1);
+                        } else if (i.customId === 'next_page') {
+                            currentPage = Math.min(pages.length - 1, currentPage + 1);
+                        }
+                        
+                        const newRow = new MessageActionRow()
+                            .addComponents(
+                                new MessageButton()
+                                    .setCustomId('prev_page')
+                                    .setLabel('◀ Previous')
+                                    .setStyle('PRIMARY')
+                                    .setDisabled(currentPage === 0),
+                                new MessageButton()
+                                    .setCustomId('next_page')
+                                    .setLabel('Next ▶')
+                                    .setStyle('PRIMARY')
+                                    .setDisabled(currentPage === pages.length - 1)
+                            );
+                        
+                        await i.update({
+                            embeds: [
+                                new MessageEmbed()
+                                    .setColor('#ff69b4')
+                                    .setTitle('DayZ Shop')
+                                    .setDescription(pages[currentPage])
+                                    .setFooter({ text: `Page ${currentPage + 1}/${pages.length} • Use /shop item:<name> to purchase.` })
+                            ],
+                            components: [newRow]
+                        });
+                    });
+                    
+                    collector.on('end', () => {
+                        // Disable buttons after timeout
+                        const disabledRow = new MessageActionRow()
+                            .addComponents(
+                                new MessageButton()
+                                    .setCustomId('prev_page')
+                                    .setLabel('◀ Previous')
+                                    .setStyle('PRIMARY')
+                                    .setDisabled(true),
+                                new MessageButton()
+                                    .setCustomId('next_page')
+                                    .setLabel('Next ▶')
+                                    .setStyle('PRIMARY')
+                                    .setDisabled(true)
+                            );
+                        message.edit({ components: [disabledRow] }).catch(() => {});
+                    });
+                    
                     console.log('[SHOP] Shop menu sent');
                     return;
                 }
