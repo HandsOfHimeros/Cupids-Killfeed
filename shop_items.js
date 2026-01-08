@@ -2,25 +2,63 @@
 // Format: { name, class, averagePrice, description }
 
 module.exports = [
+  // Assault Rifles
   { name: 'M4A1 Assault Rifle', class: 'M4A1', averagePrice: 1200, description: 'Standard 5.56mm assault rifle.' },
+  { name: 'M16A2', class: 'M16A2', averagePrice: 1300, description: '5.56mm military assault rifle.' },
+  { name: 'AK101', class: 'AK101', averagePrice: 1150, description: '5.56mm AK-platform rifle.' },
+  { name: 'AK74', class: 'AK74', averagePrice: 1050, description: '5.45mm assault rifle.' },
   { name: 'AKM', class: 'AKM', averagePrice: 1100, description: '7.62mm classic assault rifle.' },
+  { name: 'AKS-74U', class: 'AKS74U', averagePrice: 900, description: 'Compact 5.45mm assault rifle.' },
+  { name: 'AUG', class: 'Aug', averagePrice: 1400, description: 'Bullpup 5.56mm assault rifle.' },
+  { name: 'FAMAS', class: 'FAMAS', averagePrice: 1350, description: 'French bullpup assault rifle.' },
+  { name: 'LAR', class: 'FAL', averagePrice: 1800, description: 'Battle rifle, high damage.' },
+  
+  // Sniper/Marksman Rifles
   { name: 'Mosin Nagant', class: 'Mosin9130', averagePrice: 900, description: 'Bolt-action sniper rifle.' },
   { name: 'SVD', class: 'SVD', averagePrice: 2000, description: 'Rare semi-auto sniper rifle.' },
-  { name: 'LAR', class: 'FAL', averagePrice: 1800, description: 'Battle rifle, high damage.' },
+  { name: 'VSS', class: 'VSS', averagePrice: 1900, description: 'Suppressed sniper rifle.' },
   { name: 'Winchester 70', class: 'Winchester70', averagePrice: 950, description: 'Hunting bolt-action rifle.' },
-  { name: 'BK-133 Shotgun', class: 'Mp133Shotgun', averagePrice: 600, description: 'Pump-action shotgun.' },
-  { name: 'IZH-18 Rifle', class: 'Izh18', averagePrice: 350, description: 'Single-shot rifle.' },
   { name: 'CR-527', class: 'CZ527', averagePrice: 800, description: 'Bolt-action carbine.' },
+  { name: 'CZ550', class: 'CZ550', averagePrice: 1100, description: 'Hunting bolt-action rifle.' },
+  { name: 'Scout', class: 'Scout', averagePrice: 850, description: 'Compact bolt-action rifle.' },
+  { name: 'SSG82', class: 'SSG82', averagePrice: 750, description: 'Soviet training rifle.' },
+  
+  // Rifles
+  { name: 'SKS', class: 'SKS', averagePrice: 700, description: 'Semi-auto carbine.' },
+  { name: 'Repeater', class: 'Repeater', averagePrice: 600, description: 'Lever-action rifle.' },
+  { name: 'Ruger 10/22', class: 'Ruger1022', averagePrice: 450, description: '.22 caliber rifle.' },
+  { name: 'IZH-18 Rifle', class: 'Izh18', averagePrice: 350, description: 'Single-shot rifle.' },
+  
+  // Shotguns
+  { name: 'BK-133 Shotgun', class: 'Mp133Shotgun', averagePrice: 600, description: 'Pump-action shotgun.' },
+  { name: 'IZH-18 Shotgun', class: 'Izh18Shotgun', averagePrice: 400, description: 'Single-shot shotgun.' },
+  { name: 'IZH-43 Shotgun', class: 'Izh43Shotgun', averagePrice: 550, description: 'Double-barrel shotgun.' },
+  { name: 'Saiga', class: 'Saiga', averagePrice: 900, description: 'Semi-auto shotgun.' },
+  
+  // SMGs/PDWs
   { name: 'USG-45', class: 'UMP45', averagePrice: 850, description: '45 ACP submachine gun.' },
   { name: 'SG5-K', class: 'MP5K', averagePrice: 800, description: '9mm submachine gun.' },
-  { name: 'Glock 19', class: 'Glock19', averagePrice: 400, description: '9mm semi-auto pistol.' },
-  { name: 'IJ-70', class: 'IJ70', averagePrice: 300, description: '9mm budget pistol.' },
+  { name: 'PP-19', class: 'PP19', averagePrice: 750, description: '9mm submachine gun.' },
+  { name: 'PM-73 RAK', class: 'PM73Rak', averagePrice: 650, description: '9mm submachine gun.' },
+  { name: 'CZ-61 Skorpion', class: 'CZ61', averagePrice: 550, description: 'Compact machine pistol.' },
+  
+  // Pistols
+  { name: 'Desert Eagle', class: 'Deagle', averagePrice: 800, description: 'Powerful .357 pistol.' },
   { name: 'FX-45', class: 'FNX45', averagePrice: 450, description: '45 ACP pistol.' },
+  { name: 'Glock 19', class: 'Glock19', averagePrice: 400, description: '9mm semi-auto pistol.' },
+  { name: 'CZ-75', class: 'CZ75', averagePrice: 420, description: '9mm semi-auto pistol.' },
+  { name: 'P1', class: 'P1', averagePrice: 350, description: '9mm pistol.' },
+  { name: 'IJ-70', class: 'MakarovIJ70', averagePrice: 300, description: '9mm budget pistol.' },
+  { name: 'Ruger MK II', class: 'MKII', averagePrice: 280, description: '.22 caliber pistol.' },
+  
+  // Ammo
   { name: 'Ammo Box (5.56x45)', class: 'Ammo_556x45', averagePrice: 200, description: 'Box of 5.56mm ammo.' },
   { name: 'Ammo Box (7.62x39)', class: 'Ammo_762x39', averagePrice: 220, description: 'Box of 7.62x39mm ammo.' },
   { name: 'Ammo Box (7.62x54R)', class: 'Ammo_762x54', averagePrice: 250, description: 'Box of 7.62x54R ammo.' },
   { name: 'Ammo Box (9x19mm)', class: 'Ammo_9x19', averagePrice: 120, description: 'Box of 9x19mm ammo.' },
   { name: 'Ammo Box (.45 ACP)', class: 'Ammo_45ACP', averagePrice: 130, description: 'Box of .45 ACP ammo.' },
+  
+  // Gear & Equipment
   { name: 'Plate Carrier', class: 'PlateCarrierVest', averagePrice: 1500, description: 'Heavy armor vest.' },
   { name: 'Assault Backpack (Black)', class: 'AssaultBag_Black', averagePrice: 700, description: 'Large capacity backpack.' },
   { name: 'Assault Backpack (Green)', class: 'AssaultBag_Green', averagePrice: 700, description: 'Large capacity backpack.' },
@@ -39,6 +77,8 @@ module.exports = [
   { name: 'Saline Bag IV', class: 'SalineBagIV', averagePrice: 250, description: 'Restores blood.' },
   { name: 'Bandage', class: 'BandageDressing', averagePrice: 60, description: 'Medical bandage.' },
   { name: 'Lockpick', class: 'Lockpick', averagePrice: 100, description: 'Used to lock doors.' },
+  
+  // Vehicle Parts
   { name: 'Car Battery', class: 'CarBattery', averagePrice: 400, description: 'Vehicle battery.' },
   { name: 'Spark Plug', class: 'SparkPlug', averagePrice: 120, description: 'Vehicle spark plug.' },
   { name: 'Radiator', class: 'CarRadiator', averagePrice: 350, description: 'Vehicle radiator.' },
