@@ -42,7 +42,7 @@ module.exports = [
   { name: 'Car Battery', class: 'CarBattery', averagePrice: 400, description: 'Vehicle battery.' },
   { name: 'Spark Plug', class: 'SparkPlug', averagePrice: 120, description: 'Vehicle spark plug.' },
   { name: 'Radiator', class: 'CarRadiator', averagePrice: 350, description: 'Vehicle radiator.' },
-  { name: 'Jerrycan', class: 'CanisterGasoline', averagePrice: 200, description: 'Fuel container.' }
+  { name: 'Jerrycan', class: 'CanisterGasoline', averagePrice: 200, description: 'Fuel container.' },
 
   // Magazines from types.xml
   { name: '1911 Magazine (7Rnd)', class: 'Mag_1911_7Rnd', averagePrice: 200, description: '7-round magazine for 1911 pistol.' },
