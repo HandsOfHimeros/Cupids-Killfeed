@@ -403,6 +403,9 @@ module.exports = {
                             return i.reply({ content: 'These buttons are not for you!', ephemeral: true });
                         }
                         
+                        // Defer the update immediately to prevent timeout
+                        await i.deferUpdate();
+                        
                         if (i.customId === 'prev_page') {
                             currentPage = Math.max(0, currentPage - 1);
                         } else if (i.customId === 'next_page') {
@@ -423,7 +426,7 @@ module.exports = {
                                     .setDisabled(currentPage === pages.length - 1)
                             );
                         
-                        await i.update({
+                        await i.editReply({
                             embeds: [
                                 new MessageEmbed()
                                     .setColor('#ff69b4')
