@@ -15,11 +15,14 @@ async function listChannels() {
     try {
         await bot.login(process.env.TOKEN);
         
+        await new Promise(resolve => bot.once('ready', resolve));
+        
         console.log('Bot logged in, fetching guild...');
         
         const guild = await bot.guilds.fetch(guildId);
         console.log(`\n=== Channels in ${guild.name} ===\n`);
         
+        await guild.channels.fetch();
         const textChannels = guild.channels.cache.filter(ch => ch.type === 'GUILD_TEXT');
         
         textChannels.forEach(channel => {
