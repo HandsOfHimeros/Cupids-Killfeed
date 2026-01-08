@@ -429,6 +429,13 @@ class MultiGuildKillfeed {
                 if (event.player) {
                     embed.setDescription(`\`\`\`diff\n+ ${event.player}\n\`\`\`\n👋 **Welcome to the server!**`);
                     embed.addFields({ name: '🕐 Time', value: `\`${event.time}\``, inline: true });
+                    
+                    // Start distance tracking session
+                    try {
+                        await db.startPlayerSession(guildConfig.guild_id, event.player, 0, 0, 0);
+                    } catch (err) {
+                        console.error(`[DISTANCE] Error starting session: ${err.message}`);
+                    }
                 } else {
                     embed.setDescription(`\`\`\`\n${event.raw}\n\`\`\``);
                 }
@@ -437,7 +444,35 @@ class MultiGuildKillfeed {
                     .setTitle('🔴 ❌ PLAYER LEFT ❌ 🔴');
                 
                 if (event.player) {
-                    embed.setDescription(`\`\`\`diff\n- ${event.player}\n\`\`\`\n👋 **Left the server**`);
+                    // Calculate distance earnings
+                    let distanceInfo = '';
+                    try {
+                        const totalDistance = await db.endPlayerSession(guildConfig.guild_id, event.player);
+                        if (totalDistance > 0) {
+                            const distanceKm = (totalDistance / 1000).toFixed(2);
+                            const distanceM = Math.round(totalDistance);
+                            
+                            // Reward: $1 per 100 meters
+                            const earned = Math.floor(totalDistance / 100);
+                            
+                            if (earned > 0) {
+                                // Find user ID from dayz_names
+                                const userId = await db.getUserIdByDayZName(guildConfig.guild_id, event.player);
+                                if (userId) {
+                                    await db.addBalance(guildConfig.guild_id, userId, earned);
+                                    distanceInfo = `\n\n🗺️ **Distance Traveled:** ${distanceM}m (${distanceKm}km)\n💰 **Earned:** $${earned}`;
+                                } else {
+                                    distanceInfo = `\n\n🗺️ **Distance Traveled:** ${distanceM}m (${distanceKm}km)\n⚠️ Register with /register to earn $${earned}`;
+                                }
+                            } else {
+                                distanceInfo = `\n\n🗺️ **Distance Traveled:** ${distanceM}m (${distanceKm}km)`;
+                            }
+                        }
+                    } catch (err) {
+                        console.error(`[DISTANCE] Error calculating earnings: ${err.message}`);
+                    }
+                    
+                    embed.setDescription(`\`\`\`diff\n- ${event.player}\n\`\`\`\n👋 **Left the server**${distanceInfo}`);
                     embed.addFields({ name: '🕐 Time', value: `\`${event.time}\``, inline: true });
                 } else {
                     embed.setDescription(`\`\`\`\n${event.raw}\n\`\`\``);
@@ -496,6 +531,12 @@ class MultiGuildKillfeed {
                 const locInfo = this.parsePlayerLocation(line);
                 if (locInfo) {
                     await db.setPlayerLocation(guildId, locInfo.name, locInfo.position.x, locInfo.position.y, locInfo.position.z);
+                    // Also update distance tracking for active sessions
+                    try {
+                        await db.updatePlayerDistance(guildId, locInfo.name, locInfo.position.x, locInfo.position.y, locInfo.position.z);
+                    } catch (err) {
+                        // Session might not exist yet, ignore
+                    }
                     locationCount++;
                 }
             }

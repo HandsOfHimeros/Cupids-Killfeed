@@ -153,6 +153,11 @@ async function getDayZName(guildId, userId) {
     return result.rows[0]?.dayz_name || null;
 }
 
+async function getUserIdByDayZName(guildId, dayzName) {
+    const result = await pool.query('SELECT user_id FROM dayz_names WHERE guild_id = $1 AND LOWER(dayz_name) = LOWER($2)', [guildId, dayzName]);
+    return result.rows[0]?.user_id || null;
+}
+
 async function setDayZName(guildId, userId, dayzName) {
     await pool.query(`
         INSERT INTO dayz_names (guild_id, user_id, dayz_name) 
@@ -189,11 +194,71 @@ async function updateKillfeedState(guildId, lastLogLine) {
     `, [guildId, lastLogLine]);
 }
 
+// Player session operations for distance tracking
+async function startPlayerSession(guildId, playerName, x, y, z) {
+    await pool.query(`
+        INSERT INTO player_sessions (guild_id, player_name, connected_at, start_x, start_y, start_z, last_x, last_y, last_z, is_active)
+        VALUES ($1, $2, $3, $4, $5, $6, $4, $5, $6, true)
+        ON CONFLICT (guild_id, player_name) 
+        DO UPDATE SET 
+            connected_at = $3,
+            start_x = $4, start_y = $5, start_z = $6,
+            last_x = $4, last_y = $5, last_z = $6,
+            total_distance = 0,
+            is_active = true
+    `, [guildId, playerName.toLowerCase(), Date.now(), x || 0, y || 0, z || 0]);
+}
+
+async function updatePlayerDistance(guildId, playerName, x, y, z) {
+    // Calculate distance from last position
+    const result = await pool.query(`
+        SELECT last_x, last_y, last_z, total_distance 
+        FROM player_sessions 
+        WHERE guild_id = $1 AND LOWER(player_name) = LOWER($2) AND is_active = true
+    `, [guildId, playerName]);
+    
+    if (result.rows.length === 0) return 0;
+    
+    const { last_x, last_y, last_z, total_distance } = result.rows[0];
+    
+    // Calculate 3D distance
+    const dx = x - last_x;
+    const dy = y - last_y;
+    const dz = z - last_z;
+    const distance = Math.sqrt(dx*dx + dy*dy + dz*dz);
+    
+    // Ignore teleports (distance > 1000m) as likely respawns
+    if (distance > 1000) return total_distance;
+    
+    const newTotal = total_distance + distance;
+    
+    // Update position and distance
+    await pool.query(`
+        UPDATE player_sessions 
+        SET last_x = $3, last_y = $4, last_z = $5, total_distance = $6
+        WHERE guild_id = $1 AND LOWER(player_name) = LOWER($2) AND is_active = true
+    `, [guildId, playerName, x, y, z, newTotal]);
+    
+    return newTotal;
+}
+
+async function endPlayerSession(guildId, playerName) {
+    const result = await pool.query(`
+        UPDATE player_sessions 
+        SET is_active = false
+        WHERE guild_id = $1 AND LOWER(player_name) = LOWER($2) AND is_active = true
+        RETURNING total_distance
+    `, [guildId, playerName]);
+    
+    return result.rows[0]?.total_distance || 0;
+}
+
 module.exports = {
     pool,
     getGuildConfig,
     setGuildConfig,
-    setGuildChannels,    getAllGuildConfigs,
+    setGuildChannels,
+    getAllGuildConfigs,
     updateKillfeedState,
     getBalance,
     setBalance,
@@ -206,7 +271,11 @@ module.exports = {
     addCooldown,
     cleanOldCooldowns,
     getDayZName,
+    getUserIdByDayZName,
     setDayZName,
     getPlayerLocation,
-    setPlayerLocation
+    setPlayerLocation,
+    startPlayerSession,
+    updatePlayerDistance,
+    endPlayerSession
 };
