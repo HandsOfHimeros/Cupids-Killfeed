@@ -395,14 +395,11 @@ module.exports = {
                         fetchReply: true
                     });
                     
-                    // Create button collector
-                    const collector = message.createMessageComponentCollector({ time: 300000 }); // 5 minutes
+                    // Create button collector with filter
+                    const filter = i => i.user.id === interaction.user.id;
+                    const collector = message.createMessageComponentCollector({ filter, time: 300000 }); // 5 minutes
                     
                     collector.on('collect', async i => {
-                        if (i.user.id !== interaction.user.id) {
-                            return i.reply({ content: 'These buttons are not for you!', ephemeral: true });
-                        }
-                        
                         if (i.customId === 'prev_page') {
                             currentPage = Math.max(0, currentPage - 1);
                         } else if (i.customId === 'next_page') {
