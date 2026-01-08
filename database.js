@@ -217,7 +217,7 @@ async function updatePlayerDistance(guildId, playerName, x, y, z) {
         WHERE guild_id = $1 AND LOWER(player_name) = LOWER($2) AND is_active = true
     `, [guildId, playerName]);
     
-    if (result.rows.length === 0) return 0;
+    if (result.rows.length === 0) return null; // Return null to indicate no session exists
     
     const { last_x, last_y, last_z, total_distance } = result.rows[0];
     

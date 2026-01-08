@@ -545,19 +545,13 @@ class MultiGuildKillfeed {
                 if (locInfo) {
                     await db.setPlayerLocation(guildId, locInfo.name, locInfo.position.x, locInfo.position.y, locInfo.position.z);
                     // Also update distance tracking for active sessions
-                    try {
-                        const distance = await db.updatePlayerDistance(guildId, locInfo.name, locInfo.position.x, locInfo.position.y, locInfo.position.z);
-                        if (distance > 0) {
-                            distanceUpdateCount++;
-                        }
-                    } catch (err) {
-                        // Session might not exist yet - create it now
-                        try {
-                            await db.startPlayerSession(guildId, locInfo.name, locInfo.position.x, locInfo.position.y, locInfo.position.z);
-                            console.log(`[DISTANCE] Auto-created session for ${locInfo.name} at position`);
-                        } catch (err2) {
-                            // Ignore - session already exists or other error
-                        }
+                    const distance = await db.updatePlayerDistance(guildId, locInfo.name, locInfo.position.x, locInfo.position.y, locInfo.position.z);
+                    if (distance === null) {
+                        // Session doesn't exist yet - create it now
+                        await db.startPlayerSession(guildId, locInfo.name, locInfo.position.x, locInfo.position.y, locInfo.position.z);
+                        console.log(`[DISTANCE] Auto-created session for ${locInfo.name} at position`);
+                    } else if (distance > 0) {
+                        distanceUpdateCount++;
                     }
                     locationCount++;
                 }
