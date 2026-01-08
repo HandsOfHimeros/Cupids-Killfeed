@@ -341,6 +341,7 @@ async function addCupidSpawnEntry(spawnEntry, guildId) {
         // Step 4: Create spawn object using template from spawn.json
         const spawnObject = {
             ...template,
+            name: spawnEntry.class, // Ensure name is always the item class
             pos: playerPos,
             customString: JSON.stringify({
                 userId: spawnEntry.userId,
