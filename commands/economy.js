@@ -397,7 +397,11 @@ module.exports = {
                     
                     // Create button collector with filter
                     const filter = i => i.user.id === interaction.user.id;
-                    const collector = message.createMessageComponentCollector({ filter, time: 300000 }); // 5 minutes
+                    const collector = message.createMessageComponentCollector({ 
+                        filter, 
+                        componentType: 'BUTTON',
+                        time: 300000 
+                    }); // 5 minutes
                     
                     collector.on('collect', async i => {
                         if (i.customId === 'prev_page') {
