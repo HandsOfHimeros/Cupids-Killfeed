@@ -4,23 +4,37 @@
 module.exports = [
   // Assault Rifles
   { name: 'M4A1 Assault Rifle', class: 'M4A1', averagePrice: 1200, description: 'Standard 5.56mm assault rifle.' },
+  { name: 'M4A1 (Black)', class: 'M4A1_Black', averagePrice: 1200, description: 'Black 5.56mm assault rifle.' },
+  { name: 'M4A1 (Green)', class: 'M4A1_Green', averagePrice: 1200, description: 'Green 5.56mm assault rifle.' },
   { name: 'M16A2', class: 'M16A2', averagePrice: 1300, description: '5.56mm military assault rifle.' },
   { name: 'AK101', class: 'AK101', averagePrice: 1150, description: '5.56mm AK-platform rifle.' },
+  { name: 'AK101 (Black)', class: 'AK101_Black', averagePrice: 1150, description: 'Black 5.56mm AK-platform rifle.' },
+  { name: 'AK101 (Green)', class: 'AK101_Green', averagePrice: 1150, description: 'Green 5.56mm AK-platform rifle.' },
   { name: 'AK74', class: 'AK74', averagePrice: 1050, description: '5.45mm assault rifle.' },
+  { name: 'AK74 (Black)', class: 'AK74_Black', averagePrice: 1050, description: 'Black 5.45mm assault rifle.' },
+  { name: 'AK74 (Green)', class: 'AK74_Green', averagePrice: 1050, description: 'Green 5.45mm assault rifle.' },
   { name: 'AKM', class: 'AKM', averagePrice: 1100, description: '7.62mm classic assault rifle.' },
   { name: 'AKS-74U', class: 'AKS74U', averagePrice: 900, description: 'Compact 5.45mm assault rifle.' },
+  { name: 'AKS-74U (Black)', class: 'AKS74U_Black', averagePrice: 900, description: 'Black compact 5.45mm assault rifle.' },
+  { name: 'AKS-74U (Green)', class: 'AKS74U_Green', averagePrice: 900, description: 'Green compact 5.45mm assault rifle.' },
   { name: 'AUG', class: 'Aug', averagePrice: 1400, description: 'Bullpup 5.56mm assault rifle.' },
   { name: 'FAMAS', class: 'FAMAS', averagePrice: 1350, description: 'French bullpup assault rifle.' },
   { name: 'LAR', class: 'FAL', averagePrice: 1800, description: 'Battle rifle, high damage.' },
   
   // Sniper/Marksman Rifles
   { name: 'Mosin Nagant', class: 'Mosin9130', averagePrice: 900, description: 'Bolt-action sniper rifle.' },
+  { name: 'Mosin Nagant (Black)', class: 'Mosin9130_Black', averagePrice: 900, description: 'Black bolt-action sniper rifle.' },
+  { name: 'Mosin Nagant (Camo)', class: 'Mosin9130_Camo', averagePrice: 900, description: 'Camo bolt-action sniper rifle.' },
+  { name: 'Mosin Nagant (Green)', class: 'Mosin9130_Green', averagePrice: 900, description: 'Green bolt-action sniper rifle.' },
   { name: 'SVD', class: 'SVD', averagePrice: 2000, description: 'Rare semi-auto sniper rifle.' },
+  { name: 'SVD (Wooden)', class: 'SVD_Wooden', averagePrice: 2000, description: 'Wooden SVD sniper rifle.' },
   { name: 'VSS', class: 'VSS', averagePrice: 1900, description: 'Suppressed sniper rifle.' },
   { name: 'Winchester 70', class: 'Winchester70', averagePrice: 950, description: 'Hunting bolt-action rifle.' },
   { name: 'CR-527', class: 'CZ527', averagePrice: 800, description: 'Bolt-action carbine.' },
   { name: 'CZ550', class: 'CZ550', averagePrice: 1100, description: 'Hunting bolt-action rifle.' },
   { name: 'Scout', class: 'Scout', averagePrice: 850, description: 'Compact bolt-action rifle.' },
+  { name: 'Scout (Chernarus)', class: 'Scout_Chernarus', averagePrice: 850, description: 'Chernarus Scout rifle.' },
+  { name: 'Scout (Livonia)', class: 'Scout_Livonia', averagePrice: 850, description: 'Livonia Scout rifle.' },
   { name: 'SSG82', class: 'SSG82', averagePrice: 750, description: 'Soviet training rifle.' },
   
   // Rifles
@@ -44,6 +58,7 @@ module.exports = [
   
   // Pistols
   { name: 'Desert Eagle', class: 'Deagle', averagePrice: 800, description: 'Powerful .357 pistol.' },
+  { name: 'Desert Eagle (Gold)', class: 'Deagle_Gold', averagePrice: 1200, description: 'Gold-plated Desert Eagle.' },
   { name: 'FX-45', class: 'FNX45', averagePrice: 450, description: '45 ACP pistol.' },
   { name: 'Glock 19', class: 'Glock19', averagePrice: 400, description: '9mm semi-auto pistol.' },
   { name: 'CZ-75', class: 'CZ75', averagePrice: 420, description: '9mm semi-auto pistol.' },
