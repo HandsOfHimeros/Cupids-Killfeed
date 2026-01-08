@@ -432,9 +432,12 @@ class MultiGuildKillfeed {
                     
                     // Start distance tracking session
                     try {
+                        console.log(`[DISTANCE] Starting session for ${event.player} in guild ${guildConfig.guild_id}`);
                         await db.startPlayerSession(guildConfig.guild_id, event.player, 0, 0, 0);
+                        console.log(`[DISTANCE] Session started successfully for ${event.player}`);
                     } catch (err) {
                         console.error(`[DISTANCE] Error starting session: ${err.message}`);
+                        console.error(`[DISTANCE] Stack: ${err.stack}`);
                     }
                 } else {
                     embed.setDescription(`\`\`\`\n${event.raw}\n\`\`\``);
@@ -447,7 +450,10 @@ class MultiGuildKillfeed {
                     // Calculate distance earnings
                     let distanceInfo = '';
                     try {
+                        console.log(`[DISTANCE] Processing disconnect for ${event.player} in guild ${guildConfig.guild_id}`);
                         const totalDistance = await db.endPlayerSession(guildConfig.guild_id, event.player);
+                        console.log(`[DISTANCE] Total distance for ${event.player}: ${totalDistance}m`);
+                        
                         if (totalDistance > 0) {
                             const distanceKm = (totalDistance / 1000).toFixed(2);
                             const distanceM = Math.round(totalDistance);
@@ -458,18 +464,24 @@ class MultiGuildKillfeed {
                             if (earned > 0) {
                                 // Find user ID from dayz_names
                                 const userId = await db.getUserIdByDayZName(guildConfig.guild_id, event.player);
+                                console.log(`[DISTANCE] User ID for ${event.player}: ${userId}`);
                                 if (userId) {
                                     await db.addBalance(guildConfig.guild_id, userId, earned);
+                                    console.log(`[DISTANCE] Awarded $${earned} to ${event.player} (${userId})`);
                                     distanceInfo = `\n\n🗺️ **Distance Traveled:** ${distanceM}m (${distanceKm}km)\n💰 **Earned:** $${earned}`;
                                 } else {
+                                    console.log(`[DISTANCE] ${event.player} not registered`);
                                     distanceInfo = `\n\n🗺️ **Distance Traveled:** ${distanceM}m (${distanceKm}km)\n⚠️ Register with /register to earn $${earned}`;
                                 }
                             } else {
                                 distanceInfo = `\n\n🗺️ **Distance Traveled:** ${distanceM}m (${distanceKm}km)`;
                             }
+                        } else {
+                            console.log(`[DISTANCE] No distance tracked for ${event.player}`);
                         }
                     } catch (err) {
                         console.error(`[DISTANCE] Error calculating earnings: ${err.message}`);
+                        console.error(`[DISTANCE] Stack: ${err.stack}`);
                     }
                     
                     embed.setDescription(`\`\`\`diff\n- ${event.player}\n\`\`\`\n👋 **Left the server**${distanceInfo}`);
