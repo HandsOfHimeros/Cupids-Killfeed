@@ -538,6 +538,7 @@ class MultiGuildKillfeed {
             const logString = typeof logData === 'string' ? logData : String(logData);
             const lines = logString.split(/\r?\n/);
             let locationCount = 0;
+            let distanceUpdateCount = 0;
             
             for (const line of lines) {
                 const locInfo = this.parsePlayerLocation(line);
@@ -545,7 +546,11 @@ class MultiGuildKillfeed {
                     await db.setPlayerLocation(guildId, locInfo.name, locInfo.position.x, locInfo.position.y, locInfo.position.z);
                     // Also update distance tracking for active sessions
                     try {
-                        await db.updatePlayerDistance(guildId, locInfo.name, locInfo.position.x, locInfo.position.y, locInfo.position.z);
+                        const distance = await db.updatePlayerDistance(guildId, locInfo.name, locInfo.position.x, locInfo.position.y, locInfo.position.z);
+                        if (distance > 0) {
+                            distanceUpdateCount++;
+                            console.log(`[DISTANCE] Updated ${locInfo.name}: ${Math.round(distance)}m total`);
+                        }
                     } catch (err) {
                         // Session might not exist yet, ignore
                     }
@@ -554,7 +559,7 @@ class MultiGuildKillfeed {
             }
             
             if (locationCount > 0) {
-                console.log(`[LOCATION] Guild ${guildId}: Updated ${locationCount} player locations`);
+                console.log(`[LOCATION] Guild ${guildId}: Updated ${locationCount} player locations (${distanceUpdateCount} with distance)`);
             }
         } catch (error) {
             console.error(`[LOCATION] Guild ${guildId}: Error updating locations:`, error.message);
