@@ -1,316 +1,3055 @@
 {
-  "_comment": "Spawn templates for DayZ items. Edit 'name' field to match exact DayZ class names from your server.",
+  "_comment": "Spawn templates for DayZ items. Auto-generated from shop_items.js",
   "_instructions": {
     "name": "Exact DayZ class name (e.g., 'M4A1', 'AKM', 'Mosin9130')",
-    "pos": "Position [x, y, z] - leave [0,0,0] for Cupid mod to set at player location",
+    "pos": "Position [x, y, z] - Cupid bot sets this to player location automatically",
     "ypr": "Rotation [yaw, pitch, roll] - usually [0,0,0]",
     "scale": "Size multiplier - usually 1",
     "enableCEPersistency": "0 = temporary spawn, 1 = persistent",
-    "attachments": "Array of attachment class names (scopes, magazines, etc.)",
+    "attachments": "Array of attachment class names (for weapons)",
     "quantity": "For stackable items like ammo or bandages"
   },
-  
   "spawnTemplates": {
-    "_example_gun_with_attachments": {
-      "name": "M4A1",
-      "pos": [0, 0, 0],
-      "ypr": [0, 0, 0],
-      "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": ["ACOGOptic", "M4_MP_Buttstock", "M4_PlasticHndgrd"]
-    },
-    
     "M4A1": {
       "name": "M4A1",
-      "pos": [0, 0, 0],
-      "ypr": [0, 0, 0],
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "M4A1_Black": {
+      "name": "M4A1_Black",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "M4A1_Green": {
+      "name": "M4A1_Green",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "M16A2": {
+      "name": "M16A2",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "AK101": {
+      "name": "AK101",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "AK101_Black": {
+      "name": "AK101_Black",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "AK101_Green": {
+      "name": "AK101_Green",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "AK74": {
+      "name": "AK74",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "AK74_Black": {
+      "name": "AK74_Black",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "AK74_Green": {
+      "name": "AK74_Green",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
       "scale": 1,
       "enableCEPersistency": 0,
       "attachments": []
     },
     "AKM": {
       "name": "AKM",
-      "pos": [0, 0, 0],
-      "ypr": [0, 0, 0],
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
       "scale": 1,
       "enableCEPersistency": 0,
       "attachments": []
     },
-    "Mosin9130": {
-      "name": "Mosin9130",
-      "pos": [0, 0, 0],
-      "ypr": [0, 0, 0],
+    "AKS74U": {
+      "name": "AKS74U",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
       "scale": 1,
       "enableCEPersistency": 0,
       "attachments": []
     },
-    "SVD": {
-      "name": "SVD",
-      "pos": [0, 0, 0],
-      "ypr": [0, 0, 0],
+    "AKS74U_Black": {
+      "name": "AKS74U_Black",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "AKS74U_Green": {
+      "name": "AKS74U_Green",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Aug": {
+      "name": "Aug",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "FAMAS": {
+      "name": "FAMAS",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
       "scale": 1,
       "enableCEPersistency": 0,
       "attachments": []
     },
     "FAL": {
       "name": "FAL",
-      "pos": [0, 0, 0],
-      "ypr": [0, 0, 0],
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
       "scale": 1,
       "enableCEPersistency": 0,
       "attachments": []
     },
-    "M70": {
-      "name": "M70",
-      "pos": [0, 0, 0],
-      "ypr": [0, 0, 0],
+    "Mosin9130": {
+      "name": "Mosin9130",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
       "scale": 1,
       "enableCEPersistency": 0,
       "attachments": []
     },
-    "Mp133": {
-      "name": "Mp133Shotgun",
-      "pos": [0, 0, 0],
-      "ypr": [0, 0, 0],
+    "Mosin9130_Black": {
+      "name": "Mosin9130_Black",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
       "scale": 1,
       "enableCEPersistency": 0,
       "attachments": []
     },
-    "BK18": {
-      "name": "BK18",
-      "pos": [0, 0, 0],
-      "ypr": [0, 0, 0],
+    "Mosin9130_Camo": {
+      "name": "Mosin9130_Camo",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Mosin9130_Green": {
+      "name": "Mosin9130_Green",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "SVD": {
+      "name": "SVD",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "SVD_Wooden": {
+      "name": "SVD_Wooden",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "VSS": {
+      "name": "VSS",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Winchester70": {
+      "name": "Winchester70",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
       "scale": 1,
       "enableCEPersistency": 0,
       "attachments": []
     },
     "CZ527": {
       "name": "CZ527",
-      "pos": [0, 0, 0],
-      "ypr": [0, 0, 0],
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "CZ550": {
+      "name": "CZ550",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Scout": {
+      "name": "Scout",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Scout_Chernarus": {
+      "name": "Scout_Chernarus",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Scout_Livonia": {
+      "name": "Scout_Livonia",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "SSG82": {
+      "name": "SSG82",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "SKS": {
+      "name": "SKS",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Repeater": {
+      "name": "Repeater",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Ruger1022": {
+      "name": "Ruger1022",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Izh18": {
+      "name": "Izh18",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Mp133Shotgun": {
+      "name": "Mp133Shotgun",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Izh18Shotgun": {
+      "name": "Izh18Shotgun",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Izh43Shotgun": {
+      "name": "Izh43Shotgun",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Saiga": {
+      "name": "Saiga",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
       "scale": 1,
       "enableCEPersistency": 0,
       "attachments": []
     },
     "UMP45": {
       "name": "UMP45",
-      "pos": [0, 0, 0],
-      "ypr": [0, 0, 0],
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
       "scale": 1,
       "enableCEPersistency": 0,
       "attachments": []
     },
     "MP5K": {
       "name": "MP5K",
-      "pos": [0, 0, 0],
-      "ypr": [0, 0, 0],
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
       "scale": 1,
       "enableCEPersistency": 0,
       "attachments": []
     },
-    "Glock19": {
-      "name": "Glock19",
-      "pos": [0, 0, 0],
-      "ypr": [0, 0, 0],
+    "PP19": {
+      "name": "PP19",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
       "scale": 1,
       "enableCEPersistency": 0,
       "attachments": []
     },
-    "IJ70": {
-      "name": "IJ70",
-      "pos": [0, 0, 0],
-      "ypr": [0, 0, 0],
+    "PM73Rak": {
+      "name": "PM73Rak",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "CZ61": {
+      "name": "CZ61",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Deagle": {
+      "name": "Deagle",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Deagle_Gold": {
+      "name": "Deagle_Gold",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
       "scale": 1,
       "enableCEPersistency": 0,
       "attachments": []
     },
     "FNX45": {
       "name": "FNX45",
-      "pos": [0, 0, 0],
-      "ypr": [0, 0, 0],
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Glock19": {
+      "name": "Glock19",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "CZ75": {
+      "name": "CZ75",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "P1": {
+      "name": "P1",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "MakarovIJ70": {
+      "name": "MakarovIJ70",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "MKII": {
+      "name": "MKII",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
       "scale": 1,
       "enableCEPersistency": 0,
       "attachments": []
     },
     "Ammo_556x45": {
       "name": "Ammo_556x45",
-      "pos": [0, 0, 0],
-      "ypr": [0, 0, 0],
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
       "scale": 1,
       "enableCEPersistency": 0,
       "quantity": 1
     },
     "Ammo_762x39": {
       "name": "Ammo_762x39",
-      "pos": [0, 0, 0],
-      "ypr": [0, 0, 0],
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
       "scale": 1,
       "enableCEPersistency": 0,
       "quantity": 1
     },
     "Ammo_762x54": {
       "name": "Ammo_762x54",
-      "pos": [0, 0, 0],
-      "ypr": [0, 0, 0],
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
       "scale": 1,
       "enableCEPersistency": 0,
       "quantity": 1
     },
     "Ammo_9x19": {
       "name": "Ammo_9x19",
-      "pos": [0, 0, 0],
-      "ypr": [0, 0, 0],
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
       "scale": 1,
       "enableCEPersistency": 0,
       "quantity": 1
     },
     "Ammo_45ACP": {
       "name": "Ammo_45ACP",
-      "pos": [0, 0, 0],
-      "ypr": [0, 0, 0],
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
       "scale": 1,
       "enableCEPersistency": 0,
       "quantity": 1
     },
     "PlateCarrierVest": {
       "name": "PlateCarrierVest",
-      "pos": [0, 0, 0],
-      "ypr": [0, 0, 0],
-      "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
-    },
-    "AssaultBag": {
-      "name": "AssaultBag_Black",
-      "pos": [0, 0, 0],
-      "ypr": [0, 0, 0],
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
       "scale": 1,
       "enableCEPersistency": 0
     },
-    "FieldBag": {
-      "name": "FieldBag_Green",
-      "pos": [0, 0, 0],
-      "ypr": [0, 0, 0],
+    "AssaultBag_Black": {
+      "name": "AssaultBag_Black",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "AssaultBag_Green": {
+      "name": "AssaultBag_Green",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "CoyoteBag_Brown": {
+      "name": "CoyoteBag_Brown",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "CoyoteBag_Green": {
+      "name": "CoyoteBag_Green",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
       "scale": 1,
       "enableCEPersistency": 0
     },
     "HuntingBag": {
       "name": "HuntingBag",
-      "pos": [0, 0, 0],
-      "ypr": [0, 0, 0],
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
       "scale": 1,
       "enableCEPersistency": 0
     },
-    "CombatHelmet": {
+    "BallisticHelmet_Black": {
       "name": "BallisticHelmet_Black",
-      "pos": [0, 0, 0],
-      "ypr": [0, 0, 0],
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "BallisticHelmet_Green": {
+      "name": "BallisticHelmet_Green",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
       "scale": 1,
       "enableCEPersistency": 0
     },
     "TacticalGloves_Black": {
       "name": "TacticalGloves_Black",
-      "pos": [0, 0, 0],
-      "ypr": [0, 0, 0],
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
       "scale": 1,
       "enableCEPersistency": 0
     },
     "NVGHeadstrap": {
       "name": "NVGHeadstrap",
-      "pos": [0, 0, 0],
-      "ypr": [0, 0, 0],
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
       "scale": 1,
       "enableCEPersistency": 0
     },
     "NVGoggles": {
       "name": "NVGoggles",
-      "pos": [0, 0, 0],
-      "ypr": [0, 0, 0],
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
       "scale": 1,
       "enableCEPersistency": 0
     },
     "Canteen": {
       "name": "Canteen",
-      "pos": [0, 0, 0],
-      "ypr": [0, 0, 0],
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
       "scale": 1,
       "enableCEPersistency": 0
     },
     "TetracyclineAntibiotics": {
       "name": "TetracyclineAntibiotics",
-      "pos": [0, 0, 0],
-      "ypr": [0, 0, 0],
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
       "scale": 1,
       "enableCEPersistency": 0
     },
     "Epinephrine": {
       "name": "Epinephrine",
-      "pos": [0, 0, 0],
-      "ypr": [0, 0, 0],
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
       "scale": 1,
       "enableCEPersistency": 0
     },
     "Morphine": {
       "name": "Morphine",
-      "pos": [0, 0, 0],
-      "ypr": [0, 0, 0],
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
       "scale": 1,
       "enableCEPersistency": 0
     },
     "SalineBagIV": {
       "name": "SalineBagIV",
-      "pos": [0, 0, 0],
-      "ypr": [0, 0, 0],
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
       "scale": 1,
       "enableCEPersistency": 0
     },
     "BandageDressing": {
       "name": "BandageDressing",
-      "pos": [0, 0, 0],
-      "ypr": [0, 0, 0],
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
       "scale": 1,
       "enableCEPersistency": 0,
-      "quantity": 5
+      "quantity": 1
     },
     "Lockpick": {
       "name": "Lockpick",
-      "pos": [0, 0, 0],
-      "ypr": [0, 0, 0],
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
       "scale": 1,
       "enableCEPersistency": 0
     },
     "CarBattery": {
       "name": "CarBattery",
-      "pos": [0, 0, 0],
-      "ypr": [0, 0, 0],
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
       "scale": 1,
       "enableCEPersistency": 0
     },
     "SparkPlug": {
       "name": "SparkPlug",
-      "pos": [0, 0, 0],
-      "ypr": [0, 0, 0],
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
       "scale": 1,
       "enableCEPersistency": 0
     },
     "CarRadiator": {
       "name": "CarRadiator",
-      "pos": [0, 0, 0],
-      "ypr": [0, 0, 0],
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
       "scale": 1,
       "enableCEPersistency": 0
     },
     "CanisterGasoline": {
       "name": "CanisterGasoline",
-      "pos": [0, 0, 0],
-      "ypr": [0, 0, 0],
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "ACOGOptic": {
+      "name": "ACOGOptic",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "ACOGOptic_6x": {
+      "name": "ACOGOptic_6x",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "ReflexOptic": {
+      "name": "ReflexOptic",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "M68Optic": {
+      "name": "M68Optic",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "KobraOptic": {
+      "name": "KobraOptic",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "KashtanOptic": {
+      "name": "KashtanOptic",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "KazuarOptic": {
+      "name": "KazuarOptic",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "PSO1Optic": {
+      "name": "PSO1Optic",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "PSO6Optic": {
+      "name": "PSO6Optic",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "PSO11Optic": {
+      "name": "PSO11Optic",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "PUScopeOptic": {
+      "name": "PUScopeOptic",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "HuntingOptic": {
+      "name": "HuntingOptic",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "SportingOptic": {
+      "name": "SportingOptic",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "StarlightOptic": {
+      "name": "StarlightOptic",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "BUISOptic": {
+      "name": "BUISOptic",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "M4_CarryHandleOptic": {
+      "name": "M4_CarryHandleOptic",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "M4_T3NRDSOptic": {
+      "name": "M4_T3NRDSOptic",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "MK4Optic_Black": {
+      "name": "MK4Optic_Black",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "MK4Optic_Green": {
+      "name": "MK4Optic_Green",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "MK4Optic_Tan": {
+      "name": "MK4Optic_Tan",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "PistolOptic": {
+      "name": "PistolOptic",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "FNP45_MRDSOptic": {
+      "name": "FNP45_MRDSOptic",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "AK_Suppressor": {
+      "name": "AK_Suppressor",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "M4_Suppressor": {
+      "name": "M4_Suppressor",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "PistolSuppressor": {
+      "name": "PistolSuppressor",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "ImprovisedSuppressor": {
+      "name": "ImprovisedSuppressor",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "MP5_Compensator": {
+      "name": "MP5_Compensator",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "Mosin_Compensator": {
+      "name": "Mosin_Compensator",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "AK_Bayonet": {
+      "name": "AK_Bayonet",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "M9A1_Bayonet": {
+      "name": "M9A1_Bayonet",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "Mosin_Bayonet": {
+      "name": "Mosin_Bayonet",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "SKS_Bayonet": {
+      "name": "SKS_Bayonet",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "AK_FoldingBttstck": {
+      "name": "AK_FoldingBttstck",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "AK_FoldingBttstck_Black": {
+      "name": "AK_FoldingBttstck_Black",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "AK_FoldingBttstck_Green": {
+      "name": "AK_FoldingBttstck_Green",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "AK_PlasticBttstck": {
+      "name": "AK_PlasticBttstck",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "AK_PlasticBttstck_Black": {
+      "name": "AK_PlasticBttstck_Black",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "AK_PlasticBttstck_Green": {
+      "name": "AK_PlasticBttstck_Green",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "AK_WoodBttstck": {
+      "name": "AK_WoodBttstck",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "AK_WoodBttstck_Black": {
+      "name": "AK_WoodBttstck_Black",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "AK_WoodBttstck_Camo": {
+      "name": "AK_WoodBttstck_Camo",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "AK74_WoodBttstck": {
+      "name": "AK74_WoodBttstck",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "AKS74U_Bttstck": {
+      "name": "AKS74U_Bttstck",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "Fal_FoldingBttstck": {
+      "name": "Fal_FoldingBttstck",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "Fal_OeBttstck": {
+      "name": "Fal_OeBttstck",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "M4_CQBBttstck": {
+      "name": "M4_CQBBttstck",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "M4_MPBttstck": {
+      "name": "M4_MPBttstck",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "M4_OEBttstck": {
+      "name": "M4_OEBttstck",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "MP5k_StockBttstck": {
+      "name": "MP5k_StockBttstck",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "PP19_Bttstck": {
+      "name": "PP19_Bttstck",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "Saiga_Bttstck": {
+      "name": "Saiga_Bttstck",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "AK_PlasticHndgrd": {
+      "name": "AK_PlasticHndgrd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "AK_RailHndgrd": {
+      "name": "AK_RailHndgrd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "AK_RailHndgrd_Black": {
+      "name": "AK_RailHndgrd_Black",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "AK_RailHndgrd_Green": {
+      "name": "AK_RailHndgrd_Green",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "AK_WoodHndgrd": {
+      "name": "AK_WoodHndgrd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "AK_WoodHndgrd_Black": {
+      "name": "AK_WoodHndgrd_Black",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "AK_WoodHndgrd_Camo": {
+      "name": "AK_WoodHndgrd_Camo",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "AK74_Hndgrd": {
+      "name": "AK74_Hndgrd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "M4_MPHndgrd": {
+      "name": "M4_MPHndgrd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "M4_PlasticHndgrd": {
+      "name": "M4_PlasticHndgrd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "M4_RISHndgrd": {
+      "name": "M4_RISHndgrd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "M4_RISHndgrd_Black": {
+      "name": "M4_RISHndgrd_Black",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "M4_RISHndgrd_Green": {
+      "name": "M4_RISHndgrd_Green",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "MP5_PlasticHndgrd": {
+      "name": "MP5_PlasticHndgrd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "MP5_RailHndgrd": {
+      "name": "MP5_RailHndgrd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "Flashlight": {
+      "name": "Flashlight",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "TLRLight": {
+      "name": "TLRLight",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "UniversalLight": {
+      "name": "UniversalLight",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "GhillieAtt_Mossy": {
+      "name": "GhillieAtt_Mossy",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "GhillieAtt_Tan": {
+      "name": "GhillieAtt_Tan",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "GhillieAtt_Winter": {
+      "name": "GhillieAtt_Winter",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "GhillieAtt_Woodland": {
+      "name": "GhillieAtt_Woodland",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "Mag_1911_7Rnd": {
+      "name": "Mag_1911_7Rnd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "Mag_AK101_30Rnd": {
+      "name": "Mag_AK101_30Rnd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "Mag_AK74_30Rnd": {
+      "name": "Mag_AK74_30Rnd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "Mag_AK74_45Rnd": {
+      "name": "Mag_AK74_45Rnd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "Mag_AKM_30Rnd": {
+      "name": "Mag_AKM_30Rnd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "Mag_AKM_Drum75Rnd": {
+      "name": "Mag_AKM_Drum75Rnd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "Mag_AKM_Palm30Rnd": {
+      "name": "Mag_AKM_Palm30Rnd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "Mag_Aug_30Rnd": {
+      "name": "Mag_Aug_30Rnd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "Mag_CMAG_10Rnd": {
+      "name": "Mag_CMAG_10Rnd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "Mag_CMAG_20Rnd": {
+      "name": "Mag_CMAG_20Rnd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "Mag_CMAG_30Rnd": {
+      "name": "Mag_CMAG_30Rnd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "Mag_CMAG_40Rnd": {
+      "name": "Mag_CMAG_40Rnd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "Mag_CZ527_5rnd": {
+      "name": "Mag_CZ527_5rnd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "Mag_CZ550_10Rnd": {
+      "name": "Mag_CZ550_10Rnd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "Mag_CZ61_20Rnd": {
+      "name": "Mag_CZ61_20Rnd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "Mag_CZ75_15Rnd": {
+      "name": "Mag_CZ75_15Rnd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "Mag_Deagle_9rnd": {
+      "name": "Mag_Deagle_9rnd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "Mag_FAL_20Rnd": {
+      "name": "Mag_FAL_20Rnd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "Mag_FAMAS_25Rnd": {
+      "name": "Mag_FAMAS_25Rnd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "Mag_FNX45_15Rnd": {
+      "name": "Mag_FNX45_15Rnd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "Mag_Glock_15Rnd": {
+      "name": "Mag_Glock_15Rnd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "Mag_IJ70_8Rnd": {
+      "name": "Mag_IJ70_8Rnd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "Mag_M14_10Rnd": {
+      "name": "Mag_M14_10Rnd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "Mag_M14_20Rnd": {
+      "name": "Mag_M14_20Rnd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "Mag_MKII_10Rnd": {
+      "name": "Mag_MKII_10Rnd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "Mag_MP5_15Rnd": {
+      "name": "Mag_MP5_15Rnd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "Mag_MP5_30Rnd": {
+      "name": "Mag_MP5_30Rnd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "Mag_P1_8Rnd": {
+      "name": "Mag_P1_8Rnd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "Mag_PM73_15Rnd": {
+      "name": "Mag_PM73_15Rnd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "Mag_PM73_25Rnd": {
+      "name": "Mag_PM73_25Rnd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "Mag_PP19_64Rnd": {
+      "name": "Mag_PP19_64Rnd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "Mag_Ruger1022_15Rnd": {
+      "name": "Mag_Ruger1022_15Rnd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "Mag_Ruger1022_30Rnd": {
+      "name": "Mag_Ruger1022_30Rnd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "Mag_SSG82_5rnd": {
+      "name": "Mag_SSG82_5rnd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "Mag_STANAG_30Rnd": {
+      "name": "Mag_STANAG_30Rnd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "Mag_STANAG_60Rnd": {
+      "name": "Mag_STANAG_60Rnd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "Mag_SV98_10Rnd": {
+      "name": "Mag_SV98_10Rnd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "Mag_SVD_10Rnd": {
+      "name": "Mag_SVD_10Rnd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "Mag_Saiga_5Rnd": {
+      "name": "Mag_Saiga_5Rnd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "Mag_Saiga_8Rnd": {
+      "name": "Mag_Saiga_8Rnd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "Mag_Saiga_Drum20Rnd": {
+      "name": "Mag_Saiga_Drum20Rnd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "Mag_Scout_5Rnd": {
+      "name": "Mag_Scout_5Rnd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "Mag_UMP_25Rnd": {
+      "name": "Mag_UMP_25Rnd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "Mag_VAL_20Rnd": {
+      "name": "Mag_VAL_20Rnd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "Mag_VSS_10Rnd": {
+      "name": "Mag_VSS_10Rnd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0
+    },
+    "Mag_Vikhr_30Rnd": {
+      "name": "Mag_Vikhr_30Rnd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
       "scale": 1,
       "enableCEPersistency": 0
     }
   },
   "defaultSpawnTemplate": {
-    "pos": [0, 0, 0],
-    "ypr": [0, 0, 0],
+    "pos": [
+      0,
+      0,
+      0
+    ],
+    "ypr": [
+      0,
+      0,
+      0
+    ],
     "scale": 1,
     "enableCEPersistency": 0
   }
