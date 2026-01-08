@@ -354,17 +354,27 @@ module.exports = {
                 const itemName = interaction.options.getString('item');
                 if (!itemName) {
                     console.log('[SHOP] No itemName, showing shop menu');
-                    let desc = '';
-                    for (const item of shopItems) {
-                        desc += `**${item.name}** — $${item.averagePrice}\n${item.description}\n\n`;
+                    // Paginate shop items to avoid Discord's 4096 character limit
+                    const ITEMS_PER_PAGE = 20;
+                    const pages = [];
+                    for (let i = 0; i < shopItems.length; i += ITEMS_PER_PAGE) {
+                        const chunk = shopItems.slice(i, i + ITEMS_PER_PAGE);
+                        let desc = '';
+                        for (const item of chunk) {
+                            desc += `**${item.name}** — $${item.averagePrice}\n`;
+                        }
+                        pages.push(desc);
                     }
+                    
+                    // Send first page
+                    const currentPage = 0;
                     await interaction.reply({
                         embeds: [
                             new MessageEmbed()
                                 .setColor('#ff69b4')
                                 .setTitle('DayZ Shop')
-                                .setDescription(desc)
-                                .setFooter({ text: 'Use /shop item:<name> to purchase.' })
+                                .setDescription(pages[currentPage])
+                                .setFooter({ text: `Page ${currentPage + 1}/${pages.length} • Use /shop item:<name> to purchase.` })
                         ]
                     });
                     console.log('[SHOP] Shop menu sent');
