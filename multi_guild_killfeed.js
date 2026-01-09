@@ -430,15 +430,9 @@ class MultiGuildKillfeed {
                     embed.setDescription(`\`\`\`diff\n+ ${event.player}\n\`\`\`\n👋 **Welcome to the server!**`);
                     embed.addFields({ name: '🕐 Time', value: `\`${event.time}\``, inline: true });
                     
-                    // Start distance tracking session
-                    try {
-                        console.log(`[DISTANCE] Starting session for ${event.player} in guild ${guildConfig.guild_id}`);
-                        await db.startPlayerSession(guildConfig.guild_id, event.player, 0, 0, 0);
-                        console.log(`[DISTANCE] Session started successfully for ${event.player}`);
-                    } catch (err) {
-                        console.error(`[DISTANCE] Error starting session: ${err.message}`);
-                        console.error(`[DISTANCE] Stack: ${err.stack}`);
-                    }
+                    // Don't start session here - wait for first position update to get real coordinates
+                    // Session will be auto-created in parseAndUpdateLocations when first position is detected
+                    console.log(`[DISTANCE] Player ${event.player} connected - session will be created on first position update`);
                 } else {
                     embed.setDescription(`\`\`\`\n${event.raw}\n\`\`\``);
                 }
