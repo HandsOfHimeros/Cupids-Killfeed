@@ -24,6 +24,19 @@ async function setupMedievalEconomy() {
                 placed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         `);
+        
+        // Add is_active column if it doesn't exist (for existing tables)
+        await pool.query(`
+            DO $$ 
+            BEGIN
+                BEGIN
+                    ALTER TABLE bounties ADD COLUMN is_active BOOLEAN DEFAULT true;
+                EXCEPTION
+                    WHEN duplicate_column THEN 
+                        NULL;
+                END;
+            END $$;
+        `);
         console.log('✓ Created bounties table');
         
         // Create user_stats table
