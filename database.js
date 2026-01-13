@@ -253,6 +253,95 @@ async function endPlayerSession(guildId, playerName) {
     return result.rows[0]?.total_distance || 0;
 }
 
+// Bounty operations
+async function getActiveBounties(guildId) {
+    const result = await pool.query(`
+        SELECT placer_id, target_id, amount 
+        FROM bounties 
+        WHERE guild_id = $1 AND is_active = true
+        ORDER BY amount DESC
+    `, [guildId]);
+    return result.rows;
+}
+
+async function addBounty(guildId, placerId, targetId, amount) {
+    await pool.query(`
+        INSERT INTO bounties (guild_id, placer_id, target_id, amount, is_active, placed_at)
+        VALUES ($1, $2, $3, $4, true, CURRENT_TIMESTAMP)
+    `, [guildId, placerId, targetId, amount]);
+}
+
+async function claimBounty(guildId, targetId) {
+    const result = await pool.query(`
+        UPDATE bounties 
+        SET is_active = false 
+        WHERE guild_id = $1 AND target_id = $2 AND is_active = true
+        RETURNING amount
+    `, [guildId, targetId]);
+    return result.rows[0]?.amount || 0;
+}
+
+// User stats operations
+async function getUserStats(guildId, userId) {
+    const result = await pool.query(`
+        SELECT * FROM user_stats 
+        WHERE guild_id = $1 AND user_id = $2
+    `, [guildId, userId]);
+    
+    if (result.rows.length === 0) {
+        // Create default stats
+        await pool.query(`
+            INSERT INTO user_stats (guild_id, user_id, total_earned, total_spent, mini_games_played, mini_games_won, bounties_claimed, distance_traveled)
+            VALUES ($1, $2, 0, 0, 0, 0, 0, 0)
+        `, [guildId, userId]);
+        return {
+            total_earned: 0,
+            total_spent: 0,
+            mini_games_played: 0,
+            mini_games_won: 0,
+            bounties_claimed: 0,
+            distance_traveled: 0
+        };
+    }
+    
+    return result.rows[0];
+}
+
+async function incrementStat(guildId, userId, statName, amount = 1) {
+    await pool.query(`
+        INSERT INTO user_stats (guild_id, user_id, ${statName})
+        VALUES ($1, $2, $3)
+        ON CONFLICT (guild_id, user_id) DO UPDATE SET ${statName} = user_stats.${statName} + $3
+    `, [guildId, userId, amount]);
+}
+
+// Tournament operations
+async function checkTournamentEntry(guildId, userId) {
+    const today = new Date().toISOString().split('T')[0];
+    const result = await pool.query(`
+        SELECT * FROM tournament_entries 
+        WHERE guild_id = $1 AND user_id = $2 AND entry_date = $3
+    `, [guildId, userId, today]);
+    return result.rows.length > 0;
+}
+
+async function enterTournament(guildId, userId, entryCost) {
+    const today = new Date().toISOString().split('T')[0];
+    await pool.query(`
+        INSERT INTO tournament_entries (guild_id, user_id, entry_date, entry_cost)
+        VALUES ($1, $2, $3, $4)
+    `, [guildId, userId, today, entryCost]);
+}
+
+async function getTournamentParticipants(guildId) {
+    const today = new Date().toISOString().split('T')[0];
+    const result = await pool.query(`
+        SELECT user_id, entry_cost FROM tournament_entries 
+        WHERE guild_id = $1 AND entry_date = $2
+    `, [guildId, today]);
+    return result.rows;
+}
+
 module.exports = {
     pool,
     getGuildConfig,
@@ -277,5 +366,13 @@ module.exports = {
     setPlayerLocation,
     startPlayerSession,
     updatePlayerDistance,
-    endPlayerSession
+    endPlayerSession,
+    getActiveBounties,
+    addBounty,
+    claimBounty,
+    getUserStats,
+    incrementStat,
+    checkTournamentEntry,
+    enterTournament,
+    getTournamentParticipants
 };

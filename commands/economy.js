@@ -4,7 +4,7 @@ const fs = require('fs');
 const db = require('../database.js');
 const { MessageActionRow, MessageButton } = require('discord.js');
 const COOLDOWN_FILE = path.join(__dirname, '../logs/economy_cooldowns.json');
-const MINI_GAMES = ['slots','rob','golf','cards','job','blackjack','crime','theft','bribe','work'];
+const MINI_GAMES = ['slots','rob','golf','cards','job','blackjack','crime','theft','bribe','work','bounty','lottery','dice','tournament'];
 const COOLDOWN_LIMIT = 1; // times allowed
 const COOLDOWN_WINDOW = 6 * 60 * 60 * 1000; // 6 hours in ms
 
@@ -303,6 +303,41 @@ module.exports = {
         new SlashCommandBuilder()
             .setName('imhere')
             .setDescription('Check your last known location on the server'),
+        new SlashCommandBuilder()
+            .setName('bounty')
+            .setDescription('Place a bounty on another player or view active bounties')
+            .addUserOption(option =>
+                option.setName('target')
+                    .setDescription('Player to place bounty on')
+                    .setRequired(false))
+            .addIntegerOption(option =>
+                option.setName('amount')
+                    .setDescription('Bounty amount (min $100)')
+                    .setRequired(false)),
+        new SlashCommandBuilder()
+            .setName('lottery')
+            .setDescription('Buy a lottery ticket for a chance to win the jackpot')
+            .addIntegerOption(option =>
+                option.setName('tickets')
+                    .setDescription('Number of tickets to buy ($50 each)')
+                    .setRequired(false)),
+        new SlashCommandBuilder()
+            .setName('dice')
+            .setDescription('Roll dice and bet on the outcome')
+            .addIntegerOption(option =>
+                option.setName('bet')
+                    .setDescription('Amount to bet (min $10)')
+                    .setRequired(true))
+            .addIntegerOption(option =>
+                option.setName('prediction')
+                    .setDescription('Predict the sum (2-12)')
+                    .setRequired(true)),
+        new SlashCommandBuilder()
+            .setName('titles')
+            .setDescription('View your medieval titles and progress'),
+        new SlashCommandBuilder()
+            .setName('tournament')
+            .setDescription('Enter the daily tournament (costs $100, winner takes pot)'),
         new SlashCommandBuilder()
             .setName('shophelp')
             .setDescription('Learn how to use the shop and spawn system'),
@@ -891,6 +926,354 @@ module.exports = {
                     ], ephemeral: true
                 });
             }
+        } else if (commandName === 'bounty') {
+            const { MessageEmbed } = require('discord.js');
+            const target = interaction.options.getUser('target');
+            const amount = interaction.options.getInteger('amount');
+            
+            // If no target provided, show active bounties
+            if (!target) {
+                const bounties = await db.getActiveBounties(guildId);
+                if (bounties.length === 0) {
+                    await interaction.reply({
+                        embeds: [
+                            new MessageEmbed()
+                                .setColor('#ffaa00')
+                                .setTitle('⚔️ Active Bounties')
+                                .setDescription('No active bounties at the moment.')
+                        ], ephemeral: true
+                    });
+                } else {
+                    let desc = '';
+                    for (const bounty of bounties) {
+                        desc += `<@${bounty.target_id}> - **$${bounty.amount}** (placed by <@${bounty.placer_id}>)\n`;
+                    }
+                    await interaction.reply({
+                        embeds: [
+                            new MessageEmbed()
+                                .setColor('#ff0000')
+                                .setTitle('⚔️ Active Bounties')
+                                .setDescription(desc)
+                        ]
+                    });
+                }
+                return;
+            }
+            
+            // Placing a bounty
+            if (!amount) {
+                await interaction.reply({
+                    embeds: [
+                        new MessageEmbed()
+                            .setColor('#ff5555')
+                            .setTitle('Bounty Failed')
+                            .setDescription('You must specify an amount to place a bounty.')
+                    ], ephemeral: true
+                });
+                return;
+            }
+            
+            if (amount < 100) {
+                await interaction.reply({
+                    embeds: [
+                        new MessageEmbed()
+                            .setColor('#ff5555')
+                            .setTitle('Bounty Failed')
+                            .setDescription('Minimum bounty is $100.')
+                    ], ephemeral: true
+                });
+                return;
+            }
+            
+            if (target.id === userId) {
+                await interaction.reply({
+                    embeds: [
+                        new MessageEmbed()
+                            .setColor('#ff5555')
+                            .setTitle('Bounty Failed')
+                            .setDescription('You cannot place a bounty on yourself!')
+                    ], ephemeral: true
+                });
+                return;
+            }
+            
+            const bal = await db.getBalance(guildId, userId);
+            if (bal < amount) {
+                await interaction.reply({
+                    embeds: [
+                        new MessageEmbed()
+                            .setColor('#ff5555')
+                            .setTitle('Bounty Failed')
+                            .setDescription('You do not have enough funds.')
+                    ], ephemeral: true
+                });
+                return;
+            }
+            
+            await db.addBalance(guildId, userId, -amount);
+            await db.addBounty(guildId, userId, target.id, amount);
+            
+            await interaction.reply({
+                embeds: [
+                    new MessageEmbed()
+                        .setColor('#ff0000')
+                        .setTitle('⚔️ Bounty Placed!')
+                        .setDescription(`You placed a **$${amount}** bounty on <@${target.id}>!`)
+                        .setFooter({ text: 'Other players can now hunt them for the reward!' })
+                ]
+            });
+        } else if (commandName === 'lottery') {
+            const { MessageEmbed } = require('discord.js');
+            const tickets = interaction.options.getInteger('tickets') || 1;
+            
+            if (tickets < 1 || tickets > 10) {
+                await interaction.reply({
+                    embeds: [
+                        new MessageEmbed()
+                            .setColor('#ff5555')
+                            .setTitle('Lottery Failed')
+                            .setDescription('You can buy 1-10 tickets at a time.')
+                    ], ephemeral: true
+                });
+                return;
+            }
+            
+            const cost = tickets * 50;
+            const bal = await db.getBalance(guildId, userId);
+            
+            if (bal < cost) {
+                await interaction.reply({
+                    embeds: [
+                        new MessageEmbed()
+                            .setColor('#ff5555')
+                            .setTitle('Lottery Failed')
+                            .setDescription(`You need **$${cost}** to buy ${tickets} ticket(s). You have $${bal}.`)
+                    ], ephemeral: true
+                });
+                return;
+            }
+            
+            await db.addBalance(guildId, userId, -cost);
+            
+            // Each ticket has a 10% chance to win
+            let totalWinnings = 0;
+            const results = [];
+            
+            for (let i = 0; i < tickets; i++) {
+                const win = Math.random() < 0.1;
+                if (win) {
+                    const prize = Math.floor(Math.random() * 300) + 200; // $200-$500
+                    totalWinnings += prize;
+                    results.push(`🎟️ Ticket ${i + 1}: **WIN $${prize}** 🎉`);
+                } else {
+                    results.push(`🎟️ Ticket ${i + 1}: No win`);
+                }
+            }
+            
+            if (totalWinnings > 0) {
+                const newBal = await db.addBalance(guildId, userId, totalWinnings);
+                await interaction.reply({
+                    embeds: [
+                        new MessageEmbed()
+                            .setColor('#00ff00')
+                            .setTitle('🎰 Lottery Results - WINNER!')
+                            .setDescription(results.join('\n'))
+                            .addField('Total Winnings', `$${totalWinnings}`, true)
+                            .addField('New Balance', `$${newBal}`, true)
+                    ]
+                });
+            } else {
+                const newBal = await db.getBalance(guildId, userId);
+                await interaction.reply({
+                    embeds: [
+                        new MessageEmbed()
+                            .setColor('#ff5555')
+                            .setTitle('🎰 Lottery Results')
+                            .setDescription(results.join('\n') + '\n\nBetter luck next time!')
+                            .addField('Balance', `$${newBal}`, true)
+                    ]
+                });
+            }
+        } else if (commandName === 'dice') {
+            const { MessageEmbed } = require('discord.js');
+            const bet = interaction.options.getInteger('bet');
+            const prediction = interaction.options.getInteger('prediction');
+            
+            if (bet < 10) {
+                await interaction.reply({
+                    embeds: [
+                        new MessageEmbed()
+                            .setColor('#ff5555')
+                            .setTitle('Dice Failed')
+                            .setDescription('Minimum bet is $10.')
+                    ], ephemeral: true
+                });
+                return;
+            }
+            
+            if (prediction < 2 || prediction > 12) {
+                await interaction.reply({
+                    embeds: [
+                        new MessageEmbed()
+                            .setColor('#ff5555')
+                            .setTitle('Dice Failed')
+                            .setDescription('Prediction must be between 2 and 12.')
+                    ], ephemeral: true
+                });
+                return;
+            }
+            
+            const bal = await db.getBalance(guildId, userId);
+            if (bal < bet) {
+                await interaction.reply({
+                    embeds: [
+                        new MessageEmbed()
+                            .setColor('#ff5555')
+                            .setTitle('Dice Failed')
+                            .setDescription(`You need **$${bet}** to make this bet. You have $${bal}.`)
+                    ], ephemeral: true
+                });
+                return;
+            }
+            
+            await db.addBalance(guildId, userId, -bet);
+            
+            // Roll two dice
+            const dice1 = Math.floor(Math.random() * 6) + 1;
+            const dice2 = Math.floor(Math.random() * 6) + 1;
+            const sum = dice1 + dice2;
+            
+            const diceEmojis = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
+            const die1Emoji = diceEmojis[dice1 - 1];
+            const die2Emoji = diceEmojis[dice2 - 1];
+            
+            if (sum === prediction) {
+                // Exact match: 5x payout
+                const winnings = bet * 5;
+                const newBal = await db.addBalance(guildId, userId, winnings);
+                await interaction.reply({
+                    embeds: [
+                        new MessageEmbed()
+                            .setColor('#00ff00')
+                            .setTitle('🎲 Dice Roll - PERFECT MATCH!')
+                            .setDescription(`${die1Emoji} ${die2Emoji}\n\n**Sum: ${sum}** (You predicted: ${prediction})`)
+                            .addField('Winnings', `$${winnings} (5x payout!)`, true)
+                            .addField('New Balance', `$${newBal}`, true)
+                    ]
+                });
+            } else if (Math.abs(sum - prediction) === 1) {
+                // Close match: 2x payout
+                const winnings = bet * 2;
+                const newBal = await db.addBalance(guildId, userId, winnings);
+                await interaction.reply({
+                    embeds: [
+                        new MessageEmbed()
+                            .setColor('#ffaa00')
+                            .setTitle('🎲 Dice Roll - Close!')
+                            .setDescription(`${die1Emoji} ${die2Emoji}\n\n**Sum: ${sum}** (You predicted: ${prediction})`)
+                            .addField('Winnings', `$${winnings} (2x payout for close guess!)`, true)
+                            .addField('New Balance', `$${newBal}`, true)
+                    ]
+                });
+            } else {
+                // No match: lose bet
+                const newBal = await db.getBalance(guildId, userId);
+                await interaction.reply({
+                    embeds: [
+                        new MessageEmbed()
+                            .setColor('#ff5555')
+                            .setTitle('🎲 Dice Roll')
+                            .setDescription(`${die1Emoji} ${die2Emoji}\n\n**Sum: ${sum}** (You predicted: ${prediction})`)
+                            .addField('Result', `You lost $${bet}`, true)
+                            .addField('Balance', `$${newBal}`, true)
+                    ]
+                });
+            }
+        } else if (commandName === 'titles') {
+            const { MessageEmbed } = require('discord.js');
+            const stats = await db.getUserStats(guildId, userId);
+            
+            const titles = [];
+            if (stats.total_earned >= 10000) titles.push('💰 Wealthy Merchant');
+            if (stats.total_spent >= 5000) titles.push('🛒 Big Spender');
+            if (stats.mini_games_played >= 50) titles.push('🎮 Gambler');
+            if (stats.mini_games_won >= 20) titles.push('🏆 Lucky Winner');
+            if (stats.bounties_claimed >= 5) titles.push('⚔️ Bounty Hunter');
+            if (stats.total_earned >= 50000) titles.push('👑 Tycoon');
+            if (stats.distance_traveled >= 100000) titles.push('🚶 Wanderer');
+            
+            const bal = await db.getBalance(guildId, userId);
+            const bank = await db.getBank(guildId, userId);
+            
+            await interaction.reply({
+                embeds: [
+                    new MessageEmbed()
+                        .setColor('#ffd700')
+                        .setTitle('🏰 Your Medieval Profile')
+                        .setDescription(titles.length > 0 ? titles.join('\n') : '*No titles earned yet*')
+                        .addField('💰 Wallet', `$${bal}`, true)
+                        .addField('🏦 Bank', `$${bank}`, true)
+                        .addField('📊 Stats', 
+                            `Games Played: ${stats.mini_games_played}\n` +
+                            `Games Won: ${stats.mini_games_won}\n` +
+                            `Total Earned: $${stats.total_earned}\n` +
+                            `Total Spent: $${stats.total_spent}\n` +
+                            `Bounties Claimed: ${stats.bounties_claimed}`, 
+                            false)
+                        .setFooter({ text: 'Keep playing to unlock more titles!' })
+                ]
+            });
+        } else if (commandName === 'tournament') {
+            const { MessageEmbed } = require('discord.js');
+            const entryCost = 100;
+            
+            // Check if user has enough balance
+            const bal = await db.getBalance(guildId, userId);
+            if (bal < entryCost) {
+                await interaction.reply({
+                    embeds: [
+                        new MessageEmbed()
+                            .setColor('#ff5555')
+                            .setTitle('Tournament Entry Failed')
+                            .setDescription(`Entry costs **$${entryCost}**. You have $${bal}.`)
+                    ], ephemeral: true
+                });
+                return;
+            }
+            
+            // Check if user already entered today
+            const alreadyEntered = await db.checkTournamentEntry(guildId, userId);
+            if (alreadyEntered) {
+                await interaction.reply({
+                    embeds: [
+                        new MessageEmbed()
+                            .setColor('#ffaa00')
+                            .setTitle('Already Entered')
+                            .setDescription('You have already entered today\'s tournament!\n\nWinner will be announced at midnight.')
+                    ], ephemeral: true
+                });
+                return;
+            }
+            
+            // Deduct entry fee and enter tournament
+            await db.addBalance(guildId, userId, -entryCost);
+            await db.enterTournament(guildId, userId, entryCost);
+            
+            const participants = await db.getTournamentParticipants(guildId);
+            const pot = participants.length * entryCost;
+            
+            await interaction.reply({
+                embeds: [
+                    new MessageEmbed()
+                        .setColor('#00ff00')
+                        .setTitle('⚔️ Tournament Entry Confirmed!')
+                        .setDescription(`You have entered the daily tournament!`)
+                        .addField('Entry Fee', `$${entryCost}`, true)
+                        .addField('Current Pot', `$${pot}`, true)
+                        .addField('Participants', `${participants.length} warriors`, true)
+                        .setFooter({ text: 'Winner announced at midnight! Good luck!' })
+                ]
+            });
         } else if (commandName === 'shophelp') {
             const { MessageEmbed } = require('discord.js');
             await interaction.reply({
