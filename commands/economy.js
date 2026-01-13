@@ -368,6 +368,8 @@ module.exports = {
         const SHOP_CHANNEL_ID = guildConfig.shop_channel_id;
         const ECONOMY_CHANNEL_ID = guildConfig.economy_channel_id;
         
+        console.log(`[ECONOMY] Guild ${guildId} | Channel: ${interaction.channelId} | Economy Channel: ${ECONOMY_CHANNEL_ID} | Shop Channel: ${SHOP_CHANNEL_ID}`);
+        
         if (interaction.commandName === 'shop') {
             console.log('[SHOP] Entered /shop logic');
             try {
@@ -583,6 +585,7 @@ module.exports = {
         
         // Check if command is in wrong channel (excluding shop which has its own check above)
         if (interaction.channelId !== ECONOMY_CHANNEL_ID) {
+            console.log(`[ECONOMY] Wrong channel detected for ${commandName}. Current: ${interaction.channelId}, Expected: ${ECONOMY_CHANNEL_ID}`);
             await interaction.reply({
                 embeds: [
                     new MessageEmbed()
@@ -928,12 +931,14 @@ module.exports = {
                 });
             }
         } else if (commandName === 'bounty') {
+            console.log('[BOUNTY] Command started');
             const { MessageEmbed } = require('discord.js');
             const target = interaction.options.getUser('target');
             const amount = interaction.options.getInteger('amount');
             
             // If no target provided, show active bounties
             if (!target) {
+                console.log('[BOUNTY] Fetching active bounties');
                 const bounties = await db.getActiveBounties(guildId);
                 if (bounties.length === 0) {
                     await interaction.reply({
@@ -1225,13 +1230,19 @@ module.exports = {
                 ]
             });
         } else if (commandName === 'tournament') {
+            console.log('[TOURNAMENT] Command started');
             const { MessageEmbed } = require('discord.js');
             const entryCost = 100;
             
+            // Defer reply for database operations
+            await interaction.deferReply({ ephemeral: false });
+            console.log('[TOURNAMENT] Deferred reply');
+            
             // Check if user has enough balance
             const bal = await db.getBalance(guildId, userId);
+            console.log(`[TOURNAMENT] User balance: ${bal}`);
             if (bal < entryCost) {
-                await interaction.reply({
+                await interaction.editReply({
                     embeds: [
                         new MessageEmbed()
                             .setColor('#ff5555')
@@ -1245,13 +1256,13 @@ module.exports = {
             // Check if user already entered today
             const alreadyEntered = await db.checkTournamentEntry(guildId, userId);
             if (alreadyEntered) {
-                await interaction.reply({
+                await interaction.editReply({
                     embeds: [
                         new MessageEmbed()
                             .setColor('#ffaa00')
                             .setTitle('Already Entered')
                             .setDescription('You have already entered today\'s tournament!\n\nWinner will be announced at midnight.')
-                    ], ephemeral: true
+                    ]
                 });
                 return;
             }
@@ -1263,7 +1274,7 @@ module.exports = {
             const participants = await db.getTournamentParticipants(guildId);
             const pot = participants.length * entryCost;
             
-            await interaction.reply({
+            await interaction.editReply({
                 embeds: [
                     new MessageEmbed()
                         .setColor('#00ff00')
