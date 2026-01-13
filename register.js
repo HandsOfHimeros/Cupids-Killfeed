@@ -56,11 +56,13 @@ const rest = new REST({version: '10'}).setToken(TOKEN);
 (async () => {
   try {
     console.log('Started refreshing DayZero (/) commands.');
-    //Registers Guild Application Commands
-    await rest.put(Routes.applicationGuildCommands(CLIENTID, GUILDID), {
+    
+    // Register commands globally (available on all servers)
+    await rest.put(Routes.applicationCommands(CLIENTID), {
       body: commands,
-    }); 
-    console.log('Successfully reloaded DayZero (/) commands.');
+    });
+    
+    console.log('Successfully reloaded DayZero (/) commands globally.');
   } catch (error) {
     console.error(error);
   }
