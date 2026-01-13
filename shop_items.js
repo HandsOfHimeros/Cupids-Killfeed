@@ -2,7 +2,7 @@
 // Format: { name, class, averagePrice, description }
 
 module.exports = [
-  // Assault Rifles
+  // --- ASSAULT RIFLES ---
   { name: 'M4A1 Assault Rifle', class: 'M4A1', averagePrice: 1200, description: 'Standard 5.56mm assault rifle.' },
   { name: 'M4A1 (Black)', class: 'M4A1_Black', averagePrice: 1200, description: 'Black 5.56mm assault rifle.' },
   { name: 'M4A1 (Green)', class: 'M4A1_Green', averagePrice: 1200, description: 'Green 5.56mm assault rifle.' },
@@ -18,10 +18,14 @@ module.exports = [
   { name: 'AKS-74U (Black)', class: 'AKS74U_Black', averagePrice: 900, description: 'Black compact 5.45mm assault rifle.' },
   { name: 'AKS-74U (Green)', class: 'AKS74U_Green', averagePrice: 900, description: 'Green compact 5.45mm assault rifle.' },
   { name: 'AUG', class: 'Aug', averagePrice: 1400, description: 'Bullpup 5.56mm assault rifle.' },
+  { name: 'AUG Short', class: 'AugShort', averagePrice: 1350, description: 'Compact bullpup 5.56mm rifle.' },
   { name: 'FAMAS', class: 'FAMAS', averagePrice: 1350, description: 'French bullpup assault rifle.' },
   { name: 'LAR', class: 'FAL', averagePrice: 1800, description: 'Battle rifle, high damage.' },
-  
-  // Sniper/Marksman Rifles
+  { name: 'AS VAL', class: 'ASVAL', averagePrice: 1950, description: 'Suppressed Soviet assault rifle.' },
+  { name: 'SVAL', class: 'SVAL', averagePrice: 1950, description: 'Suppressed modern assault rifle.' },
+  { name: 'VSK-94', class: 'VSK94', averagePrice: 1700, description: 'Suppressed Russian marksman rifle.' },
+
+  // --- SNIPER / MARKSMAN RIFLES ---
   { name: 'Mosin Nagant', class: 'Mosin9130', averagePrice: 900, description: 'Bolt-action sniper rifle.' },
   { name: 'Mosin Nagant (Black)', class: 'Mosin9130_Black', averagePrice: 900, description: 'Black bolt-action sniper rifle.' },
   { name: 'Mosin Nagant (Camo)', class: 'Mosin9130_Camo', averagePrice: 900, description: 'Camo bolt-action sniper rifle.' },
@@ -36,27 +40,36 @@ module.exports = [
   { name: 'Scout (Chernarus)', class: 'Scout_Chernarus', averagePrice: 850, description: 'Chernarus Scout rifle.' },
   { name: 'Scout (Livonia)', class: 'Scout_Livonia', averagePrice: 850, description: 'Livonia Scout rifle.' },
   { name: 'SSG82', class: 'SSG82', averagePrice: 750, description: 'Soviet training rifle.' },
-  
-  // Rifles
+  { name: 'B95', class: 'B95', averagePrice: 900, description: 'Double-barrel break-action rifle.' },
+  { name: 'Blaze 95', class: 'Blaze95', averagePrice: 950, description: 'Double-barrel break-action hunting rifle.' },
+  { name: 'M70 Tundra', class: 'M70', averagePrice: 1000, description: 'Bolt-action hunting rifle.' },
+  { name: 'SV-98', class: 'SV98', averagePrice: 1800, description: 'Russian bolt-action sniper rifle.' },
+
+  // --- RIFLES ---
   { name: 'SKS', class: 'SKS', averagePrice: 700, description: 'Semi-auto carbine.' },
   { name: 'Repeater', class: 'Repeater', averagePrice: 600, description: 'Lever-action rifle.' },
   { name: 'Ruger 10/22', class: 'Ruger1022', averagePrice: 450, description: '.22 caliber rifle.' },
   { name: 'IZH-18 Rifle', class: 'Izh18', averagePrice: 350, description: 'Single-shot rifle.' },
-  
-  // Shotguns
+  { name: 'CR-550', class: 'CR550', averagePrice: 950, description: 'Modern bolt-action hunting rifle.' },
+
+  // --- SHOTGUNS ---
   { name: 'BK-133 Shotgun', class: 'Mp133Shotgun', averagePrice: 600, description: 'Pump-action shotgun.' },
   { name: 'IZH-18 Shotgun', class: 'Izh18Shotgun', averagePrice: 400, description: 'Single-shot shotgun.' },
   { name: 'IZH-43 Shotgun', class: 'Izh43Shotgun', averagePrice: 550, description: 'Double-barrel shotgun.' },
   { name: 'Saiga', class: 'Saiga', averagePrice: 900, description: 'Semi-auto shotgun.' },
-  
-  // SMGs/PDWs
+
+  // --- SMGs / PDWs ---
   { name: 'USG-45', class: 'UMP45', averagePrice: 850, description: '45 ACP submachine gun.' },
   { name: 'SG5-K', class: 'MP5K', averagePrice: 800, description: '9mm submachine gun.' },
   { name: 'PP-19', class: 'PP19', averagePrice: 750, description: '9mm submachine gun.' },
   { name: 'PM-73 RAK', class: 'PM73Rak', averagePrice: 650, description: '9mm submachine gun.' },
   { name: 'CZ-61 Skorpion', class: 'CZ61', averagePrice: 550, description: 'Compact machine pistol.' },
-  
-  // Pistols
+  { name: 'Vityaz', class: 'Vityaz', averagePrice: 900, description: '9mm Russian submachine gun.' },
+
+  // --- LAUNCHERS ---
+  { name: 'M79 Grenade Launcher', class: 'M79', averagePrice: 2500, description: 'Single-shot 40mm grenade launcher.' },
+
+  // --- PISTOLS ---
   { name: 'Desert Eagle', class: 'Deagle', averagePrice: 800, description: 'Powerful .357 pistol.' },
   { name: 'Desert Eagle (Gold)', class: 'Deagle_Gold', averagePrice: 1200, description: 'Gold-plated Desert Eagle.' },
   { name: 'FX-45', class: 'FNX45', averagePrice: 450, description: '45 ACP pistol.' },
