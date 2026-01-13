@@ -4,7 +4,7 @@ const fs = require('fs');
 const db = require('../database.js');
 const { MessageActionRow, MessageButton } = require('discord.js');
 const COOLDOWN_FILE = path.join(__dirname, '../logs/economy_cooldowns.json');
-const MINI_GAMES = ['fortuneteller','pillage','archery','tarot','quest','liarsdice','smuggle','pickpocket','bribe','labor','questboard','taverndice','duel','joust'];
+const MINI_GAMES = ['fortuneteller','pillage','archery','tarot','quest','liarsdice','smuggle','pickpocket','bribe','labor','questboard','taverndice','duel','joust','hunting','fishing','mining','herbalism','blacksmith','alchemy','bard','horseracing','chess','relics','tournamentmelee','beasttaming','siegedefense'];
 const COOLDOWN_LIMIT = 1; // times allowed
 const COOLDOWN_WINDOW = 6 * 60 * 60 * 1000; // 6 hours in ms
 
@@ -201,12 +201,12 @@ function getLeaderboard(top = 10) {
 
 // ============ RANK SYSTEM FUNCTIONS ============
 const RANKS = [
-    { name: 'Peasant', emoji: '👨‍🌾', threshold: 0, bonus: 0, stipend: 0, games: ['labor', 'questboard', 'taverndice'] },
-    { name: 'Knight', emoji: '⚔️', threshold: 5000, bonus: 0.05, stipend: 0, games: ['archery', 'fortuneteller'] },
-    { name: 'Baron', emoji: '🛡️', threshold: 15000, bonus: 0.10, stipend: 0, games: ['duel'] },
-    { name: 'Earl', emoji: '🎖️', threshold: 35000, bonus: 0.15, stipend: 100, games: ['joust'] },
-    { name: 'Duke', emoji: '👑', threshold: 75000, bonus: 0.20, stipend: 250, games: [] },
-    { name: 'King', emoji: '🏰', threshold: 150000, bonus: 0.25, stipend: 500, games: [] }
+    { name: 'Peasant', emoji: '👨‍🌾', threshold: 0, bonus: 0, stipend: 0, games: ['labor', 'questboard', 'taverndice', 'fishing', 'herbalism'] },
+    { name: 'Knight', emoji: '⚔️', threshold: 5000, bonus: 0.05, stipend: 0, games: ['archery', 'fortuneteller', 'hunting', 'mining'] },
+    { name: 'Baron', emoji: '🛡️', threshold: 15000, bonus: 0.10, stipend: 0, games: ['duel', 'blacksmith', 'bard'] },
+    { name: 'Earl', emoji: '🎖️', threshold: 35000, bonus: 0.15, stipend: 100, games: ['joust', 'alchemy', 'horseracing'] },
+    { name: 'Duke', emoji: '👑', threshold: 75000, bonus: 0.20, stipend: 250, games: ['chess', 'relics', 'tournamentmelee'] },
+    { name: 'King', emoji: '🏰', threshold: 150000, bonus: 0.25, stipend: 500, games: ['beasttaming', 'siegedefense'] }
 ];
 
 async function getUserStats(guildId, userId) {
@@ -432,6 +432,45 @@ module.exports = {
         new SlashCommandBuilder()
             .setName('shophelp')
             .setDescription('Learn how to use the shop and spawn system'),
+        new SlashCommandBuilder()
+            .setName('hunting')
+            .setDescription('🏹 Hunt wild game in the royal forest - Deer, boar, or rabbits?'),
+        new SlashCommandBuilder()
+            .setName('fishing')
+            .setDescription('🎣 Cast thy nets in the river - Catch salmon, trout, or eels!'),
+        new SlashCommandBuilder()
+            .setName('mining')
+            .setDescription('⛏️ Mine in the mountains - Dig for gold, silver, or gems!'),
+        new SlashCommandBuilder()
+            .setName('herbalism')
+            .setDescription('🌿 Gather herbs from the forest - Find healing plants or rare poisons!'),
+        new SlashCommandBuilder()
+            .setName('blacksmith')
+            .setDescription('🔨 Forge weapons and armor - Craft crude, fine, or masterwork quality!'),
+        new SlashCommandBuilder()
+            .setName('alchemy')
+            .setDescription('⚗️ Mix potions in thy laboratory - Create elixirs or risk explosions!'),
+        new SlashCommandBuilder()
+            .setName('bard')
+            .setDescription('🎵 Perform in the tavern - Play songs and earn tips from patrons!'),
+        new SlashCommandBuilder()
+            .setName('horseracing')
+            .setDescription('🐴 Race thy steed at the tracks - Bet on speed or stamina!'),
+        new SlashCommandBuilder()
+            .setName('chess')
+            .setDescription('♟️ Play strategic chess match - Outwit thy noble opponent!'),
+        new SlashCommandBuilder()
+            .setName('relics')
+            .setDescription('🏛️ Hunt ancient relics in ruins - Discover treasures or traps!'),
+        new SlashCommandBuilder()
+            .setName('tournamentmelee')
+            .setDescription('⚔️ Enter the grand melee tournament - Group combat for glory!'),
+        new SlashCommandBuilder()
+            .setName('beasttaming')
+            .setDescription('🐻 Attempt to tame wild beasts - Bears, wolves, or eagles!'),
+        new SlashCommandBuilder()
+            .setName('siegedefense')
+            .setDescription('🏰 Defend castle walls from attackers - Command thy defenders!'),
     ],
     async execute(interaction) {
         console.log(`[ECONOMY] execute called for command: ${interaction.commandName}, channel: ${interaction.channelId}`);
@@ -2059,6 +2098,877 @@ module.exports = {
                             'Medieval mini-games! Use `/rank` to see unlocked games.\n⏳ Each can be used once every 6 hours', false)
                         .setFooter({ text: 'Need help? Ask an admin!' })
                 ], ephemeral: true
+            });
+            
+        // ========== HUNTING ==========
+        } else if (commandName === 'hunting') {
+            const stats = await getUserStats(guildId, userId);
+            const rank = getRank(stats.total_earned);
+            if (!canPlayGame(rank, 'hunting')) {
+                return interaction.reply({ content: `🔒 **Hunting** unlocks at **Knight** rank! Thou art but a ${rank.emoji} ${rank.name}.`, ephemeral: true });
+            }
+            if (!canPlayMiniGame(userId, 'hunting')) {
+                const next = nextAvailableMiniGame(userId, 'hunting');
+                const hours = Math.floor(next / (1000 * 60 * 60));
+                const minutes = Math.floor((next % (1000 * 60 * 60)) / (1000 * 60));
+                return interaction.reply({ content: `⏰ Thou must rest! Try again in ${hours}h ${minutes}m.`, ephemeral: true });
+            }
+
+            const row = new MessageActionRow().addComponents(
+                new MessageButton().setCustomId('deer').setLabel('🦌 Hunt Deer').setStyle('PRIMARY'),
+                new MessageButton().setCustomId('boar').setLabel('🐗 Hunt Boar').setStyle('DANGER'),
+                new MessageButton().setCustomId('rabbit').setLabel('🐰 Hunt Rabbit').setStyle('SUCCESS')
+            );
+
+            await interaction.reply({
+                embeds: [new MessageEmbed()
+                    .setColor('#8b4513')
+                    .setTitle('🏹 Royal Forest Hunting')
+                    .setDescription('**Choose thy quarry, noble hunter!**\n\n🦌 **Deer** - High reward, tricky shot\n🐗 **Boar** - Dangerous but valuable\n🐰 **Rabbit** - Quick and easy prey')
+                    .setFooter({ text: `${rank.emoji} ${rank.name} | +${(rank.bonus * 100).toFixed(0)}% bonus` })],
+                components: [row]
+            });
+
+            const collector = interaction.channel.createMessageComponentCollector({ time: 30000 });
+            
+            collector.on('collect', async i => {
+                if (i.user.id !== userId) return i.reply({ content: 'This be not thy hunt!', ephemeral: true });
+                
+                const choices = {
+                    deer: { animal: 'Deer', base: 200, chance: 0.60, emoji: '🦌' },
+                    boar: { animal: 'Boar', base: 250, chance: 0.50, emoji: '🐗' },
+                    rabbit: { animal: 'Rabbit', base: 100, chance: 0.85, emoji: '🐰' }
+                };
+                
+                const choice = choices[i.customId];
+                await i.update({ content: `🏹 Drawing thy bow at the ${choice.emoji} ${choice.animal}...`, components: [], embeds: [] });
+                
+                setTimeout(async () => {
+                    const success = Math.random() < choice.chance;
+                    if (success) {
+                        const reward = Math.floor(choice.base * (1 + rank.bonus));
+                        await db.addBalance(guildId, userId, reward);
+                        await updateUserStats(guildId, userId, reward, true);
+                        recordMiniGamePlay(userId, 'hunting');
+                        await i.editReply(`🎯 **Success!** Thou hast slain the ${choice.emoji} **${choice.animal}**! Earned **$${reward}** from the pelt! ${rank.emoji}`);
+                    } else {
+                        await updateUserStats(guildId, userId, 0, false);
+                        recordMiniGamePlay(userId, 'hunting');
+                        await i.editReply(`💨 **Missed!** The ${choice.emoji} ${choice.animal} escaped into the forest!`);
+                    }
+                }, 2000);
+                
+                collector.stop();
+            });
+            
+            collector.on('end', collected => {
+                if (collected.size === 0) {
+                    interaction.editReply({ content: '⏰ The hunt hath ended.', components: [], embeds: [] });
+                }
+            });
+            
+        // ========== FISHING ==========
+        } else if (commandName === 'fishing') {
+            const stats = await getUserStats(guildId, userId);
+            const rank = getRank(stats.total_earned);
+            if (!canPlayGame(rank, 'fishing')) {
+                return interaction.reply({ content: `🔒 **Fishing** is available to all ${rank.emoji} ${rank.name}s!`, ephemeral: true });
+            }
+            if (!canPlayMiniGame(userId, 'fishing')) {
+                const next = nextAvailableMiniGame(userId, 'fishing');
+                const hours = Math.floor(next / (1000 * 60 * 60));
+                const minutes = Math.floor((next % (1000 * 60 * 60)) / (1000 * 60));
+                return interaction.reply({ content: `⏰ Thou must rest! Try again in ${hours}h ${minutes}m.`, ephemeral: true });
+            }
+
+            const row = new MessageActionRow().addComponents(
+                new MessageButton().setCustomId('salmon').setLabel('🐟 Cast for Salmon').setStyle('PRIMARY'),
+                new MessageButton().setCustomId('trout').setLabel('🎣 Cast for Trout').setStyle('SUCCESS'),
+                new MessageButton().setCustomId('eel').setLabel('🦎 Cast for Eel').setStyle('SECONDARY')
+            );
+
+            await interaction.reply({
+                embeds: [new MessageEmbed()
+                    .setColor('#4682b4')
+                    .setTitle('🎣 River Fishing')
+                    .setDescription('**Cast thy nets into the flowing waters!**\n\n🐟 **Salmon** - Rare and valuable\n🎣 **Trout** - Common catch\n🦎 **Eel** - Slippery and elusive')
+                    .setFooter({ text: `${rank.emoji} ${rank.name} | +${(rank.bonus * 100).toFixed(0)}% bonus` })],
+                components: [row]
+            });
+
+            const collector = interaction.channel.createMessageComponentCollector({ time: 30000 });
+            
+            collector.on('collect', async i => {
+                if (i.user.id !== userId) return i.reply({ content: 'This be not thy fishing spot!', ephemeral: true });
+                
+                const choices = {
+                    salmon: { fish: 'Salmon', base: 180, chance: 0.55, emoji: '🐟' },
+                    trout: { fish: 'Trout', base: 120, chance: 0.75, emoji: '🎣' },
+                    eel: { fish: 'Eel', base: 200, chance: 0.45, emoji: '🦎' }
+                };
+                
+                const choice = choices[i.customId];
+                await i.update({ content: `🎣 Casting thy net for ${choice.emoji} ${choice.fish}...`, components: [], embeds: [] });
+                
+                setTimeout(async () => {
+                    const success = Math.random() < choice.chance;
+                    if (success) {
+                        const reward = Math.floor(choice.base * (1 + rank.bonus));
+                        await db.addBalance(guildId, userId, reward);
+                        await updateUserStats(guildId, userId, reward, true);
+                        recordMiniGamePlay(userId, 'fishing');
+                        await i.editReply(`🎣 **Catch!** Thou hast caught a ${choice.emoji} **${choice.fish}**! Earned **$${reward}**! ${rank.emoji}`);
+                    } else {
+                        await updateUserStats(guildId, userId, 0, false);
+                        recordMiniGamePlay(userId, 'fishing');
+                        await i.editReply(`💨 **Empty Net!** The ${choice.emoji} ${choice.fish} escaped!`);
+                    }
+                }, 2000);
+                
+                collector.stop();
+            });
+            
+            collector.on('end', collected => {
+                if (collected.size === 0) {
+                    interaction.editReply({ content: '⏰ The fishing session hath ended.', components: [], embeds: [] });
+                }
+            });
+            
+        // ========== MINING ==========
+        } else if (commandName === 'mining') {
+            const stats = await getUserStats(guildId, userId);
+            const rank = getRank(stats.total_earned);
+            if (!canPlayGame(rank, 'mining')) {
+                return interaction.reply({ content: `🔒 **Mining** unlocks at **Knight** rank! Thou art but a ${rank.emoji} ${rank.name}.`, ephemeral: true });
+            }
+            if (!canPlayMiniGame(userId, 'mining')) {
+                const next = nextAvailableMiniGame(userId, 'mining');
+                const hours = Math.floor(next / (1000 * 60 * 60));
+                const minutes = Math.floor((next % (1000 * 60 * 60)) / (1000 * 60));
+                return interaction.reply({ content: `⏰ Thou must rest! Try again in ${hours}h ${minutes}m.`, ephemeral: true });
+            }
+
+            const row = new MessageActionRow().addComponents(
+                new MessageButton().setCustomId('gold').setLabel('💛 Mine Gold').setStyle('PRIMARY'),
+                new MessageButton().setCustomId('silver').setLabel('⚪ Mine Silver').setStyle('SECONDARY'),
+                new MessageButton().setCustomId('gems').setLabel('💎 Mine Gems').setStyle('SUCCESS')
+            );
+
+            await interaction.reply({
+                embeds: [new MessageEmbed()
+                    .setColor('#ffd700')
+                    .setTitle('⛏️ Mountain Mining')
+                    .setDescription('**Dig deep for precious ores!**\n\n💛 **Gold** - Most valuable, risk of cave-in\n⚪ **Silver** - Reliable income\n💎 **Gems** - Rare but dangerous')
+                    .setFooter({ text: `${rank.emoji} ${rank.name} | +${(rank.bonus * 100).toFixed(0)}% bonus` })],
+                components: [row]
+            });
+
+            const collector = interaction.channel.createMessageComponentCollector({ time: 30000 });
+            
+            collector.on('collect', async i => {
+                if (i.user.id !== userId) return i.reply({ content: 'This be not thy mine!', ephemeral: true });
+                
+                const choices = {
+                    gold: { ore: 'Gold', base: 300, chance: 0.50, emoji: '💛' },
+                    silver: { ore: 'Silver', base: 150, chance: 0.70, emoji: '⚪' },
+                    gems: { ore: 'Gems', base: 400, chance: 0.35, emoji: '💎' }
+                };
+                
+                const choice = choices[i.customId];
+                await i.update({ content: `⛏️ Mining for ${choice.emoji} ${choice.ore}...`, components: [], embeds: [] });
+                
+                setTimeout(async () => {
+                    const success = Math.random() < choice.chance;
+                    if (success) {
+                        const reward = Math.floor(choice.base * (1 + rank.bonus));
+                        await db.addBalance(guildId, userId, reward);
+                        await updateUserStats(guildId, userId, reward, true);
+                        recordMiniGamePlay(userId, 'mining');
+                        await i.editReply(`⛏️ **Strike!** Thou hast mined ${choice.emoji} **${choice.ore}**! Earned **$${reward}**! ${rank.emoji}`);
+                    } else {
+                        await updateUserStats(guildId, userId, 0, false);
+                        recordMiniGamePlay(userId, 'mining');
+                        await i.editReply(`💥 **Cave-in!** Thou found nothing but rocks and dust!`);
+                    }
+                }, 2000);
+                
+                collector.stop();
+            });
+            
+            collector.on('end', collected => {
+                if (collected.size === 0) {
+                    interaction.editReply({ content: '⏰ The mining shift hath ended.', components: [], embeds: [] });
+                }
+            });
+            
+        // ========== HERBALISM ==========
+        } else if (commandName === 'herbalism') {
+            const stats = await getUserStats(guildId, userId);
+            const rank = getRank(stats.total_earned);
+            if (!canPlayGame(rank, 'herbalism')) {
+                return interaction.reply({ content: `🔒 **Herbalism** is available to all ${rank.emoji} ${rank.name}s!`, ephemeral: true });
+            }
+            if (!canPlayMiniGame(userId, 'herbalism')) {
+                const next = nextAvailableMiniGame(userId, 'herbalism');
+                const hours = Math.floor(next / (1000 * 60 * 60));
+                const minutes = Math.floor((next % (1000 * 60 * 60)) / (1000 * 60));
+                return interaction.reply({ content: `⏰ Thou must rest! Try again in ${hours}h ${minutes}m.`, ephemeral: true });
+            }
+
+            const row = new MessageActionRow().addComponents(
+                new MessageButton().setCustomId('healing').setLabel('🌿 Healing Herbs').setStyle('SUCCESS'),
+                new MessageButton().setCustomId('poison').setLabel('☠️ Poison Plants').setStyle('DANGER'),
+                new MessageButton().setCustomId('rare').setLabel('✨ Rare Herbs').setStyle('PRIMARY')
+            );
+
+            await interaction.reply({
+                embeds: [new MessageEmbed()
+                    .setColor('#228b22')
+                    .setTitle('🌿 Forest Herbalism')
+                    .setDescription('**Gather herbs from the wild woods!**\n\n🌿 **Healing** - Safe and common\n☠️ **Poison** - Dangerous to gather\n✨ **Rare** - Valuable but elusive')
+                    .setFooter({ text: `${rank.emoji} ${rank.name} | +${(rank.bonus * 100).toFixed(0)}% bonus` })],
+                components: [row]
+            });
+
+            const collector = interaction.channel.createMessageComponentCollector({ time: 30000 });
+            
+            collector.on('collect', async i => {
+                if (i.user.id !== userId) return i.reply({ content: 'This be not thy gathering!', ephemeral: true });
+                
+                const choices = {
+                    healing: { herb: 'Healing Herbs', base: 100, chance: 0.80, emoji: '🌿' },
+                    poison: { herb: 'Poison Plants', base: 200, chance: 0.55, emoji: '☠️' },
+                    rare: { herb: 'Rare Herbs', base: 250, chance: 0.40, emoji: '✨' }
+                };
+                
+                const choice = choices[i.customId];
+                await i.update({ content: `🌿 Gathering ${choice.emoji} ${choice.herb}...`, components: [], embeds: [] });
+                
+                setTimeout(async () => {
+                    const success = Math.random() < choice.chance;
+                    if (success) {
+                        const reward = Math.floor(choice.base * (1 + rank.bonus));
+                        await db.addBalance(guildId, userId, reward);
+                        await updateUserStats(guildId, userId, reward, true);
+                        recordMiniGamePlay(userId, 'herbalism');
+                        await i.editReply(`🌿 **Success!** Thou hast gathered ${choice.emoji} **${choice.herb}**! Earned **$${reward}**! ${rank.emoji}`);
+                    } else {
+                        await updateUserStats(guildId, userId, 0, false);
+                        recordMiniGamePlay(userId, 'herbalism');
+                        await i.editReply(`🍂 **Nothing!** Thou found only weeds and brambles!`);
+                    }
+                }, 2000);
+                
+                collector.stop();
+            });
+            
+            collector.on('end', collected => {
+                if (collected.size === 0) {
+                    interaction.editReply({ content: '⏰ The gathering hath ended.', components: [], embeds: [] });
+                }
+            });
+            
+        // ========== BLACKSMITH ==========
+        } else if (commandName === 'blacksmith') {
+            const stats = await getUserStats(guildId, userId);
+            const rank = getRank(stats.total_earned);
+            if (!canPlayGame(rank, 'blacksmith')) {
+                return interaction.reply({ content: `🔒 **Blacksmith** unlocks at **Baron** rank! Thou art but a ${rank.emoji} ${rank.name}.`, ephemeral: true });
+            }
+            if (!canPlayMiniGame(userId, 'blacksmith')) {
+                const next = nextAvailableMiniGame(userId, 'blacksmith');
+                const hours = Math.floor(next / (1000 * 60 * 60));
+                const minutes = Math.floor((next % (1000 * 60 * 60)) / (1000 * 60));
+                return interaction.reply({ content: `⏰ Thou must rest! Try again in ${hours}h ${minutes}m.`, ephemeral: true });
+            }
+
+            const row = new MessageActionRow().addComponents(
+                new MessageButton().setCustomId('crude').setLabel('🔨 Crude Quality').setStyle('SECONDARY'),
+                new MessageButton().setCustomId('fine').setLabel('⚒️ Fine Quality').setStyle('PRIMARY'),
+                new MessageButton().setCustomId('masterwork').setLabel('✨ Masterwork').setStyle('SUCCESS')
+            );
+
+            await interaction.reply({
+                embeds: [new MessageEmbed()
+                    .setColor('#ff4500')
+                    .setTitle('🔨 Blacksmith Forge')
+                    .setDescription('**Forge weapons and armor at thy anvil!**\n\n🔨 **Crude** - Easy to craft, lower value\n⚒️ **Fine** - Skilled work required\n✨ **Masterwork** - Legendary craftsmanship')
+                    .setFooter({ text: `${rank.emoji} ${rank.name} | +${(rank.bonus * 100).toFixed(0)}% bonus` })],
+                components: [row]
+            });
+
+            const collector = interaction.channel.createMessageComponentCollector({ time: 30000 });
+            
+            collector.on('collect', async i => {
+                if (i.user.id !== userId) return i.reply({ content: 'This be not thy forge!', ephemeral: true });
+                
+                const choices = {
+                    crude: { quality: 'Crude', base: 150, chance: 0.85, emoji: '🔨' },
+                    fine: { quality: 'Fine', base: 250, chance: 0.60, emoji: '⚒️' },
+                    masterwork: { quality: 'Masterwork', base: 450, chance: 0.30, emoji: '✨' }
+                };
+                
+                const choice = choices[i.customId];
+                await i.update({ content: `🔥 Forging ${choice.emoji} ${choice.quality} quality...`, components: [], embeds: [] });
+                
+                setTimeout(async () => {
+                    const success = Math.random() < choice.chance;
+                    if (success) {
+                        const reward = Math.floor(choice.base * (1 + rank.bonus));
+                        await db.addBalance(guildId, userId, reward);
+                        await updateUserStats(guildId, userId, reward, true);
+                        recordMiniGamePlay(userId, 'blacksmith');
+                        await i.editReply(`🔨 **Forged!** Thou hast crafted ${choice.emoji} **${choice.quality}** quality! Earned **$${reward}**! ${rank.emoji}`);
+                    } else {
+                        await updateUserStats(guildId, userId, 0, false);
+                        recordMiniGamePlay(userId, 'blacksmith');
+                        await i.editReply(`💥 **Ruined!** The metal cracked and is worthless!`);
+                    }
+                }, 2000);
+                
+                collector.stop();
+            });
+            
+            collector.on('end', collected => {
+                if (collected.size === 0) {
+                    interaction.editReply({ content: '⏰ The forge hath cooled.', components: [], embeds: [] });
+                }
+            });
+            
+        // ========== ALCHEMY ==========
+        } else if (commandName === 'alchemy') {
+            const stats = await getUserStats(guildId, userId);
+            const rank = getRank(stats.total_earned);
+            if (!canPlayGame(rank, 'alchemy')) {
+                return interaction.reply({ content: `🔒 **Alchemy** unlocks at **Earl** rank! Thou art but a ${rank.emoji} ${rank.name}.`, ephemeral: true });
+            }
+            if (!canPlayMiniGame(userId, 'alchemy')) {
+                const next = nextAvailableMiniGame(userId, 'alchemy');
+                const hours = Math.floor(next / (1000 * 60 * 60));
+                const minutes = Math.floor((next % (1000 * 60 * 60)) / (1000 * 60));
+                return interaction.reply({ content: `⏰ Thou must rest! Try again in ${hours}h ${minutes}m.`, ephemeral: true });
+            }
+
+            const row = new MessageActionRow().addComponents(
+                new MessageButton().setCustomId('health').setLabel('💚 Health Potion').setStyle('SUCCESS'),
+                new MessageButton().setCustomId('strength').setLabel('💪 Strength Elixir').setStyle('PRIMARY'),
+                new MessageButton().setCustomId('transmute').setLabel('✨ Transmutation').setStyle('DANGER')
+            );
+
+            await interaction.reply({
+                embeds: [new MessageEmbed()
+                    .setColor('#9370db')
+                    .setTitle('⚗️ Alchemy Laboratory')
+                    .setDescription('**Mix potions in thy mystical lab!**\n\n💚 **Health** - Safe and reliable\n💪 **Strength** - Powerful but volatile\n✨ **Transmute** - Turn lead to gold... or explode!')
+                    .setFooter({ text: `${rank.emoji} ${rank.name} | +${(rank.bonus * 100).toFixed(0)}% bonus` })],
+                components: [row]
+            });
+
+            const collector = interaction.channel.createMessageComponentCollector({ time: 30000 });
+            
+            collector.on('collect', async i => {
+                if (i.user.id !== userId) return i.reply({ content: 'This be not thy laboratory!', ephemeral: true });
+                
+                const choices = {
+                    health: { potion: 'Health Potion', base: 200, chance: 0.75, emoji: '💚' },
+                    strength: { potion: 'Strength Elixir', base: 350, chance: 0.55, emoji: '💪' },
+                    transmute: { potion: 'Transmutation', base: 600, chance: 0.30, emoji: '✨' }
+                };
+                
+                const choice = choices[i.customId];
+                await i.update({ content: `⚗️ Mixing ${choice.emoji} ${choice.potion}...`, components: [], embeds: [] });
+                
+                setTimeout(async () => {
+                    const success = Math.random() < choice.chance;
+                    if (success) {
+                        const reward = Math.floor(choice.base * (1 + rank.bonus));
+                        await db.addBalance(guildId, userId, reward);
+                        await updateUserStats(guildId, userId, reward, true);
+                        recordMiniGamePlay(userId, 'alchemy');
+                        await i.editReply(`⚗️ **Success!** Thou hast brewed ${choice.emoji} **${choice.potion}**! Earned **$${reward}**! ${rank.emoji}`);
+                    } else {
+                        await updateUserStats(guildId, userId, 0, false);
+                        recordMiniGamePlay(userId, 'alchemy');
+                        await i.editReply(`💥 **EXPLOSION!** The potion erupted in flames! Lab destroyed!`);
+                    }
+                }, 2000);
+                
+                collector.stop();
+            });
+            
+            collector.on('end', collected => {
+                if (collected.size === 0) {
+                    interaction.editReply({ content: '⏰ The alchemy session hath ended.', components: [], embeds: [] });
+                }
+            });
+            
+        // ========== BARD ==========
+        } else if (commandName === 'bard') {
+            const stats = await getUserStats(guildId, userId);
+            const rank = getRank(stats.total_earned);
+            if (!canPlayGame(rank, 'bard')) {
+                return interaction.reply({ content: `🔒 **Bard Performance** unlocks at **Baron** rank! Thou art but a ${rank.emoji} ${rank.name}.`, ephemeral: true });
+            }
+            if (!canPlayMiniGame(userId, 'bard')) {
+                const next = nextAvailableMiniGame(userId, 'bard');
+                const hours = Math.floor(next / (1000 * 60 * 60));
+                const minutes = Math.floor((next % (1000 * 60 * 60)) / (1000 * 60));
+                return interaction.reply({ content: `⏰ Thou must rest! Try again in ${hours}h ${minutes}m.`, ephemeral: true });
+            }
+
+            const row = new MessageActionRow().addComponents(
+                new MessageButton().setCustomId('ballad').setLabel('🎵 Ballad').setStyle('PRIMARY'),
+                new MessageButton().setCustomId('jig').setLabel('💃 Lively Jig').setStyle('SUCCESS'),
+                new MessageButton().setCustomId('epic').setLabel('⚔️ Epic Tale').setStyle('DANGER')
+            );
+
+            await interaction.reply({
+                embeds: [new MessageEmbed()
+                    .setColor('#ffa500')
+                    .setTitle('🎵 Tavern Performance')
+                    .setDescription('**Perform for the tavern patrons!**\n\n🎵 **Ballad** - Romantic and safe\n💃 **Jig** - Dance and be merry\n⚔️ **Epic** - Tell tales of heroes')
+                    .setFooter({ text: `${rank.emoji} ${rank.name} | +${(rank.bonus * 100).toFixed(0)}% bonus` })],
+                components: [row]
+            });
+
+            const collector = interaction.channel.createMessageComponentCollector({ time: 30000 });
+            
+            collector.on('collect', async i => {
+                if (i.user.id !== userId) return i.reply({ content: 'This be not thy performance!', ephemeral: true });
+                
+                const choices = {
+                    ballad: { song: 'Ballad', base: 150, chance: 0.75, emoji: '🎵' },
+                    jig: { song: 'Lively Jig', base: 200, chance: 0.65, emoji: '💃' },
+                    epic: { song: 'Epic Tale', base: 300, chance: 0.50, emoji: '⚔️' }
+                };
+                
+                const choice = choices[i.customId];
+                await i.update({ content: `🎵 Performing ${choice.emoji} ${choice.song}...`, components: [], embeds: [] });
+                
+                setTimeout(async () => {
+                    const success = Math.random() < choice.chance;
+                    if (success) {
+                        const reward = Math.floor(choice.base * (1 + rank.bonus));
+                        await db.addBalance(guildId, userId, reward);
+                        await updateUserStats(guildId, userId, reward, true);
+                        recordMiniGamePlay(userId, 'bard');
+                        await i.editReply(`🎵 **Applause!** The crowd loved thy ${choice.emoji} **${choice.song}**! Earned **$${reward}** in tips! ${rank.emoji}`);
+                    } else {
+                        await updateUserStats(guildId, userId, 0, false);
+                        recordMiniGamePlay(userId, 'bard');
+                        await i.editReply(`🍅 **Booed!** The crowd threw rotten vegetables! No tips today!`);
+                    }
+                }, 2000);
+                
+                collector.stop();
+            });
+            
+            collector.on('end', collected => {
+                if (collected.size === 0) {
+                    interaction.editReply({ content: '⏰ The performance time hath ended.', components: [], embeds: [] });
+                }
+            });
+            
+        // ========== HORSE RACING ==========
+        } else if (commandName === 'horseracing') {
+            const stats = await getUserStats(guildId, userId);
+            const rank = getRank(stats.total_earned);
+            if (!canPlayGame(rank, 'horseracing')) {
+                return interaction.reply({ content: `🔒 **Horse Racing** unlocks at **Earl** rank! Thou art but a ${rank.emoji} ${rank.name}.`, ephemeral: true });
+            }
+            if (!canPlayMiniGame(userId, 'horseracing')) {
+                const next = nextAvailableMiniGame(userId, 'horseracing');
+                const hours = Math.floor(next / (1000 * 60 * 60));
+                const minutes = Math.floor((next % (1000 * 60 * 60)) / (1000 * 60));
+                return interaction.reply({ content: `⏰ Thou must rest! Try again in ${hours}h ${minutes}m.`, ephemeral: true });
+            }
+
+            const row = new MessageActionRow().addComponents(
+                new MessageButton().setCustomId('speed').setLabel('⚡ Speed Horse').setStyle('DANGER'),
+                new MessageButton().setCustomId('stamina').setLabel('💪 Stamina Horse').setStyle('PRIMARY'),
+                new MessageButton().setCustomId('balanced').setLabel('⚖️ Balanced Horse').setStyle('SUCCESS')
+            );
+
+            await interaction.reply({
+                embeds: [new MessageEmbed()
+                    .setColor('#8b4513')
+                    .setTitle('🐴 Horse Racing Track')
+                    .setDescription('**Choose thy steed for the race!**\n\n⚡ **Speed** - Fast but tires quickly\n💪 **Stamina** - Steady and reliable\n⚖️ **Balanced** - Mix of both')
+                    .setFooter({ text: `${rank.emoji} ${rank.name} | +${(rank.bonus * 100).toFixed(0)}% bonus` })],
+                components: [row]
+            });
+
+            const collector = interaction.channel.createMessageComponentCollector({ time: 30000 });
+            
+            collector.on('collect', async i => {
+                if (i.user.id !== userId) return i.reply({ content: 'This be not thy race!', ephemeral: true });
+                
+                const choices = {
+                    speed: { horse: 'Speed Horse', base: 350, chance: 0.45, emoji: '⚡' },
+                    stamina: { horse: 'Stamina Horse', base: 250, chance: 0.65, emoji: '💪' },
+                    balanced: { horse: 'Balanced Horse', base: 300, chance: 0.55, emoji: '⚖️' }
+                };
+                
+                const choice = choices[i.customId];
+                await i.update({ content: `🏇 Racing with ${choice.emoji} ${choice.horse}...`, components: [], embeds: [] });
+                
+                setTimeout(async () => {
+                    const success = Math.random() < choice.chance;
+                    if (success) {
+                        const reward = Math.floor(choice.base * (1 + rank.bonus));
+                        await db.addBalance(guildId, userId, reward);
+                        await updateUserStats(guildId, userId, reward, true);
+                        recordMiniGamePlay(userId, 'horseracing');
+                        await i.editReply(`🏆 **Victory!** Thy ${choice.emoji} **${choice.horse}** won the race! Earned **$${reward}**! ${rank.emoji}`);
+                    } else {
+                        await updateUserStats(guildId, userId, 0, false);
+                        recordMiniGamePlay(userId, 'horseracing');
+                        await i.editReply(`😞 **Lost!** Thy ${choice.emoji} ${choice.horse} finished in last place!`);
+                    }
+                }, 2000);
+                
+                collector.stop();
+            });
+            
+            collector.on('end', collected => {
+                if (collected.size === 0) {
+                    interaction.editReply({ content: '⏰ The race hath concluded.', components: [], embeds: [] });
+                }
+            });
+            
+        // ========== CHESS ==========
+        } else if (commandName === 'chess') {
+            const stats = await getUserStats(guildId, userId);
+            const rank = getRank(stats.total_earned);
+            if (!canPlayGame(rank, 'chess')) {
+                return interaction.reply({ content: `🔒 **Chess** unlocks at **Duke** rank! Thou art but a ${rank.emoji} ${rank.name}.`, ephemeral: true });
+            }
+            if (!canPlayMiniGame(userId, 'chess')) {
+                const next = nextAvailableMiniGame(userId, 'chess');
+                const hours = Math.floor(next / (1000 * 60 * 60));
+                const minutes = Math.floor((next % (1000 * 60 * 60)) / (1000 * 60));
+                return interaction.reply({ content: `⏰ Thou must rest! Try again in ${hours}h ${minutes}m.`, ephemeral: true });
+            }
+
+            const row = new MessageActionRow().addComponents(
+                new MessageButton().setCustomId('aggressive').setLabel('⚔️ Aggressive').setStyle('DANGER'),
+                new MessageButton().setCustomId('defensive').setLabel('🛡️ Defensive').setStyle('PRIMARY'),
+                new MessageButton().setCustomId('strategic').setLabel('🧠 Strategic').setStyle('SUCCESS')
+            );
+
+            await interaction.reply({
+                embeds: [new MessageEmbed()
+                    .setColor('#000000')
+                    .setTitle('♟️ Noble Chess Match')
+                    .setDescription('**Choose thy strategy against the grandmaster!**\n\n⚔️ **Aggressive** - Bold attacks\n🛡️ **Defensive** - Patient play\n🧠 **Strategic** - Long-term thinking')
+                    .setFooter({ text: `${rank.emoji} ${rank.name} | +${(rank.bonus * 100).toFixed(0)}% bonus` })],
+                components: [row]
+            });
+
+            const collector = interaction.channel.createMessageComponentCollector({ time: 30000 });
+            
+            collector.on('collect', async i => {
+                if (i.user.id !== userId) return i.reply({ content: 'This be not thy match!', ephemeral: true });
+                
+                const choices = {
+                    aggressive: { strategy: 'Aggressive', base: 400, chance: 0.45, emoji: '⚔️' },
+                    defensive: { strategy: 'Defensive', base: 300, chance: 0.60, emoji: '🛡️' },
+                    strategic: { strategy: 'Strategic', base: 500, chance: 0.40, emoji: '🧠' }
+                };
+                
+                const choice = choices[i.customId];
+                await i.update({ content: `♟️ Playing ${choice.emoji} ${choice.strategy} style...`, components: [], embeds: [] });
+                
+                setTimeout(async () => {
+                    const success = Math.random() < choice.chance;
+                    if (success) {
+                        const reward = Math.floor(choice.base * (1 + rank.bonus));
+                        await db.addBalance(guildId, userId, reward);
+                        await updateUserStats(guildId, userId, reward, true);
+                        recordMiniGamePlay(userId, 'chess');
+                        await i.editReply(`♟️ **Checkmate!** Thy ${choice.emoji} **${choice.strategy}** play prevailed! Earned **$${reward}**! ${rank.emoji}`);
+                    } else {
+                        await updateUserStats(guildId, userId, 0, false);
+                        recordMiniGamePlay(userId, 'chess');
+                        await i.editReply(`♔ **Defeated!** The grandmaster's skill surpassed thee!`);
+                    }
+                }, 2000);
+                
+                collector.stop();
+            });
+            
+            collector.on('end', collected => {
+                if (collected.size === 0) {
+                    interaction.editReply({ content: '⏰ The match hath concluded.', components: [], embeds: [] });
+                }
+            });
+            
+        // ========== RELIC HUNTING ==========
+        } else if (commandName === 'relics') {
+            const stats = await getUserStats(guildId, userId);
+            const rank = getRank(stats.total_earned);
+            if (!canPlayGame(rank, 'relics')) {
+                return interaction.reply({ content: `🔒 **Relic Hunting** unlocks at **Duke** rank! Thou art but a ${rank.emoji} ${rank.name}.`, ephemeral: true });
+            }
+            if (!canPlayMiniGame(userId, 'relics')) {
+                const next = nextAvailableMiniGame(userId, 'relics');
+                const hours = Math.floor(next / (1000 * 60 * 60));
+                const minutes = Math.floor((next % (1000 * 60 * 60)) / (1000 * 60));
+                return interaction.reply({ content: `⏰ Thou must rest! Try again in ${hours}h ${minutes}m.`, ephemeral: true });
+            }
+
+            const row = new MessageActionRow().addComponents(
+                new MessageButton().setCustomId('temple').setLabel('🏛️ Ancient Temple').setStyle('PRIMARY'),
+                new MessageButton().setCustomId('tomb').setLabel('⚰️ Royal Tomb').setStyle('DANGER'),
+                new MessageButton().setCustomId('vault').setLabel('🗝️ Hidden Vault').setStyle('SUCCESS')
+            );
+
+            await interaction.reply({
+                embeds: [new MessageEmbed()
+                    .setColor('#daa520')
+                    .setTitle('🏛️ Relic Hunting Expedition')
+                    .setDescription('**Explore ancient ruins for treasures!**\n\n🏛️ **Temple** - Sacred artifacts\n⚰️ **Tomb** - Cursed riches\n🗝️ **Vault** - Forgotten treasures')
+                    .setFooter({ text: `${rank.emoji} ${rank.name} | +${(rank.bonus * 100).toFixed(0)}% bonus` })],
+                components: [row]
+            });
+
+            const collector = interaction.channel.createMessageComponentCollector({ time: 30000 });
+            
+            collector.on('collect', async i => {
+                if (i.user.id !== userId) return i.reply({ content: 'This be not thy expedition!', ephemeral: true });
+                
+                const choices = {
+                    temple: { location: 'Ancient Temple', base: 400, chance: 0.50, emoji: '🏛️' },
+                    tomb: { location: 'Royal Tomb', base: 550, chance: 0.35, emoji: '⚰️' },
+                    vault: { location: 'Hidden Vault', base: 700, chance: 0.25, emoji: '🗝️' }
+                };
+                
+                const choice = choices[i.customId];
+                await i.update({ content: `🔦 Exploring the ${choice.emoji} ${choice.location}...`, components: [], embeds: [] });
+                
+                setTimeout(async () => {
+                    const success = Math.random() < choice.chance;
+                    if (success) {
+                        const reward = Math.floor(choice.base * (1 + rank.bonus));
+                        await db.addBalance(guildId, userId, reward);
+                        await updateUserStats(guildId, userId, reward, true);
+                        recordMiniGamePlay(userId, 'relics');
+                        await i.editReply(`✨ **Discovery!** Found ancient relics in the ${choice.emoji} **${choice.location}**! Earned **$${reward}**! ${rank.emoji}`);
+                    } else {
+                        await updateUserStats(guildId, userId, 0, false);
+                        recordMiniGamePlay(userId, 'relics');
+                        await i.editReply(`🪤 **Trapped!** Barely escaped with thy life! Found nothing!`);
+                    }
+                }, 2000);
+                
+                collector.stop();
+            });
+            
+            collector.on('end', collected => {
+                if (collected.size === 0) {
+                    interaction.editReply({ content: '⏰ The expedition hath ended.', components: [], embeds: [] });
+                }
+            });
+            
+        // ========== TOURNAMENT MELEE ==========
+        } else if (commandName === 'tournamentmelee') {
+            const stats = await getUserStats(guildId, userId);
+            const rank = getRank(stats.total_earned);
+            if (!canPlayGame(rank, 'tournamentmelee')) {
+                return interaction.reply({ content: `🔒 **Tournament Melee** unlocks at **Duke** rank! Thou art but a ${rank.emoji} ${rank.name}.`, ephemeral: true });
+            }
+            if (!canPlayMiniGame(userId, 'tournamentmelee')) {
+                const next = nextAvailableMiniGame(userId, 'tournamentmelee');
+                const hours = Math.floor(next / (1000 * 60 * 60));
+                const minutes = Math.floor((next % (1000 * 60 * 60)) / (1000 * 60));
+                return interaction.reply({ content: `⏰ Thou must rest! Try again in ${hours}h ${minutes}m.`, ephemeral: true });
+            }
+
+            const row = new MessageActionRow().addComponents(
+                new MessageButton().setCustomId('offense').setLabel('⚔️ All-Out Attack').setStyle('DANGER'),
+                new MessageButton().setCustomId('balance').setLabel('⚖️ Balanced Style').setStyle('PRIMARY'),
+                new MessageButton().setCustomId('defense').setLabel('🛡️ Defensive Stance').setStyle('SUCCESS')
+            );
+
+            await interaction.reply({
+                embeds: [new MessageEmbed()
+                    .setColor('#8b0000')
+                    .setTitle('⚔️ Grand Melee Tournament')
+                    .setDescription('**Face multiple opponents in group combat!**\n\n⚔️ **Attack** - Risky but rewarding\n⚖️ **Balanced** - Even approach\n🛡️ **Defense** - Survive longer')
+                    .setFooter({ text: `${rank.emoji} ${rank.name} | +${(rank.bonus * 100).toFixed(0)}% bonus` })],
+                components: [row]
+            });
+
+            const collector = interaction.channel.createMessageComponentCollector({ time: 30000 });
+            
+            collector.on('collect', async i => {
+                if (i.user.id !== userId) return i.reply({ content: 'This be not thy melee!', ephemeral: true });
+                
+                const choices = {
+                    offense: { style: 'All-Out Attack', base: 600, chance: 0.35, emoji: '⚔️' },
+                    balance: { style: 'Balanced Style', base: 450, chance: 0.50, emoji: '⚖️' },
+                    defense: { style: 'Defensive Stance', base: 350, chance: 0.65, emoji: '🛡️' }
+                };
+                
+                const choice = choices[i.customId];
+                await i.update({ content: `⚔️ Fighting with ${choice.emoji} ${choice.style}...`, components: [], embeds: [] });
+                
+                setTimeout(async () => {
+                    const success = Math.random() < choice.chance;
+                    if (success) {
+                        const reward = Math.floor(choice.base * (1 + rank.bonus));
+                        await db.addBalance(guildId, userId, reward);
+                        await updateUserStats(guildId, userId, reward, true);
+                        recordMiniGamePlay(userId, 'tournamentmelee');
+                        await i.editReply(`🏆 **Champion!** Victory with ${choice.emoji} **${choice.style}**! Earned **$${reward}**! ${rank.emoji}`);
+                    } else {
+                        await updateUserStats(guildId, userId, 0, false);
+                        recordMiniGamePlay(userId, 'tournamentmelee');
+                        await i.editReply(`🗡️ **Defeated!** Thou wast knocked from the melee!`);
+                    }
+                }, 2000);
+                
+                collector.stop();
+            });
+            
+            collector.on('end', collected => {
+                if (collected.size === 0) {
+                    interaction.editReply({ content: '⏰ The melee hath concluded.', components: [], embeds: [] });
+                }
+            });
+            
+        // ========== BEAST TAMING ==========
+        } else if (commandName === 'beasttaming') {
+            const stats = await getUserStats(guildId, userId);
+            const rank = getRank(stats.total_earned);
+            if (!canPlayGame(rank, 'beasttaming')) {
+                return interaction.reply({ content: `🔒 **Beast Taming** unlocks at **King** rank! Thou art but a ${rank.emoji} ${rank.name}.`, ephemeral: true });
+            }
+            if (!canPlayMiniGame(userId, 'beasttaming')) {
+                const next = nextAvailableMiniGame(userId, 'beasttaming');
+                const hours = Math.floor(next / (1000 * 60 * 60));
+                const minutes = Math.floor((next % (1000 * 60 * 60)) / (1000 * 60));
+                return interaction.reply({ content: `⏰ Thou must rest! Try again in ${hours}h ${minutes}m.`, ephemeral: true });
+            }
+
+            const row = new MessageActionRow().addComponents(
+                new MessageButton().setCustomId('wolf').setLabel('🐺 Tame Wolf').setStyle('PRIMARY'),
+                new MessageButton().setCustomId('bear').setLabel('🐻 Tame Bear').setStyle('DANGER'),
+                new MessageButton().setCustomId('eagle').setLabel('🦅 Tame Eagle').setStyle('SUCCESS')
+            );
+
+            await interaction.reply({
+                embeds: [new MessageEmbed()
+                    .setColor('#654321')
+                    .setTitle('🐻 Beast Taming Challenge')
+                    .setDescription('**Only the King can tame wild beasts!**\n\n🐺 **Wolf** - Loyal but fierce\n🐻 **Bear** - Powerful and dangerous\n🦅 **Eagle** - Majestic and swift')
+                    .setFooter({ text: `${rank.emoji} ${rank.name} | +${(rank.bonus * 100).toFixed(0)}% bonus` })],
+                components: [row]
+            });
+
+            const collector = interaction.channel.createMessageComponentCollector({ time: 30000 });
+            
+            collector.on('collect', async i => {
+                if (i.user.id !== userId) return i.reply({ content: 'This be not thy taming!', ephemeral: true });
+                
+                const choices = {
+                    wolf: { beast: 'Wolf', base: 500, chance: 0.50, emoji: '🐺' },
+                    bear: { beast: 'Bear', base: 800, chance: 0.30, emoji: '🐻' },
+                    eagle: { beast: 'Eagle', base: 650, chance: 0.40, emoji: '🦅' }
+                };
+                
+                const choice = choices[i.customId];
+                await i.update({ content: `🐻 Attempting to tame the ${choice.emoji} ${choice.beast}...`, components: [], embeds: [] });
+                
+                setTimeout(async () => {
+                    const success = Math.random() < choice.chance;
+                    if (success) {
+                        const reward = Math.floor(choice.base * (1 + rank.bonus));
+                        await db.addBalance(guildId, userId, reward);
+                        await updateUserStats(guildId, userId, reward, true);
+                        recordMiniGamePlay(userId, 'beasttaming');
+                        await i.editReply(`🐻 **Tamed!** The ${choice.emoji} **${choice.beast}** is now thy companion! Earned **$${reward}**! ${rank.emoji}`);
+                    } else {
+                        await updateUserStats(guildId, userId, 0, false);
+                        recordMiniGamePlay(userId, 'beasttaming');
+                        await i.editReply(`😱 **Failed!** The ${choice.emoji} ${choice.beast} remained wild and fled!`);
+                    }
+                }, 2000);
+                
+                collector.stop();
+            });
+            
+            collector.on('end', collected => {
+                if (collected.size === 0) {
+                    interaction.editReply({ content: '⏰ The taming hath ended.', components: [], embeds: [] });
+                }
+            });
+            
+        // ========== SIEGE DEFENSE ==========
+        } else if (commandName === 'siegedefense') {
+            const stats = await getUserStats(guildId, userId);
+            const rank = getRank(stats.total_earned);
+            if (!canPlayGame(rank, 'siegedefense')) {
+                return interaction.reply({ content: `🔒 **Siege Defense** unlocks at **King** rank! Thou art but a ${rank.emoji} ${rank.name}.`, ephemeral: true });
+            }
+            if (!canPlayMiniGame(userId, 'siegedefense')) {
+                const next = nextAvailableMiniGame(userId, 'siegedefense');
+                const hours = Math.floor(next / (1000 * 60 * 60));
+                const minutes = Math.floor((next % (1000 * 60 * 60)) / (1000 * 60));
+                return interaction.reply({ content: `⏰ Thou must rest! Try again in ${hours}h ${minutes}m.`, ephemeral: true });
+            }
+
+            const row = new MessageActionRow().addComponents(
+                new MessageButton().setCustomId('archers').setLabel('🏹 Deploy Archers').setStyle('SUCCESS'),
+                new MessageButton().setCustomId('cavalry').setLabel('🐴 Send Cavalry').setStyle('DANGER'),
+                new MessageButton().setCustomId('siege').setLabel('🔥 Use Siege Weapons').setStyle('PRIMARY')
+            );
+
+            await interaction.reply({
+                embeds: [new MessageEmbed()
+                    .setColor('#2f4f4f')
+                    .setTitle('🏰 Castle Siege Defense')
+                    .setDescription('**Defend thy kingdom from invaders!**\n\n🏹 **Archers** - Steady defense\n🐴 **Cavalry** - Risky counter-attack\n🔥 **Siege** - Powerful but slow')
+                    .setFooter({ text: `${rank.emoji} ${rank.name} | +${(rank.bonus * 100).toFixed(0)}% bonus` })],
+                components: [row]
+            });
+
+            const collector = interaction.channel.createMessageComponentCollector({ time: 30000 });
+            
+            collector.on('collect', async i => {
+                if (i.user.id !== userId) return i.reply({ content: 'This be not thy siege!', ephemeral: true });
+                
+                const choices = {
+                    archers: { tactic: 'Archers', base: 600, chance: 0.60, emoji: '🏹' },
+                    cavalry: { tactic: 'Cavalry', base: 900, chance: 0.35, emoji: '🐴' },
+                    siege: { tactic: 'Siege Weapons', base: 750, chance: 0.45, emoji: '🔥' }
+                };
+                
+                const choice = choices[i.customId];
+                await i.update({ content: `🏰 Deploying ${choice.emoji} ${choice.tactic}...`, components: [], embeds: [] });
+                
+                setTimeout(async () => {
+                    const success = Math.random() < choice.chance;
+                    if (success) {
+                        const reward = Math.floor(choice.base * (1 + rank.bonus));
+                        await db.addBalance(guildId, userId, reward);
+                        await updateUserStats(guildId, userId, reward, true);
+                        recordMiniGamePlay(userId, 'siegedefense');
+                        await i.editReply(`🏰 **Defended!** Thy ${choice.emoji} **${choice.tactic}** repelled the invaders! Earned **$${reward}**! ${rank.emoji}`);
+                    } else {
+                        await updateUserStats(guildId, userId, 0, false);
+                        recordMiniGamePlay(userId, 'siegedefense');
+                        await i.editReply(`🔥 **Breached!** The castle walls were overcome! Kingdom lost!`);
+                    }
+                }, 2000);
+                
+                collector.stop();
+            });
+            
+            collector.on('end', collected => {
+                if (collected.size === 0) {
+                    interaction.editReply({ content: '⏰ The siege hath concluded.', components: [], embeds: [] });
+                }
             });
         }
     }
