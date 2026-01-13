@@ -4,7 +4,7 @@ const fs = require('fs');
 const db = require('../database.js');
 const { MessageActionRow, MessageButton } = require('discord.js');
 const COOLDOWN_FILE = path.join(__dirname, '../logs/economy_cooldowns.json');
-const MINI_GAMES = ['slots','rob','golf','cards','job','blackjack','crime','theft','bribe','work'];
+const MINI_GAMES = ['fortuneteller','pillage','archery','tarot','quest','liarsdice','smuggle','pickpocket','bribe','labor','questboard','taverndice','duel','joust'];
 const COOLDOWN_LIMIT = 1; // times allowed
 const COOLDOWN_WINDOW = 6 * 60 * 60 * 1000; // 6 hours in ms
 
@@ -199,14 +199,126 @@ function getLeaderboard(top = 10) {
         .slice(0, top);
 }
 
+// ============ RANK SYSTEM FUNCTIONS ============
+const RANKS = [
+    { name: 'Peasant', emoji: '👨‍🌾', threshold: 0, bonus: 0, stipend: 0, games: ['labor', 'questboard', 'taverndice'] },
+    { name: 'Knight', emoji: '⚔️', threshold: 5000, bonus: 0.05, stipend: 0, games: ['archery', 'fortuneteller'] },
+    { name: 'Baron', emoji: '🛡️', threshold: 15000, bonus: 0.10, stipend: 0, games: ['duel'] },
+    { name: 'Earl', emoji: '🎖️', threshold: 35000, bonus: 0.15, stipend: 100, games: ['joust'] },
+    { name: 'Duke', emoji: '👑', threshold: 75000, bonus: 0.20, stipend: 250, games: [] },
+    { name: 'King', emoji: '🏰', threshold: 150000, bonus: 0.25, stipend: 500, games: [] }
+];
+
+async function getUserStats(guildId, userId) {
+    try {
+        const result = await db.query(
+            'SELECT * FROM user_stats WHERE guild_id = $1 AND user_id = $2',
+            [guildId, userId]
+        );
+        if (result.rows.length > 0) {
+            return result.rows[0];
+        }
+        // Create new stats entry
+        await db.query(
+            'INSERT INTO user_stats (guild_id, user_id) VALUES ($1, $2)',
+            [guildId, userId]
+        );
+        return {
+            guild_id: guildId,
+            user_id: userId,
+            total_earned: 0,
+            total_spent: 0,
+            mini_games_played: 0,
+            mini_games_won: 0,
+            distance_traveled: 0
+        };
+    } catch (err) {
+        console.error('[RANK] Error getting user stats:', err);
+        return null;
+    }
+}
+
+async function updateUserStats(guildId, userId, updates) {
+    try {
+        const sets = [];
+        const values = [];
+        let paramIndex = 1;
+        
+        for (const [key, value] of Object.entries(updates)) {
+            sets.push(`${key} = ${key} + $${paramIndex}`);
+            values.push(value);
+            paramIndex++;
+        }
+        
+        values.push(guildId, userId);
+        await db.query(
+            `UPDATE user_stats SET ${sets.join(', ')} WHERE guild_id = $${paramIndex} AND user_id = $${paramIndex + 1}`,
+            values
+        );
+    } catch (err) {
+        console.error('[RANK] Error updating user stats:', err);
+    }
+}
+
+function getRank(totalEarned) {
+    for (let i = RANKS.length - 1; i >= 0; i--) {
+        if (totalEarned >= RANKS[i].threshold) {
+            return RANKS[i];
+        }
+    }
+    return RANKS[0];
+}
+
+function getNextRank(currentRank) {
+    const currentIndex = RANKS.findIndex(r => r.name === currentRank.name);
+    if (currentIndex < RANKS.length - 1) {
+        return RANKS[currentIndex + 1];
+    }
+    return null;
+}
+
+function canPlayGame(rank, gameName) {
+    const rankIndex = RANKS.findIndex(r => r.name === rank.name);
+    for (let i = 0; i <= rankIndex; i++) {
+        if (RANKS[i].games.includes(gameName)) {
+            return true;
+        }
+    }
+    // Check if it's one of the always-available games
+    const alwaysAvailable = ['pillage', 'tarot', 'quest', 'liarsdice', 'smuggle', 'pickpocket', 'bribe'];
+    return alwaysAvailable.includes(gameName);
+}
+
+function getUnlockedGames(rank) {
+    const rankIndex = RANKS.findIndex(r => r.name === rank.name);
+    const games = [];
+    for (let i = 0; i <= rankIndex; i++) {
+        games.push(...RANKS[i].games);
+    }
+    // Add always-available games
+    games.push('pillage', 'tarot', 'quest', 'liarsdice', 'smuggle', 'pickpocket', 'bribe');
+    return [...new Set(games)]; // Remove duplicates
+}
+
+function getBalance(userId) {
+    const balances = getBalances();
+    return balances[userId] || 0;
+}
+
 module.exports = {
     data: [
         new SlashCommandBuilder()
+            .setName('wallet')
+            .setDescription('Check your coin purse (balance)'),
+        new SlashCommandBuilder()
+            .setName('labor')
+            .setDescription('⚒️ Toil for coin - Choose thy daily labor (farming, smithing, or stable work)'),
+        new SlashCommandBuilder()
             .setName('balance')
-            .setDescription('Check your balance'),
+            .setDescription('Check your balance (alias for /wallet)'),
         new SlashCommandBuilder()
             .setName('work')
-            .setDescription('Earn a random amount of money'),
+            .setDescription('Earn money (alias for /labor)'),
         new SlashCommandBuilder()
             .setName('pay')
             .setDescription('Pay another user')
@@ -220,32 +332,51 @@ module.exports = {
                     .setRequired(true)),
         new SlashCommandBuilder()
             .setName('leaderboard')
-            .setDescription('Show the top 10 richest users'),
+            .setDescription('Show the top 10 richest nobles'),
+        new SlashCommandBuilder()
+            .setName('fortuneteller')
+            .setDescription('🔮 Consult the village oracle - Bet coin on mystical fortune telling'),
         new SlashCommandBuilder()
             .setName('slots')
-            .setDescription('Play the slot machine!'),
+            .setDescription('Play fortune game (alias for /fortuneteller)'),
+        new SlashCommandBuilder()
+            .setName('pillage')
+            .setDescription('⚔️ Raid another noble\'s coffers - Risk guards catching thee!')
+            .addUserOption(option =>
+                option.setName('target')
+                    .setDescription('Noble whose castle thou shall raid')
+                    .setRequired(true)),
         new SlashCommandBuilder()
             .setName('rob')
-            .setDescription('Attempt to rob another user')
+            .setDescription('Raid another player (alias for /pillage)')
             .addUserOption(option =>
                 option.setName('user')
                     .setDescription('User to rob')
                     .setRequired(true)),
         new SlashCommandBuilder()
+            .setName('archery')
+            .setDescription('🏹 Test thy aim at the archery range - Hit the target for rewards!'),
+        new SlashCommandBuilder()
             .setName('golf')
-            .setDescription('Play a golf mini-game!'),
+            .setDescription('Archery competition (alias for /archery)'),
+        new SlashCommandBuilder()
+            .setName('tarot')
+            .setDescription('🃏 Draw from the mystical tarot deck - Each card brings fortune or woe'),
         new SlashCommandBuilder()
             .setName('cards')
-            .setDescription('Draw a random card!'),
+            .setDescription('Draw a card (alias for /tarot)'),
+        new SlashCommandBuilder()
+            .setName('quest')
+            .setDescription('⚔️ Undertake a quest from the board - Choose thy danger level wisely!'),
         new SlashCommandBuilder()
             .setName('job')
-            .setDescription('Get a random job for a reward!'),
+            .setDescription('Take a quest (alias for /quest)'),
+        new SlashCommandBuilder()
+            .setName('liarsdice')
+            .setDescription('🎲 Play Liar\'s Dice in the tavern - Bluff thy way to victory!'),
         new SlashCommandBuilder()
             .setName('blackjack')
-            .setDescription('Play blackjack against the bot!'),
-        new SlashCommandBuilder()
-            .setName('wallet')
-            .setDescription('Check your wallet balance'),
+            .setDescription('Tavern dice game (alias for /liarsdice)'),
         new SlashCommandBuilder()
             .setName('bank')
             .setDescription('Check your bank balance'),
@@ -264,14 +395,43 @@ module.exports = {
                     .setDescription('Amount to withdraw')
                     .setRequired(true)),
         new SlashCommandBuilder()
+            .setName('smuggle')
+            .setDescription('🍷 Smuggle contraband past guards - Choose wine, weapons, or secrets!'),
+        new SlashCommandBuilder()
             .setName('crime')
-            .setDescription('Commit a random crime for a reward or penalty!'),
+            .setDescription('Commit crime (alias for /smuggle)'),
+        new SlashCommandBuilder()
+            .setName('pickpocket')
+            .setDescription('👛 Pickpocket in the marketplace - Steal purses without being caught!'),
         new SlashCommandBuilder()
             .setName('theft')
-            .setDescription('Attempt a theft for a reward or penalty!'),
+            .setDescription('Steal from others (alias for /pickpocket)'),
         new SlashCommandBuilder()
             .setName('bribe')
-            .setDescription('Attempt to bribe for a reward or penalty!'),
+            .setDescription('💰 Bribe the castle guards - Higher coin purses yield better favors!'),
+        new SlashCommandBuilder()
+            .setName('questboard')
+            .setDescription('📜 Simple quests for peasants - Earn coin with basic tasks'),
+        new SlashCommandBuilder()
+            .setName('taverndice')
+            .setDescription('🎲 Roll knucklebones in the tavern - Bet on thy dice!'),
+        new SlashCommandBuilder()
+            .setName('duel')
+            .setDescription('⚔️ Challenge a noble to honorable combat - Winner takes all!')
+            .addUserOption(option =>
+                option.setName('opponent')
+                    .setDescription('Noble to challenge')
+                    .setRequired(true))
+            .addIntegerOption(option =>
+                option.setName('stakes')
+                    .setDescription('Amount to wager (min $50)')
+                    .setRequired(true)),
+        new SlashCommandBuilder()
+            .setName('joust')
+            .setDescription('🏇 Enter the grand jousting tournament - $100 entry, glory awaits!'),
+        new SlashCommandBuilder()
+            .setName('rank')
+            .setDescription('👑 View thy noble rank and progression'),
         new SlashCommandBuilder()
             .setName('addmoney')
             .setDescription('Admin: Add money to a user')
@@ -891,6 +1051,108 @@ module.exports = {
                     ], ephemeral: true
                 });
             }
+        // ============ RANK COMMAND ============
+        } else if (commandName === 'rank') {
+            const stats = await getUserStats(guildId, userId);
+            if (!stats) {
+                await interaction.reply({ content: 'Error loading stats!', ephemeral: true });
+                return;
+            }
+            const rank = getRank(stats.total_earned);
+            const nextRank = getNextRank(rank);
+            const unlockedGames = getUnlockedGames(rank);
+            const { MessageEmbed } = require('discord.js');
+            
+            const embed = new MessageEmbed()
+                .setColor('#ffd700')
+                .setTitle(`${rank.emoji} ${rank.name}`)
+                .setDescription(`<@${userId}>, thou art a noble ${rank.name}!`)
+                .addField('💰 Total Earned', `$${stats.total_earned}`, true)
+                .addField('🎮 Games Played', `${stats.mini_games_played}`, true)
+                .addField('🏆 Games Won', `${stats.mini_games_won}`, true)
+                .addField('🎁 Rank Bonus', `+${Math.round(rank.bonus * 100)}% on all earnings`, true)
+                .addField('💵 Daily Stipend', rank.stipend > 0 ? `$${rank.stipend}/day` : 'None', true);
+            
+            if (nextRank) {
+                const progress = stats.total_earned - rank.threshold;
+                const needed = nextRank.threshold - rank.threshold;
+                const percent = Math.min(100, Math.round((progress / needed) * 100));
+                const progressBar = '█'.repeat(Math.floor(percent / 5)) + '░'.repeat(20 - Math.floor(percent / 5));
+                embed.addField(`📈 Progress to ${nextRank.emoji} ${nextRank.name}`, 
+                    `${progressBar} ${percent}%\n$${stats.total_earned}/$${nextRank.threshold}`, false);
+            } else {
+                embed.addField('👑 Achievement', 'Thou hast reached the highest rank!', false);
+            }
+            
+            embed.addField('🎮 Unlocked Games', unlockedGames.map(g => `\`/${g}\``).join(', '), false);
+            await interaction.reply({ embeds: [embed] });
+            
+        // ============ MEDIEVAL MINI-GAMES ============
+        } else if (['labor', 'work'].includes(commandName)) {
+            if (!canPlayMiniGame(userId, 'labor')) {
+                const nextTime = nextAvailableMiniGame(userId);
+                await interaction.reply({ content: `⏳ Thou art weary! Rest until <t:${Math.floor(nextTime / 1000)}:R>`, ephemeral: true });
+                return;
+            }
+            
+            const stats = await getUserStats(guildId, userId);
+            const rank = getRank(stats ? stats.total_earned : 0);
+            
+            const row = new MessageActionRow()
+                .addComponents(
+                    new MessageButton().setCustomId('labor_farm').setLabel('🌾 Farm Fields').setStyle('PRIMARY'),
+                    new MessageButton().setCustomId('labor_forge').setLabel('⚒️ Work Forge').setStyle('PRIMARY'),
+                    new MessageButton().setCustomId('labor_stable').setLabel('🐴 Tend Stables').setStyle('PRIMARY')
+                );
+            
+            const { MessageEmbed } = require('discord.js');
+            const message = await interaction.reply({
+                embeds: [
+                    new MessageEmbed()
+                        .setColor('#8b4513')
+                        .setTitle('⚒️ Daily Labor')
+                        .setDescription('Choose thy toil for the day, peasant!')
+                ],
+                components: [row],
+                fetchReply: true
+            });
+            
+            const filter = i => i.user.id === userId;
+            const collector = message.createMessageComponentCollector({ filter, time: 30000, max: 1 });
+            
+            collector.on('collect', async i => {
+                const jobs = {
+                    labor_farm: { name: 'Farm Fields', desc: 'plowed the fields', min: 50, max: 150 },
+                    labor_forge: { name: 'Work Forge', desc: 'toiled at the forge', min: 60, max: 140 },
+                    labor_stable: { name: 'Tend Stables', desc: 'tended the horses', min: 70, max: 130 }
+                };
+                const job = jobs[i.customId];
+                const earned = Math.floor(Math.random() * (job.max - job.min + 1)) + job.min;
+                const bonusEarned = Math.floor(earned * (1 + rank.bonus));
+                
+                await db.addBalance(guildId, userId, bonusEarned);
+                if (stats) await updateUserStats(guildId, userId, { total_earned: bonusEarned, mini_games_played: 1 });
+                recordMiniGamePlay(userId, 'labor');
+                
+                await i.update({
+                    embeds: [
+                        new MessageEmbed()
+                            .setColor('#43b581')
+                            .setTitle('⚒️ Labor Complete!')
+                            .setDescription(`Thou hast ${job.desc} and earned **$${bonusEarned}**!`)
+                            .addField('Base Reward', `$${earned}`, true)
+                            .addField(`${rank.emoji} ${rank.name} Bonus`, `+${Math.round(rank.bonus * 100)}%`, true)
+                    ],
+                    components: []
+                });
+            });
+            
+            collector.on('end', collected => {
+                if (collected.size === 0) {
+                    interaction.editReply({ content: '⏰ Time expired! The work day hath ended.', components: [], embeds: [] });
+                }
+            });
+            
         } else if (commandName === 'shophelp') {
             const { MessageEmbed } = require('discord.js');
             await interaction.reply({
@@ -912,7 +1174,7 @@ module.exports = {
                         .addField('🔄 Restart Schedule', 
                             '**Server restarts:** 3, 6, 9, 12 (AM/PM) EST\n• Purchased items spawn on next restart\n• Items spawn once and are removed from spawn list\n• Buy anytime - spawns on next scheduled restart', false)
                         .addField('💰 Earn Money', 
-                            '`/work`, `/slots`, `/blackjack`, `/job`, `/rob`, `/crime`, `/theft`, `/bribe`\n⏳ Each can be used once every 6 hours', false)
+                            'Medieval mini-games! Use `/rank` to see unlocked games.\n⏳ Each can be used once every 6 hours', false)
                         .setFooter({ text: 'Need help? Ask an admin!' })
                 ], ephemeral: true
             });
