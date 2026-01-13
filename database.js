@@ -255,6 +255,7 @@ async function endPlayerSession(guildId, playerName) {
 
 module.exports = {
     pool,
+    query: (text, params) => pool.query(text, params),
     getGuildConfig,
     setGuildConfig,
     setGuildChannels,
