@@ -343,6 +343,7 @@ module.exports = {
             .setDescription('Learn how to use the shop and spawn system'),
     ],
     async execute(interaction) {
+        try {
         console.log(`[ECONOMY] execute called for command: ${interaction.commandName}, channel: ${interaction.channelId}`);
         const { commandName } = interaction;
         const userId = interaction.user.id;
@@ -1299,6 +1300,22 @@ module.exports = {
                         .setFooter({ text: 'Need help? Ask an admin!' })
                 ], ephemeral: true
             });
+        }
+        } catch (error) {
+            console.error('[ECONOMY] Error in execute:', error);
+            try {
+                await interaction.reply({
+                    content: `❌ An error occurred: ${error.message}`,
+                    ephemeral: true
+                }).catch(() => {
+                    interaction.followUp({
+                        content: `❌ An error occurred: ${error.message}`,
+                        ephemeral: true
+                    }).catch(() => {});
+                });
+            } catch (e) {
+                console.error('[ECONOMY] Failed to send error message:', e);
+            }
         }
     }
 };
