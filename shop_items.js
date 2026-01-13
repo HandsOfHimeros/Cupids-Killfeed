@@ -103,6 +103,9 @@ module.exports = [
   
   // --- GEAR & EQUIPMENT ---
   { name: 'Plate Carrier', class: 'PlateCarrierVest', averagePrice: 1500, description: 'Heavy armor vest.' },
+  { name: 'Alice Backpack (Black)', class: 'AliceBag_Black', averagePrice: 800, description: 'Large military backpack, black.' },
+  { name: 'Alice Backpack (Camo)', class: 'AliceBag_Camo', averagePrice: 800, description: 'Large military backpack, camo.' },
+  { name: 'Alice Backpack (Green)', class: 'AliceBag_Green', averagePrice: 800, description: 'Large military backpack, green.' },
   { name: 'Assault Backpack (Black)', class: 'AssaultBag_Black', averagePrice: 700, description: 'Large capacity backpack.' },
   { name: 'Assault Backpack (Green)', class: 'AssaultBag_Green', averagePrice: 700, description: 'Large capacity backpack.' },
   { name: 'Coyote Backpack (Brown)', class: 'CoyoteBag_Brown', averagePrice: 600, description: 'Medium capacity backpack.' },
