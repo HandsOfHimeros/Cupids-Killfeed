@@ -79,14 +79,29 @@ module.exports = [
   { name: 'IJ-70', class: 'MakarovIJ70', averagePrice: 300, description: '9mm budget pistol.' },
   { name: 'Ruger MK II', class: 'MKII', averagePrice: 280, description: '.22 caliber pistol.' },
   
-  // Ammo
-  { name: 'Ammo Box (5.56x45)', class: 'Ammo_556x45', averagePrice: 200, description: 'Box of 5.56mm ammo.' },
-  { name: 'Ammo Box (7.62x39)', class: 'Ammo_762x39', averagePrice: 220, description: 'Box of 7.62x39mm ammo.' },
-  { name: 'Ammo Box (7.62x54R)', class: 'Ammo_762x54', averagePrice: 250, description: 'Box of 7.62x54R ammo.' },
-  { name: 'Ammo Box (9x19mm)', class: 'Ammo_9x19', averagePrice: 120, description: 'Box of 9x19mm ammo.' },
-  { name: 'Ammo Box (.45 ACP)', class: 'Ammo_45ACP', averagePrice: 130, description: 'Box of .45 ACP ammo.' },
+  // --- AMMUNITION BOXES ---
+  { name: 'Ammo Box (.22 LR 50Rnd)', class: 'AmmoBox_22_50Rnd', averagePrice: 80, description: 'Box of 50 .22 LR rounds.' },
+  { name: 'Ammo Box (.308 Win 20Rnd)', class: 'AmmoBox_308Win_20Rnd', averagePrice: 220, description: 'Box of 20 .308 Winchester rounds.' },
+  { name: 'Ammo Box (.308 Win Tracer 20Rnd)', class: 'AmmoBox_308WinTracer_20Rnd', averagePrice: 240, description: 'Box of 20 .308 tracer rounds.' },
+  { name: 'Ammo Box (.357 20Rnd)', class: 'AmmoBox_357_20Rnd', averagePrice: 180, description: 'Box of 20 .357 rounds.' },
+  { name: 'Ammo Box (.380 ACP 35Rnd)', class: 'AmmoBox_380_35rnd', averagePrice: 100, description: 'Box of 35 .380 ACP rounds.' },
+  { name: 'Ammo Box (.45 ACP 25Rnd)', class: 'AmmoBox_45ACP_25rnd', averagePrice: 130, description: 'Box of 25 .45 ACP rounds.' },
+  { name: 'Ammo Box (5.45x39 20Rnd)', class: 'AmmoBox_545x39_20Rnd', averagePrice: 180, description: 'Box of 20 5.45x39mm rounds.' },
+  { name: 'Ammo Box (5.45x39 Tracer 20Rnd)', class: 'AmmoBox_545x39Tracer_20Rnd', averagePrice: 200, description: 'Box of 20 5.45x39mm tracer rounds.' },
+  { name: 'Ammo Box (5.56x45 20Rnd)', class: 'AmmoBox_556x45_20Rnd', averagePrice: 200, description: 'Box of 20 5.56mm rounds.' },
+  { name: 'Ammo Box (5.56x45 Tracer 20Rnd)', class: 'AmmoBox_556x45Tracer_20Rnd', averagePrice: 220, description: 'Box of 20 5.56mm tracer rounds.' },
+  { name: 'Ammo Box (7.62x39 20Rnd)', class: 'AmmoBox_762x39_20Rnd', averagePrice: 220, description: 'Box of 20 7.62x39mm rounds.' },
+  { name: 'Ammo Box (7.62x39 Tracer 20Rnd)', class: 'AmmoBox_762x39Tracer_20Rnd', averagePrice: 240, description: 'Box of 20 7.62x39mm tracer rounds.' },
+  { name: 'Ammo Box (7.62x54R 20Rnd)', class: 'AmmoBox_762x54_20Rnd', averagePrice: 250, description: 'Box of 20 7.62x54R rounds.' },
+  { name: 'Ammo Box (7.62x54R Tracer 20Rnd)', class: 'AmmoBox_762x54Tracer_20Rnd', averagePrice: 270, description: 'Box of 20 7.62x54R tracer rounds.' },
+  { name: 'Ammo Box (9x19 25Rnd)', class: 'AmmoBox_9x19_25rnd', averagePrice: 120, description: 'Box of 25 9x19mm rounds.' },
+  { name: 'Ammo Box (9x39 20Rnd)', class: 'AmmoBox_9x39_20Rnd', averagePrice: 200, description: 'Box of 20 9x39mm rounds.' },
+  { name: 'Ammo Box (9x39 AP 20Rnd)', class: 'AmmoBox_9x39AP_20Rnd', averagePrice: 250, description: 'Box of 20 9x39mm armor-piercing rounds.' },
+  { name: 'Ammo Box (12ga 00 Buck 10Rnd)', class: 'AmmoBox_00buck_10rnd', averagePrice: 150, description: 'Box of 10 12-gauge buckshot shells.' },
+  { name: 'Ammo Box (12ga Slug 10Rnd)', class: 'AmmoBox_12gaSlug_10Rnd', averagePrice: 180, description: 'Box of 10 12-gauge slug shells.' },
+  { name: 'Ammo Box (12ga Rubber Slug 10Rnd)', class: 'AmmoBox_12gaRubberSlug_10Rnd', averagePrice: 120, description: 'Box of 10 12-gauge rubber slug shells.' },
   
-  // Gear & Equipment
+  // --- GEAR & EQUIPMENT ---
   { name: 'Plate Carrier', class: 'PlateCarrierVest', averagePrice: 1500, description: 'Heavy armor vest.' },
   { name: 'Assault Backpack (Black)', class: 'AssaultBag_Black', averagePrice: 700, description: 'Large capacity backpack.' },
   { name: 'Assault Backpack (Green)', class: 'AssaultBag_Green', averagePrice: 700, description: 'Large capacity backpack.' },
