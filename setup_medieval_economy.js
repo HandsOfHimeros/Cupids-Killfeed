@@ -12,13 +12,15 @@ async function setupMedievalEconomy() {
     console.log('Setting up medieval economy tables...');
     
     try {
-        // Drop old bounties table if it exists (from previous partial setup)
+        // Drop old tables if they exist (from previous partial setup)
         await pool.query(`DROP TABLE IF EXISTS bounties CASCADE`);
-        console.log('✓ Dropped old bounties table');
+        await pool.query(`DROP TABLE IF EXISTS user_stats CASCADE`);
+        await pool.query(`DROP TABLE IF EXISTS tournament_entries CASCADE`);
+        console.log('✓ Dropped old tables');
         
         // Create bounties table
         await pool.query(`
-            CREATE TABLE IF NOT EXISTS bounties (
+            CREATE TABLE bounties (
                 id SERIAL PRIMARY KEY,
                 guild_id TEXT NOT NULL,
                 placer_id TEXT NOT NULL,
@@ -28,24 +30,11 @@ async function setupMedievalEconomy() {
                 placed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         `);
-        
-        // Add is_active column if it doesn't exist (for existing tables)
-        await pool.query(`
-            DO $$ 
-            BEGIN
-                BEGIN
-                    ALTER TABLE bounties ADD COLUMN is_active BOOLEAN DEFAULT true;
-                EXCEPTION
-                    WHEN duplicate_column THEN 
-                        NULL;
-                END;
-            END $$;
-        `);
         console.log('✓ Created bounties table');
         
         // Create user_stats table
         await pool.query(`
-            CREATE TABLE IF NOT EXISTS user_stats (
+            CREATE TABLE user_stats (
                 guild_id TEXT NOT NULL,
                 user_id TEXT NOT NULL,
                 total_earned INTEGER DEFAULT 0,
@@ -61,7 +50,7 @@ async function setupMedievalEconomy() {
         
         // Create tournament_entries table
         await pool.query(`
-            CREATE TABLE IF NOT EXISTS tournament_entries (
+            CREATE TABLE tournament_entries (
                 id SERIAL PRIMARY KEY,
                 guild_id TEXT NOT NULL,
                 user_id TEXT NOT NULL,
