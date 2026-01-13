@@ -1912,7 +1912,7 @@ module.exports = {
             );
             
             if (existingEntry.rows.length > 0) {
-                await interaction.reply({ content: '🏇 Thou hast already entered today\\'s tournament!', ephemeral: true });
+                await interaction.reply({ content: '🏇 Thou hast already entered today\'s tournament!', ephemeral: true });
                 return;
             }
             
@@ -1929,7 +1929,7 @@ module.exports = {
                     new MessageEmbed()
                         .setColor('#f39c12')
                         .setTitle('🏇 Jousting Tournament')
-                        .setDescription(`Thou hast entered today\\'s grand tournament!\n\n💰 Entry Fee: $${entryFee}\n🏆 Winners announced at day\\'s end!\n\n*Tournament results coming soon...*`)
+                        .setDescription(`Thou hast entered today's grand tournament!\n\n💰 Entry Fee: $${entryFee}\n🏆 Winners announced at day's end!\n\n*Tournament results coming soon...*`)
                 ]
             });
             
