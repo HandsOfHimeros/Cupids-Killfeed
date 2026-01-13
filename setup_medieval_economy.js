@@ -59,11 +59,11 @@ async function setupMedievalEconomy() {
         // Create indexes for better performance
         await pool.query(`
             CREATE INDEX IF NOT EXISTS idx_bounties_guild_active 
-            ON bounties(guild_id, is_active)
+            ON bounties(guild_id, is_active) WHERE is_active = true
         `);
         await pool.query(`
             CREATE INDEX IF NOT EXISTS idx_bounties_target 
-            ON bounties(guild_id, target_id, is_active)
+            ON bounties(guild_id, target_id) WHERE is_active = true
         `);
         await pool.query(`
             CREATE INDEX IF NOT EXISTS idx_user_stats_guild 
