@@ -314,12 +314,6 @@ module.exports = {
             .setName('labor')
             .setDescription('⚒️ Toil for coin - Choose thy daily labor (farming, smithing, or stable work)'),
         new SlashCommandBuilder()
-            .setName('balance')
-            .setDescription('Check your balance (alias for /wallet)'),
-        new SlashCommandBuilder()
-            .setName('work')
-            .setDescription('Earn money (alias for /labor)'),
-        new SlashCommandBuilder()
             .setName('pay')
             .setDescription('Pay another user')
             .addUserOption(option =>
@@ -337,9 +331,6 @@ module.exports = {
             .setName('fortuneteller')
             .setDescription('🔮 Consult the village oracle - Bet coin on mystical fortune telling'),
         new SlashCommandBuilder()
-            .setName('slots')
-            .setDescription('Play fortune game (alias for /fortuneteller)'),
-        new SlashCommandBuilder()
             .setName('pillage')
             .setDescription('⚔️ Raid another noble\'s coffers - Risk guards catching thee!')
             .addUserOption(option =>
@@ -347,36 +338,17 @@ module.exports = {
                     .setDescription('Noble whose castle thou shall raid')
                     .setRequired(true)),
         new SlashCommandBuilder()
-            .setName('rob')
-            .setDescription('Raid another player (alias for /pillage)')
-            .addUserOption(option =>
-                option.setName('user')
-                    .setDescription('User to rob')
-                    .setRequired(true)),
-        new SlashCommandBuilder()
             .setName('archery')
             .setDescription('🏹 Test thy aim at the archery range - Hit the target for rewards!'),
-        new SlashCommandBuilder()
-            .setName('golf')
-            .setDescription('Archery competition (alias for /archery)'),
         new SlashCommandBuilder()
             .setName('tarot')
             .setDescription('🃏 Draw from the mystical tarot deck - Each card brings fortune or woe'),
         new SlashCommandBuilder()
-            .setName('cards')
-            .setDescription('Draw a card (alias for /tarot)'),
-        new SlashCommandBuilder()
             .setName('quest')
             .setDescription('⚔️ Undertake a quest from the board - Choose thy danger level wisely!'),
         new SlashCommandBuilder()
-            .setName('job')
-            .setDescription('Take a quest (alias for /quest)'),
-        new SlashCommandBuilder()
             .setName('liarsdice')
             .setDescription('🎲 Play Liar\'s Dice in the tavern - Bluff thy way to victory!'),
-        new SlashCommandBuilder()
-            .setName('blackjack')
-            .setDescription('Tavern dice game (alias for /liarsdice)'),
         new SlashCommandBuilder()
             .setName('bank')
             .setDescription('Check your bank balance'),
@@ -398,14 +370,8 @@ module.exports = {
             .setName('smuggle')
             .setDescription('🍷 Smuggle contraband past guards - Choose wine, weapons, or secrets!'),
         new SlashCommandBuilder()
-            .setName('crime')
-            .setDescription('Commit crime (alias for /smuggle)'),
-        new SlashCommandBuilder()
             .setName('pickpocket')
             .setDescription('👛 Pickpocket in the marketplace - Steal purses without being caught!'),
-        new SlashCommandBuilder()
-            .setName('theft')
-            .setDescription('Steal from others (alias for /pickpocket)'),
         new SlashCommandBuilder()
             .setName('bribe')
             .setDescription('💰 Bribe the castle guards - Higher coin purses yield better favors!'),
@@ -748,7 +714,7 @@ module.exports = {
             await db.cleanOldCooldowns(guildId, userId, commandName, COOLDOWN_WINDOW);
         }
 
-        if (commandName === 'balance') {
+        if (commandName === 'wallet') {
             const bal = await db.getBalance(guildId, userId);
             const bank = await db.getBank(guildId, userId);
             await interaction.reply({
@@ -813,7 +779,7 @@ module.exports = {
             await db.addBank(guildId, userId, -amount);
             const newBal = await db.addBalance(guildId, userId, amount);
             await interaction.reply({ embeds: [new MessageEmbed().setColor('#00aaff').setTitle('🏦 Withdraw Successful').addField('Amount', `$${amount}`, true).addField('New Wallet Balance', `$${newBal}`, true)] });
-        } else if (commandName === 'work') {
+        } else if (commandName === 'labor_old_handler') {
             const earned = Math.floor(Math.random() * 100) + 50;
             const bal = await db.addBalance(guildId, userId, earned);
             const { MessageEmbed } = require('discord.js');
@@ -842,7 +808,7 @@ module.exports = {
                 desc += `**#${i + 1}** <@${top[i][0]}>: $${top[i][1]}\n`;
             }
             await interaction.reply({ embeds: [new MessageEmbed().setColor('#ffd700').setTitle('🏆 Economy Leaderboard').setDescription(desc)] });
-        } else if (commandName === 'slots') {
+        } else if (commandName === 'fortuneteller') {
             // Simple slot machine
             const symbols = ['🍒', '🍋', '🍊', '🍉', '⭐', '💎'];
             const spin = [0, 0, 0].map(() => symbols[Math.floor(Math.random() * symbols.length)]);
@@ -858,7 +824,7 @@ module.exports = {
                     .addField('Result', reward > 0 ? `You won **$${reward}**!` : 'No win this time.', true)
                     .addField('Balance', `$${await db.addBalance(guildId, userId, reward)}`, true)
             ] });
-        } else if (commandName === 'rob') {
+        } else if (commandName === 'pillage') {
             const target = interaction.options.getUser('user');
             if (target.id === userId) {
                 await interaction.reply('You cannot rob yourself!');
@@ -880,17 +846,17 @@ module.exports = {
                 await db.addBalance(guildId, userId, -penalty);
                 await interaction.reply(`Robbery failed! You lost $${penalty}.`);
             }
-        } else if (commandName === 'golf') {
+        } else if (commandName === 'archery') {
             const strokes = Math.floor(Math.random() * 5) + 1;
             const reward = 150 - strokes * 20;
             const bal = await db.addBalance(guildId, userId, reward);
             await interaction.reply(`⛳ You played golf and finished in ${strokes} strokes! You earned $${reward}. Balance: $${bal}`);
-        } else if (commandName === 'cards') {
+        } else if (commandName === 'tarot') {
             const suits = ['♠', '♥', '♦', '♣'];
             const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
             const card = `${values[Math.floor(Math.random() * values.length)]}${suits[Math.floor(Math.random() * suits.length)]}`;
             await interaction.reply(`🃏 You drew: ${card}`);
-        } else if (commandName === 'job') {
+        } else if (commandName === 'quest') {
             const jobs = [
                 { name: 'Farmer', pay: 120 },
                 { name: 'Hunter', pay: 150 },
@@ -903,7 +869,7 @@ module.exports = {
             const job = jobs[Math.floor(Math.random() * jobs.length)];
             const bal = await db.addBalance(guildId, userId, job.pay);
             await interaction.reply(`👷 You worked as a ${job.name} and earned $${job.pay}! Balance: $${bal}`);
-        } else if (commandName === 'blackjack') {
+        } else if (commandName === 'liarsdice') {
             // Simple blackjack: player vs bot, one round
             function drawCard() {
                 const values = [2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10, 11];
@@ -923,7 +889,7 @@ module.exports = {
                 result = 'It\'s a tie!';
             }
             await interaction.reply(`🃏 Blackjack! You: ${player} | Bot: ${bot} — ${result}`);
-        } else if (commandName === 'crime') {
+        } else if (commandName === 'smuggle') {
             const crimes = [
                 { name: 'bank robbery', reward: 500, penalty: 250 },
                 { name: 'car theft', reward: 300, penalty: 150 },
@@ -940,7 +906,7 @@ module.exports = {
                 const bal = await db.addBalance(guildId, userId, -crime.penalty);
                 await interaction.reply(`🚓 You got caught committing ${crime.name} and lost $${crime.penalty}! Balance: $${bal}`);
             }
-        } else if (commandName === 'theft') {
+        } else if (commandName === 'pickpocket') {
             const targets = ['a store', 'a house', 'a car', 'a bank', 'a museum'];
             const target = targets[Math.floor(Math.random() * targets.length)];
             const success = Math.random() < 0.4;
@@ -1088,7 +1054,7 @@ module.exports = {
             await interaction.reply({ embeds: [embed] });
             
         // ============ MEDIEVAL MINI-GAMES ============
-        } else if (['labor', 'work'].includes(commandName)) {
+        } else if (commandName === 'labor') {
             if (!canPlayMiniGame(userId, 'labor')) {
                 const nextTime = nextAvailableMiniGame(userId);
                 await interaction.reply({ content: `⏳ Thou art weary! Rest until <t:${Math.floor(nextTime / 1000)}:R>`, ephemeral: true });
