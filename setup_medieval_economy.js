@@ -12,6 +12,10 @@ async function setupMedievalEconomy() {
     console.log('Setting up medieval economy tables...');
     
     try {
+        // Drop old bounties table if it exists (from previous partial setup)
+        await pool.query(`DROP TABLE IF EXISTS bounties CASCADE`);
+        console.log('✓ Dropped old bounties table');
+        
         // Create bounties table
         await pool.query(`
             CREATE TABLE IF NOT EXISTS bounties (
