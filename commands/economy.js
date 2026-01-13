@@ -809,66 +809,444 @@ module.exports = {
             }
             await interaction.reply({ embeds: [new MessageEmbed().setColor('#ffd700').setTitle('🏆 Economy Leaderboard').setDescription(desc)] });
         } else if (commandName === 'fortuneteller') {
-            // Simple slot machine
-            const symbols = ['🍒', '🍋', '🍊', '🍉', '⭐', '💎'];
-            const spin = [0, 0, 0].map(() => symbols[Math.floor(Math.random() * symbols.length)]);
-            let reward = 0;
-            if (spin[0] === spin[1] && spin[1] === spin[2]) reward = 500;
-            else if (spin[0] === spin[1] || spin[1] === spin[2] || spin[0] === spin[2]) reward = 100;
-            const { MessageEmbed } = require('discord.js');
-            await interaction.reply({ embeds: [
-                new MessageEmbed()
-                    .setColor(reward > 0 ? '#43b581' : '#ff5555')
-                    .setTitle('🎰 Slot Machine')
-                    .setDescription(`[${spin.join(' ')}]`)
-                    .addField('Result', reward > 0 ? `You won **$${reward}**!` : 'No win this time.', true)
-                    .addField('Balance', `$${await db.addBalance(guildId, userId, reward)}`, true)
-            ] });
-        } else if (commandName === 'pillage') {
-            const target = interaction.options.getUser('user');
-            if (target.id === userId) {
-                await interaction.reply('You cannot rob yourself!');
+            if (!canPlayMiniGame(userId, 'fortuneteller')) {
+                const nextTime = nextAvailableMiniGame(userId);
+                await interaction.reply({ content: `⏳ The oracle rests! Return <t:${Math.floor(nextTime / 1000)}:R>`, ephemeral: true });
                 return;
             }
+            
+            const stats = await getUserStats(guildId, userId);
+            const rank = getRank(stats ? stats.total_earned : 0);
+            
+            const { MessageEmbed } = require('discord.js');
+            const symbols = ['🗡️', '👑', '🛡️', '💎', '⚱️'];
+            
+            await interaction.reply({
+                embeds: [
+                    new MessageEmbed()
+                        .setColor('#9b59b6')
+                        .setTitle('🔮 Fortune Teller')
+                        .setDescription('*The mystic peers into her crystal orb...*\n\n🔮 🔮 🔮')
+                ]
+            });
+            
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            const spin = [0, 0, 0].map(() => symbols[Math.floor(Math.random() * symbols.length)]);
+            let baseReward = 0;
+            let outcome = '';
+            
+            if (spin[0] === spin[1] && spin[1] === spin[2]) {
+                baseReward = 500;
+                outcome = '**✨ Three of a kind! The spirits favor thee greatly!**';
+            } else if (spin[0] === spin[1] || spin[1] === spin[2] || spin[0] === spin[2]) {
+                baseReward = 100;
+                outcome = '**⭐ A pair! Fortune smiles upon thee!**';
+            } else {
+                baseReward = 0;
+                outcome = '*The mists are unclear... No fortune this time.*';
+            }
+            
+            const bonusReward = Math.floor(baseReward * (1 + rank.bonus));
+            if (bonusReward > 0) await db.addBalance(guildId, userId, bonusReward);
+            if (stats) await updateUserStats(guildId, userId, { 
+                total_earned: bonusReward, 
+                mini_games_played: 1,
+                mini_games_won: bonusReward > 0 ? 1 : 0
+            });
+            recordMiniGamePlay(userId, 'fortuneteller');
+            
+            await interaction.editReply({
+                embeds: [
+                    new MessageEmbed()
+                        .setColor(bonusReward > 0 ? '#43b581' : '#95a5a6')
+                        .setTitle('🔮 The Oracle Speaks')
+                        .setDescription(`**[${spin.join(' ')}]**\n\n${outcome}`)
+                        .addField('Base Fortune', baseReward > 0 ? `$${baseReward}` : 'None', true)
+                        .addField(`${rank.emoji} Bonus`, bonusReward > baseReward ? `+$${bonusReward - baseReward}` : 'None', true)
+                        .setFooter({ text: 'The mists swirl and fade...' })
+                ]
+            });
+        } else if (commandName === 'pillage') {
+            if (!canPlayMiniGame(userId, 'pillage')) {
+                const nextTime = nextAvailableMiniGame(userId);
+                await interaction.reply({ content: `⏳ Thou art too exhausted! Rest until <t:${Math.floor(nextTime / 1000)}:R>`, ephemeral: true });
+                return;
+            }
+            
+            const target = interaction.options.getUser('target');
+            if (target.id === userId) {
+                await interaction.reply({ content: '⚔️ Thou cannot raid thine own coffers!', ephemeral: true });
+                return;
+            }
+            if (target.bot) {
+                await interaction.reply({ content: '🤖 Thou cannot raid a bot!', ephemeral: true });
+                return;
+            }
+            
             const targetBal = await db.getBalance(guildId, target.id);
             if (targetBal < 100) {
-                await interaction.reply('Target is too poor to rob!');
+                await interaction.reply({ content: `💰 ${target.username} hath no coin worth pillaging!`, ephemeral: true });
                 return;
             }
-            const success = Math.random() < 0.5;
-            if (success) {
-                const amount = Math.floor(Math.random() * Math.min(200, targetBal));
-                await db.addBalance(guildId, userId, amount);
-                await db.addBalance(guildId, target.id, -amount);
-                await interaction.reply(`You robbed ${target.username} and got $${amount}!`);
-            } else {
-                const penalty = Math.floor(Math.random() * 100) + 20;
-                await db.addBalance(guildId, userId, -penalty);
-                await interaction.reply(`Robbery failed! You lost $${penalty}.`);
-            }
+            
+            const stats = await getUserStats(guildId, userId);
+            const rank = getRank(stats ? stats.total_earned : 0);
+            
+            const row = new MessageActionRow()
+                .addComponents(
+                    new MessageButton().setCustomId('pillage_raid').setLabel('⚔️ Raid Castle').setStyle('DANGER'),
+                    new MessageButton().setCustomId('pillage_retreat').setLabel('🏃 Retreat').setStyle('SECONDARY')
+                );
+            
+            const { MessageEmbed } = require('discord.js');
+            const message = await interaction.reply({
+                embeds: [
+                    new MessageEmbed()
+                        .setColor('#e74c3c')
+                        .setTitle('⚔️ Pillage')
+                        .setDescription(`Thou approach the castle of **${target.username}**...\n\n🏰 Guards patrol the walls\n💰 Estimated loot: $${Math.min(200, targetBal)}`)
+                        .addField('Risk', 'Guards may catch thee!', true)
+                        .addField('Reward', 'Steal coin if successful', true)
+                ],
+                components: [row],
+                fetchReply: true
+            });
+            
+            const filter = i => i.user.id === userId;
+            const collector = message.createMessageComponentCollector({ filter, time: 30000, max: 1 });
+            
+            collector.on('collect', async i => {
+                if (i.customId === 'pillage_retreat') {
+                    await i.update({
+                        embeds: [
+                            new MessageEmbed()
+                                .setColor('#95a5a6')
+                                .setTitle('🏃 Retreat')
+                                .setDescription('Thou hast wisely fled! No coin gained, no coin lost.')
+                        ],
+                        components: []
+                    });
+                    return;
+                }
+                
+                await i.update({
+                    embeds: [
+                        new MessageEmbed()
+                            .setColor('#f39c12')
+                            .setTitle('⚔️ Raid in Progress')
+                            .setDescription('🌙 Sneaking through the shadows...')
+                    ],
+                    components: []
+                });
+                
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                const success = Math.random() < 0.5;
+                if (success) {
+                    const amount = Math.floor(Math.random() * Math.min(200, targetBal)) + 50;
+                    const bonusAmount = Math.floor(amount * (1 + rank.bonus));
+                    await db.addBalance(guildId, userId, bonusAmount);
+                    await db.addBalance(guildId, target.id, -amount);
+                    if (stats) await updateUserStats(guildId, userId, { total_earned: bonusAmount, mini_games_played: 1, mini_games_won: 1 });
+                    recordMiniGamePlay(userId, 'pillage');
+                    
+                    await i.editReply({
+                        embeds: [
+                            new MessageEmbed()
+                                .setColor('#43b581')
+                                .setTitle('⚔️ Raid Successful!')
+                                .setDescription(`Thou hast escaped with **$${bonusAmount}** from ${target.username}'s coffers!`)
+                                .addField('Stolen', `$${amount}`, true)
+                                .addField(`${rank.emoji} Bonus`, `+$${bonusAmount - amount}`, true)
+                                .setFooter({ text: 'The guards never saw thee!' })
+                        ]
+                    });
+                } else {
+                    const penalty = Math.floor(Math.random() * 100) + 50;
+                    await db.addBalance(guildId, userId, -penalty);
+                    if (stats) await updateUserStats(guildId, userId, { mini_games_played: 1 });
+                    recordMiniGamePlay(userId, 'pillage');
+                    
+                    await i.editReply({
+                        embeds: [
+                            new MessageEmbed()
+                                .setColor('#e74c3c')
+                                .setTitle('🛡️ Caught!')
+                                .setDescription(`The guards caught thee! Lost **$${penalty}** in fines!`)
+                                .setFooter({ text: 'Better luck next time, knave!' })
+                        ]
+                    });
+                }
+            });
+            
+            collector.on('end', collected => {
+                if (collected.size === 0) {
+                    interaction.editReply({ content: '⏰ Thou didst hesitate too long! The moment hath passed.', components: [], embeds: [] });
+                }
+            });
         } else if (commandName === 'archery') {
-            const strokes = Math.floor(Math.random() * 5) + 1;
-            const reward = 150 - strokes * 20;
-            const bal = await db.addBalance(guildId, userId, reward);
-            await interaction.reply(`⛳ You played golf and finished in ${strokes} strokes! You earned $${reward}. Balance: $${bal}`);
+            if (!canPlayMiniGame(userId, 'archery')) {
+                const nextTime = nextAvailableMiniGame(userId);
+                await interaction.reply({ content: `⏳ Thy arm needs rest! Return <t:${Math.floor(nextTime / 1000)}:R>`, ephemeral: true });
+                return;
+            }
+            
+            const stats = await getUserStats(guildId, userId);
+            const rank = getRank(stats ? stats.total_earned : 0);
+            
+            const row = new MessageActionRow()
+                .addComponents(
+                    new MessageButton().setCustomId('archery_shoot').setLabel('🏹 Draw Bow').setStyle('PRIMARY')
+                );
+            
+            const { MessageEmbed } = require('discord.js');
+            const message = await interaction.reply({
+                embeds: [
+                    new MessageEmbed()
+                        .setColor('#2ecc71')
+                        .setTitle('🏹 Archery Range')
+                        .setDescription('Stand at the line and draw thy bow!\n\n```\n      🎯\n   ●  ●  ●\n  ●●  ●  ●●\n   ●  ●  ●\n```')
+                        .addField('Bullseye', '$400', true)
+                        .addField('Inner Ring', '$300', true)
+                        .addField('Outer Ring', '$150', true)
+                ],
+                components: [row],
+                fetchReply: true
+            });
+            
+            const filter = i => i.user.id === userId;
+            const collector = message.createMessageComponentCollector({ filter, time: 30000, max: 1 });
+            
+            collector.on('collect', async i => {
+                await i.update({
+                    embeds: [
+                        new MessageEmbed()
+                            .setColor('#f39c12')
+                            .setTitle('🏹 Releasing Arrow...')
+                            .setDescription('*The arrow flies through the air...*')
+                    ],
+                    components: []
+                });
+                
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                const roll = Math.random();
+                let baseReward = 0;
+                let hit = '';
+                
+                if (roll < 0.15) { // 15% bullseye
+                    baseReward = 400;
+                    hit = '🎯 **BULLSEYE!** Perfect shot!';
+                } else if (roll < 0.40) { // 25% inner ring
+                    baseReward = 300;
+                    hit = '⭐ **Inner Ring!** Excellent aim!';
+                } else if (roll < 0.70) { // 30% outer ring
+                    baseReward = 150;
+                    hit = '✓ **Outer Ring!** Decent shot!';
+                } else { // 30% miss
+                    baseReward = 0;
+                    hit = '❌ **Miss!** The arrow flies wide!';
+                }
+                
+                const bonusReward = Math.floor(baseReward * (1 + rank.bonus));
+                if (bonusReward > 0) await db.addBalance(guildId, userId, bonusReward);
+                if (stats) await updateUserStats(guildId, userId, { 
+                    total_earned: bonusReward, 
+                    mini_games_played: 1,
+                    mini_games_won: bonusReward > 0 ? 1 : 0
+                });
+                recordMiniGamePlay(userId, 'archery');
+                
+                await i.editReply({
+                    embeds: [
+                        new MessageEmbed()
+                            .setColor(bonusReward > 0 ? '#43b581' : '#e74c3c')
+                            .setTitle('🏹 Shot Result')
+                            .setDescription(hit)
+                            .addField('Base Reward', baseReward > 0 ? `$${baseReward}` : 'None', true)
+                            .addField(`${rank.emoji} Total`, bonusReward > 0 ? `$${bonusReward}` : 'None', true)
+                    ]
+                });
+            });
+            
+            collector.on('end', collected => {
+                if (collected.size === 0) {
+                    interaction.editReply({ content: '⏰ Thou didst not shoot in time!', components: [], embeds: [] });
+                }
+            });
         } else if (commandName === 'tarot') {
-            const suits = ['♠', '♥', '♦', '♣'];
-            const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
-            const card = `${values[Math.floor(Math.random() * values.length)]}${suits[Math.floor(Math.random() * suits.length)]}`;
-            await interaction.reply(`🃏 You drew: ${card}`);
-        } else if (commandName === 'quest') {
-            const jobs = [
-                { name: 'Farmer', pay: 120 },
-                { name: 'Hunter', pay: 150 },
-                { name: 'Fisherman', pay: 100 },
-                { name: 'Mechanic', pay: 180 },
-                { name: 'Medic', pay: 200 },
-                { name: 'Bartender', pay: 90 },
-                { name: 'Guard', pay: 130 }
+            if (!canPlayMiniGame(userId, 'tarot')) {
+                const nextTime = nextAvailableMiniGame(userId);
+                await interaction.reply({ content: `⏳ The cards must rest! Return <t:${Math.floor(nextTime / 1000)}:R>`, ephemeral: true });
+                return;
+            }
+            
+            const stats = await getUserStats(guildId, userId);
+            const rank = getRank(stats ? stats.total_earned : 0);
+            
+            const cards = [
+                { name: 'The Fool', emoji: '🃏', reward: 80, msg: 'New beginnings await!' },
+                { name: 'The Magician', emoji: '🎩', reward: 200, msg: 'Power and skill are thine!' },
+                { name: 'Death', emoji: '💀', reward: -100, msg: 'Change comes at a cost!' },
+                { name: 'Fortune', emoji: '🎰', reward: 350, msg: 'Lady Luck smiles upon thee!' },
+                { name: 'The Tower', emoji: '🏰', reward: -50, msg: 'Chaos strikes thy coffers!' },
+                { name: 'The Sun', emoji: '☀️', reward: 250, msg: 'Radiant fortune shines!' },
+                { name: 'The Moon', emoji: '🌙', reward: 150, msg: 'Mystery brings reward!' }
             ];
-            const job = jobs[Math.floor(Math.random() * jobs.length)];
-            const bal = await db.addBalance(guildId, userId, job.pay);
-            await interaction.reply(`👷 You worked as a ${job.name} and earned $${job.pay}! Balance: $${bal}`);
+            
+            const row = new MessageActionRow()
+                .addComponents(
+                    new MessageButton().setCustomId('card_1').setLabel('🂠').setStyle('PRIMARY'),
+                    new MessageButton().setCustomId('card_2').setLabel('🂠').setStyle('PRIMARY'),
+                    new MessageButton().setCustomId('card_3').setLabel('🂠').setStyle('PRIMARY'),
+                    new MessageButton().setCustomId('card_4').setLabel('🂠').setStyle('PRIMARY'),
+                    new MessageButton().setCustomId('card_5').setLabel('🂠').setStyle('PRIMARY')
+                );
+            
+            const { MessageEmbed } = require('discord.js');
+            const message = await interaction.reply({
+                embeds: [
+                    new MessageEmbed()
+                        .setColor('#9b59b6')
+                        .setTitle('🃏 Tarot Reading')
+                        .setDescription('*The mystic lays out five cards...*\n\nChoose thy destiny!')
+                ],
+                components: [row],
+                fetchReply: true
+            });
+            
+            const filter = i => i.user.id === userId;
+            const collector = message.createMessageComponentCollector({ filter, time: 30000, max: 1 });
+            
+            collector.on('collect', async i => {
+                const card = cards[Math.floor(Math.random() * cards.length)];
+                const baseReward = card.reward;
+                const bonusReward = baseReward > 0 ? Math.floor(baseReward * (1 + rank.bonus)) : baseReward;
+                
+                await db.addBalance(guildId, userId, bonusReward);
+                if (stats) await updateUserStats(guildId, userId, { 
+                    total_earned: Math.max(0, bonusReward), 
+                    mini_games_played: 1,
+                    mini_games_won: bonusReward > 0 ? 1 : 0
+                });
+                recordMiniGamePlay(userId, 'tarot');
+                
+                await i.update({
+                    embeds: [
+                        new MessageEmbed()
+                            .setColor(bonusReward >= 0 ? '#43b581' : '#e74c3c')
+                            .setTitle(`🃏 ${card.emoji} ${card.name}`)
+                            .setDescription(`*${card.msg}*\n\n${bonusReward >= 0 ? 'Gained' : 'Lost'} **$${Math.abs(bonusReward)}**!`)
+                            .addField('Base Fortune', `${baseReward >= 0 ? '+' : ''}$${baseReward}`, true)
+                            .addField(`${rank.emoji} Result`, `${bonusReward >= 0 ? '+' : ''}$${bonusReward}`, true)
+                    ],
+                    components: []
+                });
+            });
+            
+            collector.on('end', collected => {
+                if (collected.size === 0) {
+                    interaction.editReply({ content: '⏰ The cards fade away...', components: [], embeds: [] });
+                }
+            });
+        } else if (commandName === 'quest') {
+            if (!canPlayMiniGame(userId, 'quest')) {
+                const nextTime = nextAvailableMiniGame(userId);
+                await interaction.reply({ content: `⏳ Thou art weary from adventure! Rest until <t:${Math.floor(nextTime / 1000)}:R>`, ephemeral: true });
+                return;
+            }
+            
+            const stats = await getUserStats(guildId, userId);
+            const rank = getRank(stats ? stats.total_earned : 0);
+            
+            const quests = [
+                { name: '🐉 Slay Dragon', danger: 'High', pay: 300, success: 0.5, emoji: '🐉' },
+                { name: '⚔️ Clear Bandits', danger: 'Medium', pay: 200, success: 0.7, emoji: '⚔️' },
+                { name: '🥖 Deliver Bread', danger: 'Low', pay: 100, success: 0.9, emoji: '🥖' }
+            ];
+            
+            const row = new MessageActionRow()
+                .addComponents(
+                    new MessageButton().setCustomId('quest_0').setLabel(`${quests[0].emoji} Dangerous`).setStyle('DANGER'),
+                    new MessageButton().setCustomId('quest_1').setLabel(`${quests[1].emoji} Medium`).setStyle('PRIMARY'),
+                    new MessageButton().setCustomId('quest_2').setLabel(`${quests[2].emoji} Easy`).setStyle('SUCCESS')
+                );
+            
+            const { MessageEmbed } = require('discord.js');
+            const message = await interaction.reply({
+                embeds: [
+                    new MessageEmbed()
+                        .setColor('#3498db')
+                        .setTitle('📜 Quest Board')
+                        .setDescription('Choose thy quest wisely, adventurer!')
+                        .addField('🐉 Slay Dragon', `Danger: **High**\nReward: $300\nSuccess: 50%`, true)
+                        .addField('⚔️ Clear Bandits', `Danger: **Medium**\nReward: $200\nSuccess: 70%`, true)
+                        .addField('🥖 Deliver Bread', `Danger: **Low**\nReward: $100\nSuccess: 90%`, true)
+                ],
+                components: [row],
+                fetchReply: true
+            });
+            
+            const filter = i => i.user.id === userId;
+            const collector = message.createMessageComponentCollector({ filter, time: 30000, max: 1 });
+            
+            collector.on('collect', async i => {
+                const questIndex = parseInt(i.customId.split('_')[1]);
+                const quest = quests[questIndex];
+                
+                await i.update({
+                    embeds: [
+                        new MessageEmbed()
+                            .setColor('#f39c12')
+                            .setTitle(`${quest.emoji} ${quest.name}`)
+                            .setDescription('*Embarking on the quest...*')
+                    ],
+                    components: []
+                });
+                
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                const success = Math.random() < quest.success;
+                if (success) {
+                    const baseReward = quest.pay;
+                    const bonusReward = Math.floor(baseReward * (1 + rank.bonus));
+                    await db.addBalance(guildId, userId, bonusReward);
+                    if (stats) await updateUserStats(guildId, userId, { total_earned: bonusReward, mini_games_played: 1, mini_games_won: 1 });
+                    recordMiniGamePlay(userId, 'quest');
+                    
+                    await i.editReply({
+                        embeds: [
+                            new MessageEmbed()
+                                .setColor('#43b581')
+                                .setTitle(`${quest.emoji} Quest Complete!`)
+                                .setDescription(`Thou hast succeeded! The realm thanks thee!`)
+                                .addField('Base Reward', `$${baseReward}`, true)
+                                .addField(`${rank.emoji} Total`, `$${bonusReward}`, true)
+                        ]
+                    });
+                } else {
+                    const penalty = Math.floor(quest.pay * 0.3);
+                    await db.addBalance(guildId, userId, -penalty);
+                    if (stats) await updateUserStats(guildId, userId, { mini_games_played: 1 });
+                    recordMiniGamePlay(userId, 'quest');
+                    
+                    await i.editReply({
+                        embeds: [
+                            new MessageEmbed()
+                                .setColor('#e74c3c')
+                                .setTitle(`${quest.emoji} Quest Failed!`)
+                                .setDescription(`Thou wast defeated! Lost **$${penalty}** in supplies!`)
+                        ]
+                    });
+                }
+            });
+            
+            collector.on('end', collected => {
+                if (collected.size === 0) {
+                    interaction.editReply({ content: '⏰ Thou didst hesitate! The quests are taken by others.', components: [], embeds: [] });
+                }
+            });
         } else if (commandName === 'liarsdice') {
             // Simple blackjack: player vs bot, one round
             function drawCard() {
