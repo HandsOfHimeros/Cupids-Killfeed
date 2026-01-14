@@ -78,6 +78,14 @@ class MultiGuildKillfeed {
         const logData = await this.fetchGuildLog(guildConfig);
         if (!logData) return;
         
+        // Debug: Show log size and sample for Eternal Frost if no events
+        if (guildId === '1445943557020979274') {
+            const logLength = logData.length;
+            const firstLines = logData.split('\n').slice(0, 5).join('\n');
+            console.log(`[DEBUG] Eternal Frost log size: ${logLength} bytes`);
+            console.log(`[DEBUG] First 5 lines:\n${firstLines}`);
+        }
+        
         // Parse and update player locations from log
         await this.parseAndUpdateLocations(guildId, logData);
         
