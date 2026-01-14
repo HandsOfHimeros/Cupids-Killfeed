@@ -520,6 +520,10 @@ bot.on('interactionCreate', async interaction => {
     if (interaction.isButton() && interaction.customId.startsWith('campaign_')) {
         console.log('[CAMPAIGN] Button clicked:', interaction.customId);
         const economyCommand = bot.commands.get('economy');
+        console.log('[CAMPAIGN] Economy command found:', !!economyCommand);
+        console.log('[CAMPAIGN] Has handleCampaignChoice:', !!economyCommand?.handleCampaignChoice);
+        console.log('[CAMPAIGN] Economy exports:', Object.keys(economyCommand || {}));
+        
         if (economyCommand && economyCommand.handleCampaignChoice) {
             try {
                 await economyCommand.handleCampaignChoice(interaction);
