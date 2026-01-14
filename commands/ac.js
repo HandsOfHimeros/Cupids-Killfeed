@@ -42,6 +42,7 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName('ac')
     .setDescription('Contains all Access Control commands')
+    .setDefaultMemberPermissions("0") // Admin only
     .addSubcommandGroup(subcommand =>
       subcommand
         .setName('serverlist')
