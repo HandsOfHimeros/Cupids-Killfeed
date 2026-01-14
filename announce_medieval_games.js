@@ -21,32 +21,55 @@ client.once('ready', async () => {
     try {
         const message = `@everyone
 
-🏰 **HEAR YE! A ROYAL PROCLAMATION FROM THY KING!** 🏰
+📜 **ROYAL PROCLAMATION - MAJOR KINGDOM EXPANSION!** 📜
 
-**THE GREAT EXPANSION HATH ARRIVED!**
+**8 MASSIVE NEW INTERACTIVE FEATURES HAVE ARRIVED!**
 
-Thy King bestows upon thee **13 NEW MEDIEVAL GAMES** to test thy courage and fortune!
+💰 **DAILY LOGIN REWARDS**
+• \`/daily\` - Claim rewards every day! Build streaks for up to $3,000!
+• 🔗 **+50% BONUS** if connected to DayZ that day!
 
-⚔️ **RISE THROUGH THE RANKS** ⚔️
-• 👨‍🌾 **Peasant** → ⚔️ **Knight** ($5k, +5%) → 🛡️ **Baron** ($15k, +10%)
-• 🎖️ **Earl** ($35k, +15%, $100/day) → 👑 **Duke** ($75k, +20%, $250/day) 
-• 🏰 **King** ($150k, +25%, $500/day)
+🏆 **ACHIEVEMENT SYSTEM**
+• \`/achievements\` - 14 achievements with cash rewards!
+• Auto-unlock as you play: First win, streaks, rank ups, wealth milestones!
 
-🎮 **NEW GAMES** 🎮
-🏹 /hunting | 🎣 /fishing | ⛏️ /mining | 🌿 /herbalism
-🔨 /blacksmith | ⚗️ /alchemy | 🎵 /bard | 🐴 /horseracing
-♟️ /chess | 🏛️ /relics | ⚔️ /tournamentmelee
-🐻 /beasttaming | 🏰 /siegedefense *(King rank only!)*
+🏰 **PROPERTY OWNERSHIP**
+• \`/properties\` \`/buyproperty\` - Own taverns, shops, castles!
+• 💵 Earn passive **daily income** while you sleep!
 
-**Plus all 14 original games remain!**
+⚔️ **PVP DUEL SYSTEM**
+• \`/duel @player amount\` - Challenge others to 3-round combat!
+• Attack, Defend, or Counter - **Winner takes all!**
 
-⏰ Each game playable once every 6 hours
-💎 Use **/rank** to see thy progress & unlocked games
-💰 Use **/wallet** to check thy riches
+⛏️ **CRAFTING CHAINS**
+• \`/mining\` - Gather gold ore, silver ore, and gems!
+• \`/blacksmith\` - Use materials for **2x-4x reward multipliers!**
 
-**All games are INTERACTIVE with buttons!**
+📖 **STORY CAMPAIGNS**
+• \`/campaign\` - Epic multi-chapter quests with branching choices!
+• 🐉 **The Dragon's Curse** | 🧙‍♀️ **The Witch of Darkwood**
 
-*Go forth and prove thy worth! May fortune smile upon thee!*
+🎲 **RANDOM EVENTS**
+• Unexpected encounters while playing games!
+• 💰 Treasures | 🗡️ Bandit Attacks | 🎪 Festivals | 🌟 Lucky Buffs
+
+📊 **WEEKLY LEADERBOARDS**
+• \`/weeklyleaderboard\` - Compete for top earner spots!
+• Resets every Monday with bonus rewards!
+
+🎁 **BONUS FEATURES**
+• \`/gift @user amount\` - Send coins to friends!
+• \`/inventory\` - View your crafting materials!
+
+📈 **HOW TO GET STARTED:**
+1️⃣ \`/daily\` - Claim your daily reward
+2️⃣ \`/achievements\` - See what you've unlocked  
+3️⃣ \`/campaign\` - Start an epic quest
+4️⃣ Play games and watch for random events!
+
+⚔️ **NOW WITH 48 SLASH COMMANDS!** ⚔️
+
+*Go forth and experience the expanded kingdom!*
 
 🏰👑 **LONG LIVE THE KING!** 👑🏰`;
         

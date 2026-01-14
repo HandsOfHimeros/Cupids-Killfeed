@@ -4149,6 +4149,8 @@ module.exports = {
     // Handle campaign choice button clicks
     async handleCampaignChoice(interaction) {
         const { MessageEmbed, MessageActionRow, MessageButton } = require('discord.js');
+        const db = require('../database');
+        
         const parts = interaction.customId.split('_');
         // Format: campaign_{campaignId}_{chapterNum}_{choiceId}
         const campaignId = parts[1];
@@ -4198,10 +4200,18 @@ module.exports = {
                 await db.subtractBalance(guildId, userId, choice.cost);
             }
             
-            // Award reward
+            // Award reward and track stats
             if (choice.reward > 0) {
                 await db.addBalance(guildId, userId, choice.reward);
-                await completeGame(guildId, userId, choice.reward, true);
+                
+                // Update stats manually since completeGame isn't accessible here
+                const stats = await db.getUserStats(guildId, userId);
+                await db.updateUserStats(guildId, userId, {
+                    total_earned: choice.reward,
+                    mini_games_played: 1,
+                    mini_games_won: 1
+                });
+                await db.addWeeklyEarnings(guildId, userId, choice.reward);
             }
             
             // Check if this is the end
