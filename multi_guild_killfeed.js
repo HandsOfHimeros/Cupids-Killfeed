@@ -78,25 +78,6 @@ class MultiGuildKillfeed {
         const logData = await this.fetchGuildLog(guildConfig);
         if (!logData) return;
         
-        // Debug: Show log size and sample for Eternal Frost (Sakhal) to diagnose build event issue
-        if (guildId === '1445957198000820316') {
-            const logLength = logData.length;
-            const lines = logData.split('\n');
-            console.log(`[DEBUG] Eternal Frost (Sakhal) log size: ${logLength} bytes, ${lines.length} lines`);
-            console.log(`[DEBUG] First 10 lines:\n${lines.slice(0, 10).join('\n')}`);
-            console.log(`[DEBUG] Last 10 lines:\n${lines.slice(-10).join('\n')}`);
-            
-            // Check for build keywords
-            const buildLines = lines.filter(line => 
-                line.includes('placed') || line.includes('raised') || 
-                line.includes('dismantled') || line.includes('Built')
-            );
-            console.log(`[DEBUG] Found ${buildLines.length} lines with build keywords`);
-            if (buildLines.length > 0) {
-                console.log(`[DEBUG] Sample build lines:\n${buildLines.slice(0, 3).join('\n')}`);
-            }
-        }
-        
         // Parse and update player locations from log
         await this.parseAndUpdateLocations(guildId, logData);
         
@@ -105,13 +86,6 @@ class MultiGuildKillfeed {
         
         // Parse events
         const events = this.parseKillfeedEvents(logData);
-        console.log(`[MULTI-KILLFEED] Guild ${guildId}: Parsed ${events.length} total events`);
-        
-        // Log build events specifically for debugging
-        const buildEvents = events.filter(e => e.type === 'build');
-        if (buildEvents.length > 0) {
-            console.log(`[MULTI-KILLFEED] Guild ${guildId}: Found ${buildEvents.length} build events in this log`);
-        }
         
         // Filter to only new events
         let newEvents = events;
