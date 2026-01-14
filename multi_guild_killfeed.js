@@ -207,7 +207,8 @@ class MultiGuildKillfeed {
         const events = [];
         
         for (const line of lines) {
-            if (line.includes('transporthit')) continue;
+            // Skip transporthit events (vehicle hits) - case insensitive
+            if (line.toLowerCase().includes('transporthit')) continue;
             
             let match;
             // Extract timestamp from line
