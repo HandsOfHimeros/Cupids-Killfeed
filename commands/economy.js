@@ -4151,11 +4151,18 @@ module.exports = {
         const { MessageEmbed, MessageActionRow, MessageButton } = require('discord.js');
         const db = require('../database');
         
-        const parts = interaction.customId.split('_');
         // Format: campaign_{campaignId}_{chapterNum}_{choiceId}
-        const campaignId = parts[1];
-        const chapterNum = parseInt(parts[2]);
-        const choiceId = parts[3];
+        // Since campaign IDs can have underscores, we need to parse this carefully
+        const customId = interaction.customId;
+        const match = customId.match(/^campaign_(.+)_(\d+)_(.+)$/);
+        
+        if (!match) {
+            return interaction.reply({ content: '❌ Invalid button format!', ephemeral: true });
+        }
+        
+        const campaignId = match[1];
+        const chapterNum = parseInt(match[2]);
+        const choiceId = match[3];
         
         const userId = interaction.user.id;
         const guildId = interaction.guildId;
