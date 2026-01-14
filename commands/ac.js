@@ -20,6 +20,7 @@ require('dotenv').config();
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { Client, Intents, MessageEmbed } = require('discord.js');
 const { GUILDID, ID1, NITRATOKEN } = require('../config.json');
+const db = require('../database');
 const ini = require('ini');
 const axios = require('axios');
 const FormData = require('form-data');
