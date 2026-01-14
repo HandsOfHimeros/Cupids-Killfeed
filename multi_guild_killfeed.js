@@ -400,45 +400,57 @@ class MultiGuildKillfeed {
             let embed = new MessageEmbed().setTimestamp();
             
             if (event.type === 'kill') {
-                embed.setColor('#DC143C')
-                    .setTitle('☠️ 💀 KILL CONFIRMED 💀 ☠️');
+                // Calculate distance if available from weapon info
+                const distance = event.weapon ? this.extractDistance(event.weapon) : null;
+                let killTitle = '⚔️ SLAIN IN BATTLE ⚔️';
+                
+                if (distance !== null) {
+                    if (distance <= 10) killTitle = '🗡️ CLOSE QUARTERS COMBAT 🗡️';
+                    else if (distance <= 100) killTitle = '⚔️ SKIRMISH ⚔️';
+                    else if (distance <= 300) killTitle = '🏹 MARKSMAN\'S SHOT 🏹';
+                    else killTitle = '🎯 LEGENDARY SNIPER 🎯';
+                }
+                
+                embed.setColor('#8B0000') // Dark red
+                    .setTitle(killTitle);
                 
                 if (event.victim && event.killer) {
-                    embed.setDescription(`\`\`\`diff\n- ${event.victim}\n\`\`\`\n🔫 **Killed by:** \`${event.killer}\``);
-                    if (event.weapon) {
-                        embed.addFields({ name: '⚔️ Weapon Used', value: `\`${event.weapon}\``, inline: true });
+                    const medievalWeapon = this.translateWeaponToMedieval(event.weapon);
+                    const distanceText = distance !== null ? ` (${distance}m)` : '';
+                    
+                    embed.setDescription(`\`\`\`diff\n- ${event.victim}\n\`\`\`\n⚔️ **Vanquished by:** \`${event.killer}\``);
+                    if (medievalWeapon) {
+                        embed.addFields({ name: '🗡️ Weapon of Choice', value: `\`${medievalWeapon}\`${distanceText}`, inline: true });
                     }
-                    embed.addFields({ name: '🕐 Time', value: `\`${event.time}\``, inline: true });
+                    embed.addFields({ name: '🕐 Time of Battle', value: `\`${event.time}\``, inline: true });
                 } else {
                     embed.setDescription(`\`\`\`\n${event.raw}\n\`\`\``);
                 }
             } else if (event.type === 'hit') {
-                embed.setColor('#FF4500')
-                    .setTitle('💥 ⚡ PLAYER HIT ⚡ 💥');
+                embed.setColor('#FF8C00') // Dark orange
+                    .setTitle('🎯 WOUNDED IN COMBAT 🎯');
                 
                 if (event.victim && event.source) {
-                    embed.setDescription(`🎯 **${event.victim}**\n\`\`\`fix\nHit by: ${event.source}\n\`\`\``);
+                    embed.setDescription(`🩸 **${event.victim}**\n\`\`\`fix\nStruck by: ${event.source}\n\`\`\``);
                     embed.addFields({ name: '🕐 Time', value: `\`${event.time}\``, inline: true });
                 } else {
                     embed.setDescription(`\`\`\`\n${event.raw}\n\`\`\``);
                 }
             } else if (event.type === 'connected') {
-                embed.setColor('#00FF00')
-                    .setTitle('🟢 ✅ PLAYER JOINED ✅ 🟢');
+                embed.setColor('#FFD700') // Gold
+                    .setTitle('🏰 ARRIVED AT THE REALM 🏰');
                 
                 if (event.player) {
-                    embed.setDescription(`\`\`\`diff\n+ ${event.player}\n\`\`\`\n👋 **Welcome to the server!**`);
+                    embed.setDescription(`\`\`\`diff\n+ ${event.player}\n\`\`\`\n⚜️ **Welcome to the Kingdom, traveler!**`);
                     embed.addFields({ name: '🕐 Time', value: `\`${event.time}\``, inline: true });
                     
-                    // Don't start session here - wait for first position update to get real coordinates
-                    // Session will be auto-created in parseAndUpdateLocations when first position is detected
                     console.log(`[DISTANCE] Player ${event.player} connected - session will be created on first position update`);
                 } else {
                     embed.setDescription(`\`\`\`\n${event.raw}\n\`\`\``);
                 }
             } else if (event.type === 'disconnected') {
-                embed.setColor('#FF0000')
-                    .setTitle('🔴 ❌ PLAYER LEFT ❌ 🔴');
+                embed.setColor('#9370DB') // Medium purple
+                    .setTitle('🚪 DEPARTED THE REALM 🚪');
                 
                 if (event.player) {
                     // Calculate distance earnings
@@ -456,19 +468,18 @@ class MultiGuildKillfeed {
                             const earned = Math.floor(totalDistance / 100);
                             
                             if (earned > 0) {
-                                // Find user ID from dayz_names
                                 const userId = await db.getUserIdByDayZName(guildConfig.guild_id, event.player);
                                 console.log(`[DISTANCE] User ID for ${event.player}: ${userId}`);
                                 if (userId) {
                                     await db.addBalance(guildConfig.guild_id, userId, earned);
                                     console.log(`[DISTANCE] Awarded $${earned} to ${event.player} (${userId})`);
-                                    distanceInfo = `\n\n🗺️ **Distance Traveled:** ${distanceM}m (${distanceKm}km)\n💰 **Earned:** $${earned}`;
+                                    distanceInfo = `\n\n🗺️ **Journey Traveled:** ${distanceM}m (${distanceKm}km)\n💰 **Gold Earned:** $${earned}`;
                                 } else {
                                     console.log(`[DISTANCE] ${event.player} not registered`);
-                                    distanceInfo = `\n\n🗺️ **Distance Traveled:** ${distanceM}m (${distanceKm}km)\n⚠️ Register with /register to earn $${earned}`;
+                                    distanceInfo = `\n\n🗺️ **Journey Traveled:** ${distanceM}m (${distanceKm}km)\n⚠️ Register with /register to earn $${earned} gold`;
                                 }
                             } else {
-                                distanceInfo = `\n\n🗺️ **Distance Traveled:** ${distanceM}m (${distanceKm}km)`;
+                                distanceInfo = `\n\n🗺️ **Journey Traveled:** ${distanceM}m (${distanceKm}km)`;
                             }
                         } else {
                             console.log(`[DISTANCE] No distance tracked for ${event.player}`);
@@ -478,17 +489,17 @@ class MultiGuildKillfeed {
                         console.error(`[DISTANCE] Stack: ${err.stack}`);
                     }
                     
-                    embed.setDescription(`\`\`\`diff\n- ${event.player}\n\`\`\`\n👋 **Left the server**${distanceInfo}`);
+                    embed.setDescription(`\`\`\`diff\n- ${event.player}\n\`\`\`\n👋 **The traveler's journey has ended**${distanceInfo}`);
                     embed.addFields({ name: '🕐 Time', value: `\`${event.time}\``, inline: true });
                 } else {
                     embed.setDescription(`\`\`\`\n${event.raw}\n\`\`\``);
                 }
             } else if (event.type === 'suicide') {
-                embed.setColor('#9400D3')
-                    .setTitle('💀 ⚰️ SUICIDE ⚰️ 💀');
+                embed.setColor('#2F4F4F') // Dark slate gray
+                    .setTitle('⚰️ MET AN UNTIMELY END ⚰️');
                 
                 if (event.player) {
-                    embed.setDescription(`\`\`\`fix\n${event.player}\n\`\`\`\n💔 **${event.player} was a bitch and killed themselves**`);
+                    embed.setDescription(`\`\`\`fix\n${event.player}\n\`\`\`\n🕯️ **${event.player} perished by their own hand**`);
                     embed.addFields({ name: '🕐 Time', value: `\`${event.time}\``, inline: true });
                 } else {
                     embed.setDescription(`\`\`\`\n${event.raw}\n\`\`\``);
@@ -500,13 +511,21 @@ class MultiGuildKillfeed {
                     'dismantled': '💥',
                     'built': '🏗️'
                 };
-                const emoji = actionEmoji[event.action?.toLowerCase()] || '🔨';
+                const medievalActions = {
+                    'placed': 'Erected',
+                    'raised': 'Fortified',
+                    'dismantled': 'Razed',
+                    'built': 'Constructed'
+                };
                 
-                embed.setColor('#1E90FF')
-                    .setTitle(`${emoji} 🛠️ BUILD EVENT 🛠️ ${emoji}`);
+                const emoji = actionEmoji[event.action?.toLowerCase()] || '⚒️';
+                const actionText = medievalActions[event.action?.toLowerCase()] || event.action;
+                
+                embed.setColor('#8B4513') // Brown
+                    .setTitle(`${emoji} ⚒️ BUILDING THE KINGDOM ⚒️ ${emoji}`);
                 
                 if (event.player && event.action && event.item) {
-                    embed.setDescription(`👷 **${event.player}**\n\`\`\`yaml\n${event.action.toUpperCase()}: ${event.item}\n\`\`\``);
+                    embed.setDescription(`🏗️ **${event.player}**\n\`\`\`yaml\n${actionText ? actionText.toUpperCase() : event.action.toUpperCase()}: ${event.item}\n\`\`\``);
                     embed.addFields({ name: '🕐 Time', value: `\`${event.time}\``, inline: true });
                 } else {
                     embed.setDescription(`\`\`\`\n${event.raw}\n\`\`\``);
@@ -520,6 +539,64 @@ class MultiGuildKillfeed {
             console.error(`[MULTI-KILLFEED] Error posting event for guild ${guildConfig.guild_id}:`, error.message);
             console.error(`[MULTI-KILLFEED] Error stack:`, error.stack);
         }
+    }
+
+    // Helper function to extract distance from weapon string
+    extractDistance(weaponString) {
+        if (!weaponString) return null;
+        const match = weaponString.match(/\((\d+)m\)/);
+        return match ? parseInt(match[1]) : null;
+    }
+
+    // Helper function to translate modern weapons to medieval equivalents
+    translateWeaponToMedieval(weapon) {
+        if (!weapon) return null;
+        
+        const weaponLower = weapon.toLowerCase();
+        
+        // Firearms → Medieval ranged
+        if (weaponLower.includes('m4') || weaponLower.includes('ak') || weaponLower.includes('rifle')) {
+            return '🏹 Arquebus';
+        }
+        if (weaponLower.includes('mosin') || weaponLower.includes('svd') || weaponLower.includes('tundra')) {
+            return '🎯 Longbow';
+        }
+        if (weaponLower.includes('shotgun') || weaponLower.includes('izh')) {
+            return '💥 Blunderbuss';
+        }
+        if (weaponLower.includes('pistol') || weaponLower.includes('deagle') || weaponLower.includes('mkii')) {
+            return '🔫 Hand Cannon';
+        }
+        
+        // Melee weapons
+        if (weaponLower.includes('knife') || weaponLower.includes('blade')) {
+            return '🗡️ Dagger';
+        }
+        if (weaponLower.includes('axe') || weaponLower.includes('hatchet')) {
+            return '🪓 Battle Axe';
+        }
+        if (weaponLower.includes('bat') || weaponLower.includes('pipe') || weaponLower.includes('crowbar')) {
+            return '🔨 Mace';
+        }
+        if (weaponLower.includes('shovel') || weaponLower.includes('pickaxe')) {
+            return '⛏️ Warhammer';
+        }
+        
+        // Explosives
+        if (weaponLower.includes('grenade') || weaponLower.includes('explosive')) {
+            return '💣 Alchemist\'s Fire';
+        }
+        
+        // Vehicle/Environment
+        if (weaponLower.includes('car') || weaponLower.includes('vehicle')) {
+            return '🐎 Cavalry Charge';
+        }
+        if (weaponLower.includes('fall') || weaponLower.includes('falling')) {
+            return '🏔️ Fell from Heights';
+        }
+        
+        // Default - clean up the weapon name
+        return weapon.replace(/\(.*?\)/g, '').trim() || weapon;
     }
 
     stop() {
