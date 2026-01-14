@@ -207,9 +207,6 @@ class MultiGuildKillfeed {
         const events = [];
         
         for (const line of lines) {
-            // Skip transporthit events (vehicle hits) - case insensitive
-            if (line.toLowerCase().includes('transporthit')) continue;
-            
             let match;
             // Extract timestamp from line
             const timeMatch = line.match(/^(\d{2}:\d{2}:\d{2})/);
@@ -245,16 +242,25 @@ class MultiGuildKillfeed {
             } else if (line.includes('hit by')) {
                 // Try to parse hit details
                 let victim, source;
-                let hitMatch = line.match(/Player \"(.+?)\"\(id=[^)]*\) hit by Player \"(.+?)\"\(id=[^)]*\) with (.+)$/);
-                if (hitMatch) {
-                    victim = hitMatch[1];
-                    source = `${hitMatch[2]} with ${hitMatch[3]}`;
+                
+                // Check for vehicle hit with TransportHit
+                let vehicleHitMatch = line.match(/Player "(.+?)"\(id=[^)]*\)[^h]*hit by (.+?) with TransportHit/i);
+                if (vehicleHitMatch) {
+                    victim = vehicleHitMatch[1];
+                    source = `${vehicleHitMatch[2]} (Vehicle)`;
                 } else {
-                    // Try environmental/zombie hit
-                    hitMatch = line.match(/(?:Player )?\"(.+?)\"(?:\s*\(DEAD\))?\s*(?:\(id=[^)]*(?:\s+pos=[^)]+)?\))?(?:\[HP:\s*\d+\])?\s+hit by (.+)$/);
+                    // Try player-to-player hit
+                    let hitMatch = line.match(/Player \"(.+?)\"\(id=[^)]*\) hit by Player \"(.+?)\"\(id=[^)]*\) with (.+)$/);
                     if (hitMatch) {
                         victim = hitMatch[1];
-                        source = hitMatch[2];
+                        source = `${hitMatch[2]} with ${hitMatch[3]}`;
+                    } else {
+                        // Try environmental/zombie hit
+                        hitMatch = line.match(/(?:Player )?\"(.+?)\"(?:\s*\(DEAD\))?\s*(?:\(id=[^)]*(?:\s+pos=[^)]+)?\))?(?:\[HP:\s*\d+(?:\.\d+)?\])?\s+hit by (.+)$/);
+                        if (hitMatch) {
+                            victim = hitMatch[1];
+                            source = hitMatch[2];
+                        }
                     }
                 }
                 
