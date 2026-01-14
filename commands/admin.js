@@ -96,47 +96,9 @@ module.exports = {
                 .setName('killfeed')
                 .setDescription('Admin Killfeed Commands')
                 .addSubcommand(subcommand =>
-                    subcommand
-                        .setName('stop')
-                        .setDescription('Kill Project')
-                )
-                .addSubcommand(subcommand =>
-                    subcommand
-                        .setName('deathloc')
-                        .setDescription('Toggle on display of death locations in Killfeed notifications')
-                        .addStringOption(option =>
-                            option.setName('state')
-                                .setDescription('Select desired Alarm state')
-                                .setRequired(true)
-                                .addChoices(
-                                    { name: 'OFF', value: 'off' },
-                                    { name: 'ON', value: 'on' },
-                                )
-                        )
-                )
-                .addSubcommand(subcommand =>
-                    subcommand
-                        .setName('start')
-                        .setDescription('Start Killfeed')
-                )
-                .addSubcommand(subcommand =>
                     subcommand.setName('clear')
                         .setDescription('Clear channel messages (limit 100)')
                         .addIntegerOption(option => option.setName('value').setDescription('Enter new value').setRequired(true))
-                )
-                .addSubcommand(subcommand =>
-                    subcommand.setName('map')
-                    .setDescription('Toggle Killfeed Mission Map')
-                    .addStringOption(option =>
-                        option.setName('new-map')
-                        .setDescription('Select Map to be displayed in notifications')
-                        .setRequired(true)
-                        .addChoices(
-                            { name: 'Chernarus', value: 'cherno' },
-                            { name: 'Livonia', value: 'livonia' },
-                            { name: 'Sakhal', value: 'sakhal' },
-                        )
-                    )	
                 )
                 .addSubcommand(subcommand =>
                     subcommand
@@ -161,20 +123,8 @@ module.exports = {
             case 'viewconfig':
                 await handleViewConfigCommand(interaction);
                 break;
-            case 'map':
-                await handleMapChange(interaction);
-                break;
             case "setup":
                 await handleSetupCommand(interaction);
-                break;
-            case "stop":
-                await handleStopCommand(interaction);
-                break;
-            case "deathloc":
-                await handleDeathlocCommand(interaction);
-                break;
-            case "start":
-                await handleStartCommand(interaction);
                 break;
             default:
                 break;
