@@ -86,6 +86,13 @@ class MultiGuildKillfeed {
         
         // Parse events
         const events = this.parseKillfeedEvents(logData);
+        console.log(`[MULTI-KILLFEED] Guild ${guildId}: Parsed ${events.length} total events`);
+        
+        // Log build events specifically for debugging
+        const buildEvents = events.filter(e => e.type === 'build');
+        if (buildEvents.length > 0) {
+            console.log(`[MULTI-KILLFEED] Guild ${guildId}: Found ${buildEvents.length} build events in this log`);
+        }
         
         // Filter to only new events
         let newEvents = events;
