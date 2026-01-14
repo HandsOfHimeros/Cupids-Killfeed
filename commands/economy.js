@@ -316,6 +316,95 @@ const CAMPAIGNS = {
     }
 };
 
+// Random events that can trigger for active players
+const RANDOM_EVENTS = [
+    {
+        id: 'treasure_found',
+        name: '💰 Treasure Found!',
+        description: 'Whilst walking, thou stumbled upon a hidden cache of coins!',
+        chance: 0.15,
+        minReward: 200,
+        maxReward: 800,
+        type: 'positive'
+    },
+    {
+        id: 'royal_favor',
+        name: '👑 Royal Favor',
+        description: 'The King noticed thy deeds and grants thee a royal reward!',
+        chance: 0.08,
+        minReward: 500,
+        maxReward: 1500,
+        type: 'positive'
+    },
+    {
+        id: 'lucky_streak',
+        name: '🌟 Lucky Day',
+        description: 'The stars align in thy favor! Thy next game rewards are doubled!',
+        chance: 0.10,
+        duration: 1, // 1 game
+        type: 'buff'
+    },
+    {
+        id: 'mysterious_gift',
+        name: '🎁 Mysterious Gift',
+        description: 'A mysterious stranger left a gift for thee!',
+        chance: 0.12,
+        materials: true,
+        type: 'positive'
+    },
+    {
+        id: 'tax_collector',
+        name: '💸 Tax Collector',
+        description: 'The tax collector demands his due!',
+        chance: 0.10,
+        taxRate: 0.05, // 5% of wallet
+        minTax: 50,
+        maxTax: 500,
+        type: 'negative'
+    },
+    {
+        id: 'bandit_attack',
+        name: '🗡️ Bandit Attack',
+        description: 'Bandits ambush thee on the road!',
+        chance: 0.08,
+        canDefend: true,
+        defendChance: 0.60,
+        loseAmount: 300,
+        type: 'negative'
+    },
+    {
+        id: 'festival',
+        name: '🎪 Festival Day',
+        description: 'A grand festival begins! All game rewards increased for 2 hours!',
+        chance: 0.05,
+        multiplier: 1.5,
+        duration: 7200000, // 2 hours in ms
+        type: 'guild_buff'
+    },
+    {
+        id: 'rare_material',
+        name: '💎 Rare Discovery',
+        description: 'Thou found a cache of rare crafting materials!',
+        chance: 0.10,
+        materials: { gold_ore: 3, silver_ore: 2, gem: 1 },
+        type: 'positive'
+    },
+    {
+        id: 'noble_visitor',
+        name: '🏰 Noble Visitor',
+        description: 'A noble from afar heard of thy achievements and rewards thee!',
+        chance: 0.07,
+        achievementBonus: true,
+        minReward: 400,
+        maxReward: 1200,
+        type: 'positive'
+    }
+];
+
+// Track active buffs per user
+const activeBuffs = new Map(); // userId -> { type, expiresAt }
+const guildBuffs = new Map(); // guildId -> { type, multiplier, expiresAt }
+
 function getDailyReward(streak) {
     // Find the highest reward tier for this streak
     let reward = 50; // Base reward
@@ -386,6 +475,199 @@ async function checkAndAwardAchievements(guildId, userId, stats, balance) {
     }
     
     return { newAchievements, totalReward };
+}
+
+// Trigger random event for a user
+async function triggerRandomEvent(interaction, guildId, userId) {
+    const { MessageEmbed, MessageActionRow, MessageButton } = require('discord.js');
+    
+    // 15% chance overall for any event to trigger
+    if (Math.random() > 0.15) return null;
+    
+    // Pick a random event
+    const availableEvents = RANDOM_EVENTS.filter(e => Math.random() < e.chance);
+    if (availableEvents.length === 0) return null;
+    
+    const event = availableEvents[Math.floor(Math.random() * availableEvents.length)];
+    
+    try {
+        if (event.type === 'positive') {
+            if (event.materials && event.materials !== true) {
+                // Give specific materials
+                for (const [material, qty] of Object.entries(event.materials)) {
+                    await db.addInventoryItem(guildId, userId, material, qty);
+                }
+                await interaction.followUp({
+                    embeds: [new MessageEmbed()
+                        .setColor('#00ff00')
+                        .setTitle(event.name)
+                        .setDescription(`${event.description}\n\n🎒 Received: ${Object.entries(event.materials).map(([m, q]) => `${q}x ${m.replace('_', ' ')}`).join(', ')}`)],
+                    ephemeral: false
+                });
+            } else if (event.materials === true) {
+                // Random materials
+                const materials = ['gold_ore', 'silver_ore', 'gem'];
+                const material = materials[Math.floor(Math.random() * materials.length)];
+                const qty = Math.floor(Math.random() * 3) + 1;
+                await db.addInventoryItem(guildId, userId, material, qty);
+                await interaction.followUp({
+                    embeds: [new MessageEmbed()
+                        .setColor('#00ff00')
+                        .setTitle(event.name)
+                        .setDescription(`${event.description}\n\n🎒 Received: ${qty}x ${material.replace('_', ' ')}`)],
+                    ephemeral: false
+                });
+            } else {
+                // Give money
+                const reward = Math.floor(Math.random() * (event.maxReward - event.minReward + 1)) + event.minReward;
+                await db.addBalance(guildId, userId, reward);
+                await interaction.followUp({
+                    embeds: [new MessageEmbed()
+                        .setColor('#00ff00')
+                        .setTitle(event.name)
+                        .setDescription(`${event.description}\n\n💰 Gained: $${reward}`)],
+                    ephemeral: false
+                });
+            }
+        } else if (event.type === 'buff') {
+            // Apply personal buff
+            activeBuffs.set(userId, { type: event.id, uses: event.duration, multiplier: 2.0 });
+            await interaction.followUp({
+                embeds: [new MessageEmbed()
+                    .setColor('#ffd700')
+                    .setTitle(event.name)
+                    .setDescription(`${event.description}\n\n✨ Active for ${event.duration} game(s)!`)],
+                ephemeral: false
+            });
+        } else if (event.type === 'negative') {
+            if (event.id === 'tax_collector') {
+                const balance = await db.getBalance(guildId, userId);
+                const tax = Math.min(Math.max(Math.floor(balance * event.taxRate), event.minTax), event.maxTax);
+                if (balance >= tax) {
+                    await db.subtractBalance(guildId, userId, tax);
+                    await interaction.followUp({
+                        embeds: [new MessageEmbed()
+                            .setColor('#ff6600')
+                            .setTitle(event.name)
+                            .setDescription(`${event.description}\n\n💸 Lost: $${tax}`)],
+                        ephemeral: false
+                    });
+                }
+            } else if (event.id === 'bandit_attack') {
+                const row = new MessageActionRow().addComponents(
+                    new MessageButton().setCustomId(`defend_${userId}`).setLabel('⚔️ Defend').setStyle('DANGER'),
+                    new MessageButton().setCustomId(`flee_${userId}`).setLabel('🏃 Flee').setStyle('SECONDARY')
+                );
+                
+                await interaction.followUp({
+                    embeds: [new MessageEmbed()
+                        .setColor('#ff0000')
+                        .setTitle(event.name)
+                        .setDescription(`${event.description}\n\nQuick! Defend thyself or flee!`)],
+                    components: [row],
+                    ephemeral: false
+                });
+                
+                // Handle in separate collector
+                const filter = i => i.user.id === userId;
+                const collector = interaction.channel.createMessageComponentCollector({ filter, time: 15000, max: 1 });
+                
+                collector.on('collect', async i => {
+                    if (i.customId === `defend_${userId}`) {
+                        const success = Math.random() < event.defendChance;
+                        if (success) {
+                            await i.update({
+                                embeds: [new MessageEmbed()
+                                    .setColor('#00ff00')
+                                    .setTitle('⚔️ Victory!')
+                                    .setDescription('Thou fought off the bandits! Thy coins are safe!')],
+                                components: []
+                            });
+                        } else {
+                            await db.subtractBalance(guildId, userId, event.loseAmount);
+                            await i.update({
+                                embeds: [new MessageEmbed()
+                                    .setColor('#ff0000')
+                                    .setTitle('💀 Defeated!')
+                                    .setDescription(`The bandits overpowered thee!\n\n💸 Lost: $${event.loseAmount}`)],
+                                components: []
+                            });
+                        }
+                    } else {
+                        const fleeLoss = Math.floor(event.loseAmount * 0.5);
+                        await db.subtractBalance(guildId, userId, fleeLoss);
+                        await i.update({
+                            embeds: [new MessageEmbed()
+                                .setColor('#ffaa00')
+                                .setTitle('🏃 Escaped!')
+                                .setDescription(`Thou fled! The bandits took some coins as thou ran.\n\n💸 Lost: $${fleeLoss}`)],
+                            components: []
+                        });
+                    }
+                });
+                
+                collector.on('end', collected => {
+                    if (collected.size === 0) {
+                        db.subtractBalance(guildId, userId, event.loseAmount);
+                        interaction.followUp({
+                            embeds: [new MessageEmbed()
+                                .setColor('#ff0000')
+                                .setTitle('💸 Robbed!')
+                                .setDescription(`Thou froze in fear! The bandits took thy coins.\n\n💸 Lost: $${event.loseAmount}`)],
+                            ephemeral: false
+                        });
+                    }
+                });
+            }
+        } else if (event.type === 'guild_buff') {
+            // Apply guild-wide buff
+            guildBuffs.set(guildId, {
+                type: event.id,
+                multiplier: event.multiplier,
+                expiresAt: Date.now() + event.duration
+            });
+            
+            await interaction.followUp({
+                embeds: [new MessageEmbed()
+                    .setColor('#ff00ff')
+                    .setTitle(event.name)
+                    .setDescription(`${event.description}\n\n🎉 All players benefit! @everyone`)],
+                ephemeral: false
+            });
+        }
+        
+        return event;
+    } catch (error) {
+        console.error('[RANDOM_EVENT] Error triggering event:', error);
+        return null;
+    }
+}
+
+// Check and apply active buffs to rewards
+function applyBuffs(guildId, userId, baseReward) {
+    let reward = baseReward;
+    
+    // Check personal buff
+    if (activeBuffs.has(userId)) {
+        const buff = activeBuffs.get(userId);
+        reward *= buff.multiplier;
+        buff.uses--;
+        if (buff.uses <= 0) {
+            activeBuffs.delete(userId);
+        }
+    }
+    
+    // Check guild buff
+    if (guildBuffs.has(guildId)) {
+        const buff = guildBuffs.get(guildId);
+        if (Date.now() < buff.expiresAt) {
+            reward *= buff.multiplier;
+        } else {
+            guildBuffs.delete(guildId);
+        }
+    }
+    
+    return Math.floor(reward);
 }
 
 async function getUserStats(guildId, userId) {
@@ -1328,23 +1610,30 @@ module.exports = {
                     hit = '❌ **Miss!** The arrow flies wide!';
                 }
                 
-                const bonusReward = Math.floor(baseReward * (1 + rank.bonus));
-                if (bonusReward > 0) await db.addBalance(guildId, userId, bonusReward);
-                if (stats) await updateUserStats(guildId, userId, { 
-                    total_earned: bonusReward, 
-                    mini_games_played: 1,
-                    mini_games_won: bonusReward > 0 ? 1 : 0
-                });
+                // Apply buffs and calculate final reward
+                const buffedBase = applyBuffs(guildId, userId, baseReward);
+                const finalReward = Math.floor(buffedBase * (1 + rank.bonus));
+                
+                if (finalReward > 0) await db.addBalance(guildId, userId, finalReward);
+                await completeGame(guildId, userId, finalReward, finalReward > 0);
                 recordMiniGamePlay(userId, 'archery');
+                
+                // Trigger random event
+                setTimeout(() => triggerRandomEvent(i, guildId, userId), 1000);
+                
+                let buffText = '';
+                if (finalReward > buffedBase * (1 + rank.bonus)) {
+                    buffText = '\n✨ **BUFF ACTIVE!**';
+                }
                 
                 await i.editReply({
                     embeds: [
                         new MessageEmbed()
-                            .setColor(bonusReward > 0 ? '#43b581' : '#e74c3c')
+                            .setColor(finalReward > 0 ? '#43b581' : '#e74c3c')
                             .setTitle('🏹 Shot Result')
-                            .setDescription(hit)
+                            .setDescription(`${hit}${buffText}`)
                             .addField('Base Reward', baseReward > 0 ? `$${baseReward}` : 'None', true)
-                            .addField(`${rank.emoji} Total`, bonusReward > 0 ? `$${bonusReward}` : 'None', true)
+                            .addField(`${rank.emoji} Total`, finalReward > 0 ? `$${finalReward}` : 'None', true)
                     ]
                 });
             });
