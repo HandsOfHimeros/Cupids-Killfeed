@@ -4,7 +4,7 @@ const fs = require('fs');
 const db = require('../database.js');
 const { MessageActionRow, MessageButton } = require('discord.js');
 const COOLDOWN_FILE = path.join(__dirname, '../logs/economy_cooldowns.json');
-const MINI_GAMES = ['fortuneteller','pillage','archery','tarot','quest','liarsdice','smuggle','pickpocket','bribe','labor','questboard','taverndice','duel','joust','hunting','fishing','mining','herbalism','blacksmith','alchemy','bard','horseracing','chess','relics','tournamentmelee','beasttaming','siegedefense'];
+const MINI_GAMES = ['fortuneteller','pillage','archery','tarot','quest','liarsdice','smuggle','pickpocket','bribe','labor','questboard','taverndice','duel','joust','hunting','fishing','mining','herbalism','blacksmith','alchemy','bard','horseracing','chess','relics','tournamentmelee','beasttaming','siegedefense','campaign'];
 const COOLDOWN_LIMIT = 1; // times allowed
 const COOLDOWN_WINDOW = 6 * 60 * 60 * 1000; // 6 hours in ms
 
@@ -1247,7 +1247,7 @@ module.exports = {
             return;
         }
         // Mini-game cooldown check
-        if (MINI_GAMES.includes(commandName)) {
+        if (MINI_GAMES.includes(commandName) && commandName !== 'campaign') {
             const cooldowns = await db.getCooldowns(guildId, userId, commandName);
             const now = Date.now();
             const recentPlays = cooldowns.filter(ts => now - ts < COOLDOWN_WINDOW);
@@ -4044,6 +4044,28 @@ module.exports = {
             
         // ========== CAMPAIGN ==========
         } else if (commandName === 'campaign') {
+            // Check cooldown for campaign
+            const cooldowns = await db.getCooldowns(guildId, userId, commandName);
+            const now = Date.now();
+            const recentPlays = cooldowns.filter(ts => now - ts < COOLDOWN_WINDOW);
+            
+            if (recentPlays.length >= COOLDOWN_LIMIT) {
+                const oldest = Math.min(...recentPlays);
+                const ms = oldest + COOLDOWN_WINDOW - now;
+                const h = Math.floor(ms / (60*60*1000));
+                const m = Math.floor((ms % (60*60*1000)) / (60*1000));
+                await interaction.reply({
+                    embeds: [
+                        new MessageEmbed()
+                            .setColor('#ffaa00')
+                            .setTitle('⏳ Campaign Cooldown')
+                            .setDescription(`Thy tales must rest! Complete a campaign once every 6 hours.\n\nTry again in **${h}h ${m}m**.`)
+                    ],
+                    ephemeral: true
+                });
+                return;
+            }
+            
             // Check all campaigns for progress
             const allProgress = [];
             for (const campaignId in CAMPAIGNS) {
@@ -4228,6 +4250,10 @@ module.exports = {
             if (choice.nextChapter === null) {
                 // Campaign complete!
                 await db.updateCampaignProgress(guildId, userId, campaignId, chapterNum, true);
+                
+                // Record cooldown on completion
+                await db.addCooldown(guildId, userId, 'campaign', Date.now());
+                await db.cleanOldCooldowns(guildId, userId, 'campaign', COOLDOWN_WINDOW);
                 
                 await interaction.editReply({
                     embeds: [new MessageEmbed()
