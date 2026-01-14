@@ -4216,10 +4216,7 @@ module.exports = {
             // Award reward and track stats
             if (choice.reward > 0) {
                 await db.addBalance(guildId, userId, choice.reward);
-                
-                // Update stats manually since completeGame isn't accessible here
-                const stats = await db.getUserStats(guildId, userId);
-                await db.updateUserStats(guildId, userId, {
+                await updateUserStats(guildId, userId, {
                     total_earned: choice.reward,
                     mini_games_played: 1,
                     mini_games_won: 1
