@@ -4210,7 +4210,7 @@ module.exports = {
                         embeds: []
                     });
                 }
-                await db.subtractBalance(guildId, userId, choice.cost);
+                await db.addBalance(guildId, userId, -choice.cost);
             }
             
             // Award reward and track stats
