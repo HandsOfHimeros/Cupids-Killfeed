@@ -173,9 +173,9 @@ async function handleWhitelistCommand(interaction) {
   const choice = interaction.options.getString('action');
 
   if (choice === 'add') {
-    await addToList('./logs/whitelist.txt', target, 'whitelist', interaction);
+    await addToNitradoList(guildConfig, target, 'whitelist', 'Whitelist', interaction);
   } else if (choice === 'remove') {
-    await removeFromList('./logs/whitelist.txt', target, 'whitelist', interaction);
+    await removeFromNitradoList(guildConfig, target, 'whitelist', 'Whitelist', interaction);
   }
 }
 
@@ -192,9 +192,9 @@ async function handleBanlistCommand(interaction) {
   const choice = interaction.options.getString('action');
 
   if (choice === 'add') {
-    await addToList('./logs/ban.txt', target, 'bans', interaction);
+    await addToNitradoList(guildConfig, target, 'bans', 'Banlist', interaction);
   } else if (choice === 'remove') {
-    await removeFromList('./logs/ban.txt', target, 'bans', interaction);
+    await removeFromNitradoList(guildConfig, target, 'bans', 'Banlist', interaction);
   }
 }
 
@@ -211,9 +211,9 @@ async function handlePriorityCommand(interaction) {
   const choice = interaction.options.getString('action');
 
   if (choice === 'add') {
-    await addToList('./logs/priority.txt', target, 'priority', interaction);
+    await addToNitradoList(guildConfig, target, 'priority', 'Priority List', interaction);
   } else if (choice === 'remove') {
-    await removeFromList('./logs/priority.txt', target, 'priority', interaction);
+    await removeFromNitradoList(guildConfig, target, 'priority', 'Priority List', interaction);
   }
 }
 
@@ -227,24 +227,28 @@ async function handleGetlistCommand(interaction) {
   }
   
   const choice = interaction.options.getString('action');
-  let filePath = '';
+  let listKey = '';
+  let listName = '';
 
   switch (choice) {
     case 'wl':
-      filePath = './logs/whitelist.txt';
+      listKey = 'whitelist';
+      listName = 'Whitelist';
       break;
     case 'ban':
-      filePath = './logs/ban.txt';
+      listKey = 'bans';
+      listName = 'Banlist';
       break;
     case 'pl':
-      filePath = './logs/priority.txt';
+      listKey = 'priority';
+      listName = 'Priority List';
       break;
     default:
       break;
   }
 
-  if (filePath) {
-    await getList(filePath, interaction);
+  if (listKey) {
+    await getListFromNitrado(guildConfig, listKey, listName, interaction);
   }
 }
 
@@ -258,114 +262,189 @@ async function handleResetlistCommand(interaction) {
   }
   
   const choice = interaction.options.getString('action');
-  let filePath = '';
+  let listKey = '';
+  let listName = '';
 
   switch (choice) {
     case 'wl':
-      filePath = './logs/whitelist.txt';
+      listKey = 'whitelist';
+      listName = 'Whitelist';
       break;
     case 'ban':
-      filePath = './logs/ban.txt';
+      listKey = 'bans';
+      listName = 'Banlist';
       break;
     case 'pl':
-      filePath = './logs/priority.txt';
+      listKey = 'priority';
+      listName = 'Priority List';
       break;
     default:
       break;
   }
 
-  if (filePath) {
-    fs.truncate(filePath, (err) => {
-      if (err) {
-        interaction.reply("Reset Failed!").catch(console.error);
-      } else {
-        interaction.reply(`${choice.charAt(0).toUpperCase() + choice.slice(1)} list reset successfully!`).catch(console.error);
-      }
+  if (listKey) {
+    await resetListOnNitrado(guildConfig, listKey, listName, interaction);
+  }
+}
+
+// Fetch list from Nitrado server
+async function getListFromNitrado(guildConfig, listKey, listName, interaction) {
+  try {
+    await interaction.reply(`Fetching ${listName} from Nitrado...`);
+    
+    const url = `https://api.nitrado.net/services/${guildConfig.nitrado_service_id}/gameservers/settings`;
+    const response = await axios.get(url, {
+      headers: { 'Authorization': `Bearer ${guildConfig.nitrado_token}` }
     });
+    
+    const settings = response.data.data.settings;
+    const listData = settings.general?.[listKey] || '';
+    
+    if (listData && listData.trim().length > 0) {
+      // Split into chunks if too long for Discord
+      const chunks = listData.match(/[\s\S]{1,1900}/g) || [];
+      for (const chunk of chunks) {
+        await interaction.channel.send(`\`\`\`\n${chunk}\n\`\`\``);
+      }
+      await interaction.channel.send(`**Done!**`);
+    } else {
+      await interaction.channel.send(`${listName} is empty.`);
+    }
+  } catch (error) {
+    console.error(`Error fetching ${listName}:`, error.message);
+    await interaction.channel.send(`Error fetching ${listName}: ${error.message}`);
   }
 }
 
-async function addToList(filePath, target, key, interaction) {
-  const formData = new FormData();
-  const headers = {
-    ...formData.getHeaders(),
-    "Content-Length": formData.getLengthSync(),
-    "Authorization": `Bearer ${NITRATOKEN}`,
-  };
-  const url = `https://api.nitrado.net/services/${ID1}/gameservers/settings`;
-
-  fs.appendFileSync(filePath, `${target}\r\n`);
-
-  const stream = fs.createReadStream(filePath, { flags: 'r' }, 'utf8');
-  const data = await streamToString(stream);
-  formData.append("category", "general");
-  formData.append("key", key);
-  formData.append("value", data);
-
-  formData.pipe(concat(async (data) => {
-    try {
-      const response = await axios.post(url, data, { headers, withCredentials: true });
-      if (response.status >= 200 && response.status < 300) {
-        interaction.reply('Request success!').catch(console.error);
-      }
-    } catch (error) {
-      console.error(error);
-      interaction.reply('Something went wrong!').catch(console.error);
+// Add player to Nitrado list
+async function addToNitradoList(guildConfig, target, listKey, listName, interaction) {
+  try {
+    // First, get current list
+    const getUrl = `https://api.nitrado.net/services/${guildConfig.nitrado_service_id}/gameservers/settings`;
+    const getResponse = await axios.get(getUrl, {
+      headers: { 'Authorization': `Bearer ${guildConfig.nitrado_token}` }
+    });
+    
+    const settings = getResponse.data.data.settings;
+    let currentList = settings.general?.[listKey] || '';
+    
+    // Check if already in list
+    if (currentList.includes(target)) {
+      return interaction.reply(`${target} is already in the ${listName}!`).catch(console.error);
     }
-  }));
-}
-
-async function removeFromList(filePath, target, key, interaction) {
-  const formData = new FormData();
-  const headers = {
-    ...formData.getHeaders(),
-    "Content-Length": formData.getLengthSync(),
-    "Authorization": `Bearer ${NITRATOKEN}`,
-  };
-  const url = `https://api.nitrado.net/services/${ID1}/gameservers/settings`;
-
-  let oldList = fs.readFileSync(filePath, 'utf-8');
-  let newList = oldList.replace(`${target}\r\n`, '');
-  fs.writeFileSync(filePath, newList, 'utf-8');
-
-  const stream = fs.createReadStream(filePath, { flags: 'r' }, 'utf8');
-  const data = await streamToString(stream);
-  formData.append("category", "general");
-  formData.append("key", key);
-  formData.append("value", data);
-
-  formData.pipe(concat(async (data) => {
-    try {
-      const response = await axios.post(url, data, { headers, withCredentials: true });
-      if (response.status >= 200 && response.status < 300) {
-        interaction.reply('Request success!').catch(console.error);
+    
+    // Add to list
+    const newList = currentList ? `${currentList}\n${target}` : target;
+    
+    // Update on Nitrado
+    const formData = new FormData();
+    formData.append("category", "general");
+    formData.append("key", listKey);
+    formData.append("value", newList);
+    
+    const headers = {
+      ...formData.getHeaders(),
+      "Authorization": `Bearer ${guildConfig.nitrado_token}`,
+    };
+    
+    const postUrl = `https://api.nitrado.net/services/${guildConfig.nitrado_service_id}/gameservers/settings`;
+    
+    formData.pipe(concat(async (data) => {
+      try {
+        const response = await axios.post(postUrl, data, { headers });
+        if (response.status >= 200 && response.status < 300) {
+          interaction.reply(`✅ Added **${target}** to ${listName}!`).catch(console.error);
+        }
+      } catch (error) {
+        console.error(error);
+        interaction.reply(`❌ Error adding to ${listName}: ${error.message}`).catch(console.error);
       }
-    } catch (error) {
-      console.error(error);
-      interaction.reply('Something went wrong!').catch(console.error);
-    }
-  }));
-}
-
-async function getList(filePath, interaction) {
-  const stream = fs.createReadStream(filePath, { flags: 'r' }, 'utf8');
-  const data = await streamToString(stream);
-  interaction.channel.send(`Retrieving List....`).catch(console.error);
-  if (data && data.trim().length > 0) {
-    interaction.channel.send(data).catch(console.error);
-  } else {
-    interaction.channel.send('List is empty.').catch(console.error);
+    }));
+  } catch (error) {
+    console.error(error);
+    interaction.reply(`❌ Error: ${error.message}`).catch(console.error);
   }
-  interaction.channel.send("**Done!**").catch(console.error);
-  interaction.reply(`...`).catch(console.error);
-  interaction.deleteReply().catch(console.error);
 }
 
-function streamToString(stream) {
-  const chunks = [];
-  return new Promise((resolve, reject) => {
-    stream.on('data', chunk => chunks.push(chunk));
-    stream.on('error', reject);
-    stream.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
-  });
+// Remove player from Nitrado list
+async function removeFromNitradoList(guildConfig, target, listKey, listName, interaction) {
+  try {
+    // First, get current list
+    const getUrl = `https://api.nitrado.net/services/${guildConfig.nitrado_service_id}/gameservers/settings`;
+    const getResponse = await axios.get(getUrl, {
+      headers: { 'Authorization': `Bearer ${guildConfig.nitrado_token}` }
+    });
+    
+    const settings = getResponse.data.data.settings;
+    let currentList = settings.general?.[listKey] || '';
+    
+    // Check if in list
+    if (!currentList.includes(target)) {
+      return interaction.reply(`${target} is not in the ${listName}!`).catch(console.error);
+    }
+    
+    // Remove from list
+    const lines = currentList.split('\n').filter(line => line.trim() !== target.trim());
+    const newList = lines.join('\n');
+    
+    // Update on Nitrado
+    const formData = new FormData();
+    formData.append("category", "general");
+    formData.append("key", listKey);
+    formData.append("value", newList);
+    
+    const headers = {
+      ...formData.getHeaders(),
+      "Authorization": `Bearer ${guildConfig.nitrado_token}`,
+    };
+    
+    const postUrl = `https://api.nitrado.net/services/${guildConfig.nitrado_service_id}/gameservers/settings`;
+    
+    formData.pipe(concat(async (data) => {
+      try {
+        const response = await axios.post(postUrl, data, { headers });
+        if (response.status >= 200 && response.status < 300) {
+          interaction.reply(`✅ Removed **${target}** from ${listName}!`).catch(console.error);
+        }
+      } catch (error) {
+        console.error(error);
+        interaction.reply(`❌ Error removing from ${listName}: ${error.message}`).catch(console.error);
+      }
+    }));
+  } catch (error) {
+    console.error(error);
+    interaction.reply(`❌ Error: ${error.message}`).catch(console.error);
+  }
+}
+
+// Reset list on Nitrado
+async function resetListOnNitrado(guildConfig, listKey, listName, interaction) {
+  try {
+    const formData = new FormData();
+    formData.append("category", "general");
+    formData.append("key", listKey);
+    formData.append("value", "");
+    
+    const headers = {
+      ...formData.getHeaders(),
+      "Authorization": `Bearer ${guildConfig.nitrado_token}`,
+    };
+    
+    const url = `https://api.nitrado.net/services/${guildConfig.nitrado_service_id}/gameservers/settings`;
+    
+    formData.pipe(concat(async (data) => {
+      try {
+        const response = await axios.post(url, data, { headers });
+        if (response.status >= 200 && response.status < 300) {
+          interaction.reply(`✅ ${listName} has been reset!`).catch(console.error);
+        }
+      } catch (error) {
+        console.error(error);
+        interaction.reply(`❌ Reset failed: ${error.message}`).catch(console.error);
+      }
+    }));
+  } catch (error) {
+    console.error(error);
+    interaction.reply(`❌ Error: ${error.message}`).catch(console.error);
+  }
 }
