@@ -214,7 +214,6 @@ async function handlePriorityCommand(interaction) {
   } else if (choice === 'remove') {
     await removeFromList('./logs/priority.txt', target, 'priority', interaction);
   }
-  }
 }
 
 async function handleGetlistCommand(interaction) {
