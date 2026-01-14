@@ -489,6 +489,11 @@ for (const file of commandFiles) {
         const command = require(filePath);
         // Support both single and array of slash commands (for economy.js)
         if (Array.isArray(command.data)) {
+            // Store the module itself using the filename (without .js) for accessing methods like handleCampaignChoice
+            const moduleName = file.replace('.js', '');
+            bot.commands.set(moduleName, command);
+            
+            // Also register each individual command
             for (const cmd of command.data) {
                 if (cmd && cmd.name) {
                     bot.commands.set(cmd.name, { ...command, data: cmd });
