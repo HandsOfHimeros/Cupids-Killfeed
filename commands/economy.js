@@ -240,6 +240,82 @@ const DAILY_REWARDS = [
     { day: 30, reward: 3000 }
 ];
 
+// Story campaigns with chapters
+const CAMPAIGNS = {
+    dragon_quest: {
+        id: 'dragon_quest',
+        name: '🐉 The Dragon\'s Curse',
+        description: 'A dragon threatens the kingdom. Can thou save the realm?',
+        chapters: [
+            {
+                num: 1,
+                title: 'The Village in Peril',
+                story: 'A great dragon has awakened in the mountains, burning villages and stealing livestock. The King summons thee to his throne room.',
+                choices: [
+                    { id: 'accept', label: '⚔️ Accept the Quest', chance: 0.7, reward: 500, nextChapter: 2 },
+                    { id: 'refuse', label: '🚪 Decline', chance: 1.0, reward: 0, nextChapter: null, ending: 'Thou fled like a coward. The dragon consumed the kingdom.' }
+                ]
+            },
+            {
+                num: 2,
+                title: 'Journey to the Mountains',
+                story: 'Thou travelest north through treacherous terrain. In the mountain pass, bandits block thy path!',
+                choices: [
+                    { id: 'fight', label: '⚔️ Fight the Bandits', chance: 0.65, reward: 750, nextChapter: 3 },
+                    { id: 'bribe', label: '💰 Bribe Them', chance: 0.85, reward: 400, nextChapter: 3, cost: 200 },
+                    { id: 'sneak', label: '🌙 Sneak Past', chance: 0.50, reward: 900, nextChapter: 3 }
+                ]
+            },
+            {
+                num: 3,
+                title: 'The Dragon\'s Lair',
+                story: 'Thou hast reached the smoldering cave. The dragon awaits within, guarding mountains of gold!',
+                choices: [
+                    { id: 'slay', label: '⚔️ Slay the Dragon', chance: 0.45, reward: 2000, nextChapter: null, ending: '🏆 VICTORY! Thou slew the dragon and saved the kingdom!' },
+                    { id: 'negotiate', label: '🗣️ Negotiate', chance: 0.70, reward: 1200, nextChapter: null, ending: '🤝 The dragon agreed to leave. Peace returns to the realm.' },
+                    { id: 'steal', label: '💎 Steal Treasure', chance: 0.30, reward: 3000, nextChapter: null, ending: '💰 Thou stole riches but the dragon still terrorizes the land...' }
+                ]
+            }
+        ]
+    },
+    witch_forest: {
+        id: 'witch_forest',
+        name: '🧙‍♀️ The Witch of Darkwood',
+        description: 'Strange magic corrupts the forest. Uncover the mystery.',
+        chapters: [
+            {
+                num: 1,
+                title: 'The Cursed Forest',
+                story: 'Animals flee Darkwood Forest. Trees wither. Villagers speak of a witch\'s curse.',
+                choices: [
+                    { id: 'investigate', label: '🔍 Investigate', chance: 0.75, reward: 400, nextChapter: 2 },
+                    { id: 'ignore', label: '🏠 Ignore It', chance: 1.0, reward: 0, nextChapter: null, ending: 'The curse spread. The forest consumed the village.' }
+                ]
+            },
+            {
+                num: 2,
+                title: 'The Witch\'s Cabin',
+                story: 'Deep in the woods, thou findest a decrepit cabin. Smoke rises from the chimney. A crone peers through the window.',
+                choices: [
+                    { id: 'knock', label: '🚪 Knock Politely', chance: 0.80, reward: 800, nextChapter: 3 },
+                    { id: 'break_in', label: '💥 Break In', chance: 0.50, reward: 1100, nextChapter: 3 },
+                    { id: 'spy', label: '👁️ Spy Through Window', chance: 0.65, reward: 650, nextChapter: 3 }
+                ]
+            },
+            {
+                num: 3,
+                title: 'The Witch\'s Secret',
+                story: 'The "witch" is actually the forest guardian, wounded by poachers. She cursed the land in pain.',
+                choices: [
+                    { id: 'heal', label: '💚 Heal Her Wounds', chance: 0.85, reward: 1800, nextChapter: null, ending: '🌳 The curse lifted! The forest blooms anew. The guardian blessed thee!' },
+                    { id: 'capture', label: '⛓️ Capture Her', chance: 0.60, reward: 1000, nextChapter: null, ending: '💔 Thou captured the guardian. The forest died forever.' },
+                    { id: 'hunt_poachers', label: '🏹 Hunt the Poachers', chance: 0.55, reward: 2200, nextChapter: null, ending: '⚖️ Justice served! The poachers were punished. The forest recovers!' }
+                ]
+            }
+        ]
+    }
+};
+
 function getDailyReward(streak) {
     // Find the highest reward tier for this streak
     let reward = 50; // Base reward
@@ -632,6 +708,9 @@ module.exports = {
         new SlashCommandBuilder()
             .setName('weeklyleaderboard')
             .setDescription('📊 View this week\'s top earners'),
+        new SlashCommandBuilder()
+            .setName('campaign')
+            .setDescription('📖 Embark on story-driven quests and adventures'),
     ],
     async execute(interaction) {
         console.log(`[ECONOMY] execute called for command: ${interaction.commandName}, channel: ${interaction.channelId}`);
@@ -3673,7 +3752,207 @@ module.exports = {
                     .setDescription(`**Top Earners This Week:**\n\n${description}\n\n🏆 Top 3 win bonus rewards on Monday!`)
                     .setFooter({ text: 'Leaderboard resets every Monday' })]
             });
+            
+        // ========== CAMPAIGN ==========
+        } else if (commandName === 'campaign') {
+            // Check all campaigns for progress
+            const allProgress = [];
+            for (const campaignId in CAMPAIGNS) {
+                const progress = await db.getCampaignProgress(guildId, userId, campaignId);
+                if (progress) {
+                    allProgress.push({ ...progress, campaign: CAMPAIGNS[campaignId] });
+                }
+            }
+            
+            // If no active campaigns, show campaign selection
+            if (allProgress.length === 0 || allProgress.every(p => p.completed)) {
+                const row = new MessageActionRow().addComponents(
+                    new MessageButton().setCustomId('dragon_quest').setLabel('🐉 The Dragon\'s Curse').setStyle('DANGER'),
+                    new MessageButton().setCustomId('witch_forest').setLabel('🧙‍♀️ The Witch of Darkwood').setStyle('SUCCESS')
+                );
+                
+                let campaignsList = '';
+                for (const campaignId in CAMPAIGNS) {
+                    const campaign = CAMPAIGNS[campaignId];
+                    const isCompleted = allProgress.find(p => p.campaign_id === campaignId && p.completed);
+                    campaignsList += `\n\n${campaign.name}\n${campaign.description}${isCompleted ? ' ✅ **COMPLETED**' : ''}`;
+                }
+                
+                await interaction.reply({
+                    embeds: [new MessageEmbed()
+                        .setColor('#8b4513')
+                        .setTitle('📖 Story Campaigns')
+                        .setDescription(`**Choose thy adventure!**${campaignsList}\n\n_Each campaign has multiple chapters with choices that affect the outcome._`)],
+                    components: [row]
+                });
+                
+                const collector = interaction.channel.createMessageComponentCollector({ time: 60000 });
+                
+                collector.on('collect', async i => {
+                    if (i.user.id !== userId) return i.reply({ content: 'This be not thy quest!', ephemeral: true });
+                    
+                    const campaignId = i.customId;
+                    const campaign = CAMPAIGNS[campaignId];
+                    
+                    // Start campaign at chapter 1
+                    await db.startCampaign(guildId, userId, campaignId, 1);
+                    
+                    const chapter = campaign.chapters[0];
+                    const choiceRow = new MessageActionRow();
+                    chapter.choices.forEach(choice => {
+                        choiceRow.addComponents(
+                            new MessageButton()
+                                .setCustomId(`campaign_${campaignId}_${chapter.num}_${choice.id}`)
+                                .setLabel(choice.label)
+                                .setStyle(choice.id === 'refuse' || choice.id === 'ignore' ? 'SECONDARY' : 'PRIMARY')
+                        );
+                    });
+                    
+                    await i.update({
+                        embeds: [new MessageEmbed()
+                            .setColor('#8b4513')
+                            .setTitle(`📖 ${campaign.name}`)
+                            .setDescription(`**Chapter ${chapter.num}: ${chapter.title}**\n\n${chapter.story}\n\n_Choose thy path..._`)],
+                        components: [choiceRow]
+                    });
+                    
+                    collector.stop();
+                });
+                
+                collector.on('end', collected => {
+                    if (collected.size === 0) {
+                        interaction.editReply({ content: '📖 The quest book closes...', components: [] });
+                    }
+                });
+                
+            } else {
+                // Continue active campaign
+                const activeCampaign = allProgress.find(p => !p.completed);
+                const campaign = activeCampaign.campaign;
+                const chapterNum = activeCampaign.current_chapter;
+                const chapter = campaign.chapters.find(c => c.num === chapterNum);
+                
+                if (!chapter) {
+                    return interaction.reply({ content: '❌ Campaign data error. Please report to admins.', ephemeral: true });
+                }
+                
+                const choiceRow = new MessageActionRow();
+                chapter.choices.forEach(choice => {
+                    choiceRow.addComponents(
+                        new MessageButton()
+                            .setCustomId(`campaign_${campaign.id}_${chapter.num}_${choice.id}`)
+                            .setLabel(choice.label)
+                            .setStyle(choice.id === 'refuse' || choice.id === 'ignore' ? 'SECONDARY' : 'PRIMARY')
+                    );
+                });
+                
+                await interaction.reply({
+                    embeds: [new MessageEmbed()
+                        .setColor('#8b4513')
+                        .setTitle(`📖 ${campaign.name}`)
+                        .setDescription(`**Chapter ${chapter.num}: ${chapter.title}**\n\n${chapter.story}\n\n_Choose thy path..._`)],
+                    components: [choiceRow]
+                });
+            }
         }
+    },
+    
+    // Handle campaign choice button clicks
+    async handleCampaignChoice(interaction) {
+        const { MessageEmbed, MessageActionRow, MessageButton } = require('discord.js');
+        const parts = interaction.customId.split('_');
+        // Format: campaign_{campaignId}_{chapterNum}_{choiceId}
+        const campaignId = parts[1];
+        const chapterNum = parseInt(parts[2]);
+        const choiceId = parts[3];
+        
+        const userId = interaction.user.id;
+        const guildId = interaction.guildId;
+        
+        const campaign = CAMPAIGNS[campaignId];
+        if (!campaign) return interaction.reply({ content: '❌ Invalid campaign!', ephemeral: true });
+        
+        const chapter = campaign.chapters.find(c => c.num === chapterNum);
+        if (!chapter) return interaction.reply({ content: '❌ Invalid chapter!', ephemeral: true });
+        
+        const choice = chapter.choices.find(c => c.id === choiceId);
+        if (!choice) return interaction.reply({ content: '❌ Invalid choice!', ephemeral: true });
+        
+        await interaction.update({ content: '🎲 The fates decide...', components: [], embeds: [] });
+        
+        setTimeout(async () => {
+            const success = Math.random() < choice.chance;
+            
+            if (!success) {
+                // Failed the challenge
+                await db.updateCampaignProgress(guildId, userId, campaignId, chapterNum, false);
+                await interaction.editReply({
+                    embeds: [new MessageEmbed()
+                        .setColor('#ff0000')
+                        .setTitle('💀 Failure!')
+                        .setDescription('Thy quest hath ended in tragedy!\n\nThy choice was too risky. The adventure is over.\n\n_Use `/campaign` to try again from the beginning._')],
+                    components: []
+                });
+                return;
+            }
+            
+            // Check if there's a cost
+            if (choice.cost) {
+                const balance = await db.getBalance(guildId, userId);
+                if (balance < choice.cost) {
+                    return interaction.editReply({
+                        content: `💰 Thou needest $${choice.cost} but hast only $${balance}!`,
+                        components: [],
+                        embeds: []
+                    });
+                }
+                await db.subtractBalance(guildId, userId, choice.cost);
+            }
+            
+            // Award reward
+            if (choice.reward > 0) {
+                await db.addBalance(guildId, userId, choice.reward);
+                await completeGame(guildId, userId, choice.reward, true);
+            }
+            
+            // Check if this is the end
+            if (choice.nextChapter === null) {
+                // Campaign complete!
+                await db.updateCampaignProgress(guildId, userId, campaignId, chapterNum, true);
+                
+                await interaction.editReply({
+                    embeds: [new MessageEmbed()
+                        .setColor('#00ff00')
+                        .setTitle('🎉 Quest Complete!')
+                        .setDescription(`${choice.ending}\n\n💰 **Total Reward: $${choice.reward}**\n\n_Well done, adventurer! Use \`/campaign\` to start a new quest._`)],
+                    components: []
+                });
+            } else {
+                // Continue to next chapter
+                await db.updateCampaignProgress(guildId, userId, campaignId, choice.nextChapter, false);
+                
+                const nextChapter = campaign.chapters.find(c => c.num === choice.nextChapter);
+                const choiceRow = new MessageActionRow();
+                nextChapter.choices.forEach(c => {
+                    choiceRow.addComponents(
+                        new MessageButton()
+                            .setCustomId(`campaign_${campaignId}_${nextChapter.num}_${c.id}`)
+                            .setLabel(c.label)
+                            .setStyle(c.id === 'refuse' || c.id === 'ignore' ? 'SECONDARY' : 'PRIMARY')
+                    );
+                });
+                
+                let rewardText = choice.reward > 0 ? `\n\n💰 **Earned: $${choice.reward}**` : '';
+                
+                await interaction.editReply({
+                    embeds: [new MessageEmbed()
+                        .setColor('#00aa00')
+                        .setTitle(`📖 ${campaign.name}`)
+                        .setDescription(`**Success!**${rewardText}\n\n**Chapter ${nextChapter.num}: ${nextChapter.title}**\n\n${nextChapter.story}\n\n_Choose thy path..._`)],
+                    components: [choiceRow]
+                });
+            }
+        }, 2000);
     }
 };
 

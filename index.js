@@ -516,6 +516,15 @@ bot.on('interactionCreate', async interaction => {
         return;
     }
     
+    // Handle campaign button interactions
+    if (interaction.isButton() && interaction.customId.startsWith('campaign_')) {
+        const economyCommand = bot.commands.get('economy');
+        if (economyCommand && economyCommand.handleCampaignChoice) {
+            await economyCommand.handleCampaignChoice(interaction);
+        }
+        return;
+    }
+    
     if (!interaction.isCommand()) return;
 
     const command = bot.commands.get(interaction.commandName);

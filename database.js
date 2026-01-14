@@ -446,5 +446,28 @@ module.exports = {
     removeInventoryItem,
     // Weekly leaderboards
     addWeeklyEarnings,
-    getWeeklyLeaderboard
+    getWeeklyLeaderboard,
+    // Campaigns
+    getCampaignProgress: async (guildId, userId, campaignId) => {
+        const result = await pool.query(
+            'SELECT * FROM campaign_progress WHERE guild_id = $1 AND user_id = $2 AND campaign_id = $3',
+            [guildId, userId, campaignId]
+        );
+        return result.rows[0];
+    },
+    startCampaign: async (guildId, userId, campaignId, chapter) => {
+        await pool.query(
+            `INSERT INTO campaign_progress (guild_id, user_id, campaign_id, current_chapter, completed, last_played)
+             VALUES ($1, $2, $3, $4, false, NOW())
+             ON CONFLICT (guild_id, user_id, campaign_id) 
+             DO UPDATE SET current_chapter = $4, last_played = NOW()`,
+            [guildId, userId, campaignId, chapter]
+        );
+    },
+    updateCampaignProgress: async (guildId, userId, campaignId, chapter, completed = false) => {
+        await pool.query(
+            'UPDATE campaign_progress SET current_chapter = $4, completed = $5, last_played = NOW() WHERE guild_id = $1 AND user_id = $2 AND campaign_id = $3',
+            [guildId, userId, campaignId, chapter, completed]
+        );
+    }
 };
