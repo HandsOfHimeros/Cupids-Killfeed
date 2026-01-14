@@ -5,7 +5,7 @@ async function checkAllServers() {
     
     try {
         const result = await db.pool.query(`
-            SELECT guild_id, map_name, killfeed_channel_id, build_channel_id, suicide_channel_id, connections_channel_id, is_active
+            SELECT guild_id, map_name, killfeed_channel_id, build_channel_id, suicide_channel_id, connections_channel_id
             FROM guild_configs
             ORDER BY guild_id
         `);
@@ -19,7 +19,6 @@ async function checkAllServers() {
             console.log(`  Build Channel: ${row.build_channel_id || 'NOT SET'}`);
             console.log(`  Suicide Channel: ${row.suicide_channel_id || 'NOT SET'}`);
             console.log(`  Connections Channel: ${row.connections_channel_id || 'NOT SET'}`);
-            console.log(`  Active: ${row.is_active || 'NOT SET'}`);
             console.log('');
         }
         
