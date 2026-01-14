@@ -518,9 +518,17 @@ bot.on('interactionCreate', async interaction => {
     
     // Handle campaign button interactions
     if (interaction.isButton() && interaction.customId.startsWith('campaign_')) {
+        console.log('[CAMPAIGN] Button clicked:', interaction.customId);
         const economyCommand = bot.commands.get('economy');
         if (economyCommand && economyCommand.handleCampaignChoice) {
-            await economyCommand.handleCampaignChoice(interaction);
+            try {
+                await economyCommand.handleCampaignChoice(interaction);
+            } catch (error) {
+                console.error('[CAMPAIGN] Error handling choice:', error);
+                await interaction.reply({ content: '❌ An error occurred! Please try again.', ephemeral: true });
+            }
+        } else {
+            console.error('[CAMPAIGN] Handler not found!');
         }
         return;
     }
