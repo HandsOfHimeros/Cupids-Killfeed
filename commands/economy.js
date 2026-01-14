@@ -4160,8 +4160,14 @@ module.exports = {
         const userId = interaction.user.id;
         const guildId = interaction.guildId;
         
+        console.log('[CAMPAIGN] Looking for campaign:', campaignId);
+        console.log('[CAMPAIGN] Available campaigns:', Object.keys(CAMPAIGNS));
+        
         const campaign = CAMPAIGNS[campaignId];
-        if (!campaign) return interaction.reply({ content: '❌ Invalid campaign!', ephemeral: true });
+        if (!campaign) {
+            console.log('[CAMPAIGN] Campaign not found!');
+            return interaction.reply({ content: '❌ Invalid campaign!', ephemeral: true });
+        }
         
         const chapter = campaign.chapters.find(c => c.num === chapterNum);
         if (!chapter) return interaction.reply({ content: '❌ Invalid chapter!', ephemeral: true });
