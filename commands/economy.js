@@ -2046,8 +2046,10 @@ module.exports = {
             }
             
             if (!canPlayMiniGame(userId, 'duel')) {
-                const nextTime = nextAvailableMiniGame(userId);
-                await interaction.reply({ content: `⏳ Thy sword arm needs rest! Return <t:${Math.floor(nextTime / 1000)}:R>`, ephemeral: true });
+                const nextTime = nextAvailableMiniGame(userId, 'duel');
+                const hours = Math.floor(nextTime / (1000 * 60 * 60));
+                const minutes = Math.floor((nextTime % (1000 * 60 * 60)) / (1000 * 60));
+                await interaction.reply({ content: `⏳ Thy sword arm needs rest! Return in ${hours}h ${minutes}m`, ephemeral: true });
                 return;
             }
             
@@ -2068,24 +2070,194 @@ module.exports = {
             }
             
             const userBal = await db.getBalance(guildId, userId);
+            const oppBal = await db.getBalance(guildId, opponent.id);
+            
             if (userBal < stakes) {
-                await interaction.reply({ content: '💰 Thou dost not have enough coin!', ephemeral: true });
+                await interaction.reply({ content: `💰 Thou dost not have $${stakes}! Balance: $${userBal}`, ephemeral: true });
                 return;
             }
+            if (oppBal < stakes) {
+                await interaction.reply({ content: `💰 ${opponent.username} doth not have $${stakes} to match thy stakes!`, ephemeral: true });
+                return;
+            }
+            
+            // Create accept/decline buttons
+            const acceptRow = new MessageActionRow().addComponents(
+                new MessageButton().setCustomId('duel_accept').setLabel('⚔️ Accept Duel').setStyle('DANGER'),
+                new MessageButton().setCustomId('duel_decline').setLabel('🏳️ Decline').setStyle('SECONDARY')
+            );
             
             const { MessageEmbed } = require('discord.js');
             await interaction.reply({
                 content: `<@${opponent.id}>`,
-                embeds: [
-                    new MessageEmbed()
-                        .setColor('#e74c3c')
-                        .setTitle('⚔️ Duel Challenge!')
-                        .setDescription(`<@${userId}> challenges <@${opponent.id}> to honorable combat!\n\n💰 Stakes: **$${stakes}**\n\n<@${opponent.id}>, use \`/duel\` to accept challenges! (Coming soon)`)
-                ]
+                embeds: [new MessageEmbed()
+                    .setColor('#e74c3c')
+                    .setTitle('⚔️ Duel Challenge!')
+                    .setDescription(`**${interaction.user.username}** challenges **${opponent.username}** to honorable combat!\n\n💰 Stakes: **$${stakes} each**\n🏆 Winner takes: **$${stakes * 2}**\n\n${opponent}, dost thou accept?`)
+                    .setFooter({ text: '30 seconds to respond' })],
+                components: [acceptRow]
             });
-            // Note: Full duel implementation would need accept/decline system
-            // For now, simplified to NPC duel
-            recordMiniGamePlay(userId, 'duel');
+            
+            const filter = i => i.user.id === opponent.id && (i.customId === 'duel_accept' || i.customId === 'duel_decline');
+            const collector = interaction.channel.createMessageComponentCollector({ filter, time: 30000, max: 1 });
+            
+            collector.on('collect', async i => {
+                if (i.customId === 'duel_decline') {
+                    await i.update({
+                        embeds: [new MessageEmbed()
+                            .setColor('#95a5a6')
+                            .setTitle('🏳️ Duel Declined')
+                            .setDescription(`${opponent.username} hath declined the challenge!`)],
+                        components: []
+                    });
+                    return;
+                }
+                
+                // DUEL ACCEPTED - Start combat!
+                await i.update({
+                    embeds: [new MessageEmbed()
+                        .setColor('#f39c12')
+                        .setTitle('⚔️ DUEL ACCEPTED!')
+                        .setDescription(`**${interaction.user.username}** vs **${opponent.username}**\n\nPrepare for combat!\n\n⏳ Round 1 of 3 starting...`)],
+                    components: []
+                });
+                
+                // Deduct stakes from both players
+                await db.addBalance(guildId, userId, -stakes);
+                await db.addBalance(guildId, opponent.id, -stakes);
+                
+                let challengerWins = 0;
+                let opponentWins = 0;
+                const rounds = [];
+                
+                // 3 rounds of combat
+                for (let round = 1; round <= 3; round++) {
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    
+                    const combatRow = new MessageActionRow().addComponents(
+                        new MessageButton().setCustomId('attack').setLabel('⚔️ Attack').setStyle('DANGER'),
+                        new MessageButton().setCustomId('defend').setLabel('🛡️ Defend').setStyle('PRIMARY'),
+                        new MessageButton().setCustomId('counter').setLabel('🗡️ Counter').setStyle('SUCCESS')
+                    );
+                    
+                    await interaction.followUp({
+                        content: `<@${userId}> <@${opponent.id}>`,
+                        embeds: [new MessageEmbed()
+                            .setColor('#e74c3c')
+                            .setTitle(`⚔️ Round ${round} of 3`)
+                            .setDescription(`**Choose thy move!**\n\n⚔️ **Attack** - Strong offense\n🛡️ **Defend** - Block attacks\n🗡️ **Counter** - Risky but powerful\n\n${challengerWins > opponentWins ? `${interaction.user.username} leads!` : opponentWins > challengerWins ? `${opponent.username} leads!` : 'Tie game!'}`)
+                            .setFooter({ text: '10 seconds to choose!' })],
+                        components: [combatRow]
+                    });
+                    
+                    const roundFilter = i2 => (i2.user.id === userId || i2.user.id === opponent.id) && ['attack', 'defend', 'counter'].includes(i2.customId);
+                    const roundCollector = interaction.channel.createMessageComponentCollector({ filter: roundFilter, time: 10000 });
+                    
+                    const choices = {};
+                    
+                    await new Promise((resolve) => {
+                        roundCollector.on('collect', async i2 => {
+                            if (choices[i2.user.id]) {
+                                await i2.reply({ content: 'Thou hast already chosen!', ephemeral: true });
+                                return;
+                            }
+                            
+                            choices[i2.user.id] = i2.customId;
+                            await i2.reply({ content: `⚔️ Move selected!`, ephemeral: true });
+                            
+                            if (choices[userId] && choices[opponent.id]) {
+                                roundCollector.stop();
+                                resolve();
+                            }
+                        });
+                        
+                        roundCollector.on('end', () => resolve());
+                    });
+                    
+                    // Default to random if no choice
+                    if (!choices[userId]) choices[userId] = ['attack', 'defend', 'counter'][Math.floor(Math.random() * 3)];
+                    if (!choices[opponent.id]) choices[opponent.id] = ['attack', 'defend', 'counter'][Math.floor(Math.random() * 3)];
+                    
+                    // Determine winner: attack beats counter, counter beats defend, defend beats attack
+                    const challengerMove = choices[userId];
+                    const opponentMove = choices[opponent.id];
+                    
+                    let roundWinner = null;
+                    if (challengerMove === opponentMove) {
+                        roundWinner = 'tie';
+                    } else if (
+                        (challengerMove === 'attack' && opponentMove === 'counter') ||
+                        (challengerMove === 'counter' && opponentMove === 'defend') ||
+                        (challengerMove === 'defend' && opponentMove === 'attack')
+                    ) {
+                        roundWinner = 'challenger';
+                        challengerWins++;
+                    } else {
+                        roundWinner = 'opponent';
+                        opponentWins++;
+                    }
+                    
+                    rounds.push({ round, challengerMove, opponentMove, winner: roundWinner });
+                    
+                    const moveEmoji = { attack: '⚔️', defend: '🛡️', counter: '🗡️' };
+                    await interaction.followUp({
+                        embeds: [new MessageEmbed()
+                            .setColor(roundWinner === 'tie' ? '#95a5a6' : '#f39c12')
+                            .setTitle(`Round ${round} Result`)
+                            .setDescription(`**${interaction.user.username}**: ${moveEmoji[challengerMove]} ${challengerMove}\n**${opponent.username}**: ${moveEmoji[opponentMove]} ${opponentMove}\n\n${roundWinner === 'tie' ? '⚔️ **TIE!**' : roundWinner === 'challenger' ? `⚔️ **${interaction.user.username} wins the round!**` : `⚔️ **${opponent.username} wins the round!**`}\n\nScore: ${challengerWins} - ${opponentWins}`)],
+                        components: []
+                    });
+                }
+                
+                // Determine final winner
+                const winner = challengerWins > opponentWins ? userId : opponent.id;
+                const loser = winner === userId ? opponent.id : userId;
+                const winnerUser = winner === userId ? interaction.user : opponent;
+                
+                // Award winnings
+                await db.addBalance(guildId, winner, stakes * 2);
+                recordMiniGamePlay(userId, 'duel');
+                
+                // Record duel in history
+                await db.query(`
+                    INSERT INTO duel_history (guild_id, challenger_id, opponent_id, stakes, winner_id, rounds_data)
+                    VALUES ($1, $2, $3, $4, $5, $6)
+                `, [guildId, userId, opponent.id, stakes, winner, JSON.stringify(rounds)]);
+                
+                // Check duel achievement
+                const duelWins = await db.query(
+                    'SELECT COUNT(*) as wins FROM duel_history WHERE guild_id = $1 AND winner_id = $2',
+                    [guildId, winner]
+                );
+                
+                let achievementText = '';
+                if (duelWins.rows[0].wins >= 5 && !(await db.hasAchievement(guildId, winner, 'duel_win_5'))) {
+                    await db.unlockAchievement(guildId, winner, 'duel_win_5');
+                    await db.addBalance(guildId, winner, ACHIEVEMENTS.duel_win_5.reward);
+                    achievementText = `\n\n🏆 **ACHIEVEMENT UNLOCKED!**\n${ACHIEVEMENTS.duel_win_5.emoji} **${ACHIEVEMENTS.duel_win_5.name}** - $${ACHIEVEMENTS.duel_win_5.reward}`;
+                }
+                
+                await interaction.followUp({
+                    embeds: [new MessageEmbed()
+                        .setColor('#00ff00')
+                        .setTitle('⚔️ DUEL COMPLETE!')
+                        .setDescription(`**🏆 WINNER: ${winnerUser.username}**\n\nFinal Score: ${challengerWins} - ${opponentWins}\n\n💰 ${winnerUser.username} wins **$${stakes * 2}**!${achievementText}`)
+                        .setFooter({ text: 'Honor and glory to the victor!' })],
+                    components: []
+                });
+            });
+            
+            collector.on('end', collected => {
+                if (collected.size === 0) {
+                    interaction.editReply({
+                        embeds: [new MessageEmbed()
+                            .setColor('#95a5a6')
+                            .setTitle('⏰ Challenge Expired')
+                            .setDescription(`${opponent.username} did not respond in time.`)],
+                        components: []
+                    });
+                }
+            });
             
         } else if (commandName === 'joust') {
             const stats = await getUserStats(guildId, userId);
@@ -2430,9 +2602,9 @@ module.exports = {
                 if (i.user.id !== userId) return i.reply({ content: 'This be not thy mine!', ephemeral: true });
                 
                 const choices = {
-                    gold: { ore: 'Gold', base: 300, chance: 0.50, emoji: '💛' },
-                    silver: { ore: 'Silver', base: 150, chance: 0.70, emoji: '⚪' },
-                    gems: { ore: 'Gems', base: 400, chance: 0.35, emoji: '💎' }
+                    gold: { ore: 'Gold', base: 300, chance: 0.50, emoji: '💛', item: 'gold_ore' },
+                    silver: { ore: 'Silver', base: 150, chance: 0.70, emoji: '⚪', item: 'silver_ore' },
+                    gems: { ore: 'Gems', base: 400, chance: 0.35, emoji: '💎', item: 'gem' }
                 };
                 
                 const choice = choices[i.customId];
@@ -2443,11 +2615,15 @@ module.exports = {
                     if (success) {
                         const reward = Math.floor(choice.base * (1 + rank.bonus));
                         await db.addBalance(guildId, userId, reward);
-                        await updateUserStats(guildId, userId, reward, true);
+                        await completeGame(guildId, userId, reward, true);
+                        
+                        // Add crafting material to inventory
+                        await db.addInventoryItem(guildId, userId, choice.item, 1);
+                        
                         recordMiniGamePlay(userId, 'mining');
-                        await i.editReply(`⛏️ **Strike!** Thou hast mined ${choice.emoji} **${choice.ore}**! Earned **$${reward}**! ${rank.emoji}`);
+                        await i.editReply(`⛏️ **Strike!** Thou hast mined ${choice.emoji} **${choice.ore}**!\n\n💰 Earned **$${reward}**!\n🎒 +1 ${choice.emoji} ${choice.ore} added to inventory\n\n💡 Use materials in \`/blacksmith\` for bonus rewards! ${rank.emoji}`);
                     } else {
-                        await updateUserStats(guildId, userId, 0, false);
+                        await completeGame(guildId, userId, 0, false);
                         recordMiniGamePlay(userId, 'mining');
                         await i.editReply(`💥 **Cave-in!** Thou found nothing but rocks and dust!`);
                     }
@@ -2543,17 +2719,36 @@ module.exports = {
                 return interaction.reply({ content: `⏰ Thou must rest! Try again in ${hours}h ${minutes}m.`, ephemeral: true });
             }
 
+            // Check for crafting materials
+            const inventory = await db.getInventory(guildId, userId);
+            const hasGoldOre = inventory.find(item => item.item_id === 'gold_ore' && item.quantity > 0);
+            const hasSilverOre = inventory.find(item => item.item_id === 'silver_ore' && item.quantity > 0);
+            const hasGem = inventory.find(item => item.item_id === 'gem' && item.quantity > 0);
+
             const row = new MessageActionRow().addComponents(
                 new MessageButton().setCustomId('crude').setLabel('🔨 Crude Quality').setStyle('SECONDARY'),
                 new MessageButton().setCustomId('fine').setLabel('⚒️ Fine Quality').setStyle('PRIMARY'),
                 new MessageButton().setCustomId('masterwork').setLabel('✨ Masterwork').setStyle('SUCCESS')
             );
+            
+            // Add enhanced crafting button if materials available
+            if (hasGoldOre || hasSilverOre || hasGem) {
+                row.addComponents(new MessageButton().setCustomId('enhanced').setLabel('💎 Enhanced Craft (Uses Materials)').setStyle('DANGER'));
+            }
+
+            let inventoryText = '';
+            if (hasGoldOre || hasSilverOre || hasGem) {
+                inventoryText = '\n\n**🎒 Materials Available:**';
+                if (hasGoldOre) inventoryText += `\n💛 Gold Ore x${hasGoldOre.quantity}`;
+                if (hasSilverOre) inventoryText += `\n⚪ Silver Ore x${hasSilverOre.quantity}`;
+                if (hasGem) inventoryText += `\n💎 Gems x${hasGem.quantity}`;
+            }
 
             await interaction.reply({
                 embeds: [new MessageEmbed()
                     .setColor('#ff4500')
                     .setTitle('🔨 Blacksmith Forge')
-                    .setDescription('**Forge weapons and armor at thy anvil!**\n\n🔨 **Crude** - Easy to craft, lower value\n⚒️ **Fine** - Skilled work required\n✨ **Masterwork** - Legendary craftsmanship')
+                    .setDescription(`**Forge weapons and armor at thy anvil!**\n\n🔨 **Crude** - Easy to craft, lower value\n⚒️ **Fine** - Skilled work required\n✨ **Masterwork** - Legendary craftsmanship\n💎 **Enhanced** - Use materials for +200% rewards!${inventoryText}`)
                     .setFooter({ text: `${rank.emoji} ${rank.name} | +${(rank.bonus * 100).toFixed(0)}% bonus` })],
                 components: [row]
             });
@@ -2566,22 +2761,72 @@ module.exports = {
                 const choices = {
                     crude: { quality: 'Crude', base: 150, chance: 0.85, emoji: '🔨' },
                     fine: { quality: 'Fine', base: 250, chance: 0.60, emoji: '⚒️' },
-                    masterwork: { quality: 'Masterwork', base: 450, chance: 0.30, emoji: '✨' }
+                    masterwork: { quality: 'Masterwork', base: 450, chance: 0.30, emoji: '✨' },
+                    enhanced: { quality: 'Enhanced', base: 600, chance: 0.95, emoji: '💎', usesMaterials: true }
                 };
                 
                 const choice = choices[i.customId];
+                
+                // Check if user selected enhanced but has no materials
+                if (choice.usesMaterials) {
+                    const inv = await db.getInventory(guildId, userId);
+                    const goldOre = inv.find(item => item.item_id === 'gold_ore');
+                    const silverOre = inv.find(item => item.item_id === 'silver_ore');
+                    const gem = inv.find(item => item.item_id === 'gem');
+                    
+                    if (!goldOre && !silverOre && !gem) {
+                        return i.reply({ content: '🎒 Thou hast no materials! Mine for resources first.', ephemeral: true });
+                    }
+                }
+                
                 await i.update({ content: `🔥 Forging ${choice.emoji} ${choice.quality} quality...`, components: [], embeds: [] });
                 
                 setTimeout(async () => {
                     const success = Math.random() < choice.chance;
+                    let usedMaterials = '';
+                    
                     if (success) {
-                        const reward = Math.floor(choice.base * (1 + rank.bonus));
+                        let reward = Math.floor(choice.base * (1 + rank.bonus));
+                        
+                        // Consume materials and triple reward for enhanced crafting
+                        if (choice.usesMaterials) {
+                            const inv = await db.getInventory(guildId, userId);
+                            let materialsUsed = [];
+                            
+                            // Try to use gold ore first
+                            const goldOre = inv.find(item => item.item_id === 'gold_ore' && item.quantity > 0);
+                            if (goldOre) {
+                                await db.removeInventoryItem(guildId, userId, 'gold_ore', 1);
+                                materialsUsed.push('💛 Gold Ore');
+                                reward *= 3;
+                            } else {
+                                // Use silver ore
+                                const silverOre = inv.find(item => item.item_id === 'silver_ore' && item.quantity > 0);
+                                if (silverOre) {
+                                    await db.removeInventoryItem(guildId, userId, 'silver_ore', 1);
+                                    materialsUsed.push('⚪ Silver Ore');
+                                    reward *= 2.5;
+                                } else {
+                                    // Use gem
+                                    const gem = inv.find(item => item.item_id === 'gem' && item.quantity > 0);
+                                    if (gem) {
+                                        await db.removeInventoryItem(guildId, userId, 'gem', 1);
+                                        materialsUsed.push('💎 Gem');
+                                        reward *= 4;
+                                    }
+                                }
+                            }
+                            
+                            reward = Math.floor(reward);
+                            usedMaterials = `\n🔨 Materials Used: ${materialsUsed.join(', ')}`;
+                        }
+                        
                         await db.addBalance(guildId, userId, reward);
-                        await updateUserStats(guildId, userId, reward, true);
+                        await completeGame(guildId, userId, reward, true);
                         recordMiniGamePlay(userId, 'blacksmith');
-                        await i.editReply(`🔨 **Forged!** Thou hast crafted ${choice.emoji} **${choice.quality}** quality! Earned **$${reward}**! ${rank.emoji}`);
+                        await i.editReply(`🔨 **Forged!** Thou hast crafted ${choice.emoji} **${choice.quality}** quality!\n\n💰 Earned **$${reward}**!${usedMaterials} ${rank.emoji}`);
                     } else {
-                        await updateUserStats(guildId, userId, 0, false);
+                        await completeGame(guildId, userId, 0, false);
                         recordMiniGamePlay(userId, 'blacksmith');
                         await i.editReply(`💥 **Ruined!** The metal cracked and is worthless!`);
                     }
