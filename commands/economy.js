@@ -209,6 +209,109 @@ const RANKS = [
     { name: 'King', emoji: '🏰', threshold: 150000, bonus: 0.25, stipend: 500, games: ['beasttaming', 'siegedefense'] }
 ];
 
+// ============ ACHIEVEMENTS SYSTEM ============
+const ACHIEVEMENTS = {
+    first_win: { name: 'First Victory', emoji: '🎯', description: 'Win your first mini game', reward: 100 },
+    games_10: { name: 'Adventurer', emoji: '🗺️', description: 'Play 10 mini games', reward: 250 },
+    games_50: { name: 'Veteran', emoji: '⚔️', description: 'Play 50 mini games', reward: 500 },
+    games_100: { name: 'Legend', emoji: '👑', description: 'Play 100 mini games', reward: 1000 },
+    streak_7: { name: 'Dedicated', emoji: '🔥', description: '7 day login streak', reward: 500 },
+    streak_30: { name: 'Devoted', emoji: '💎', description: '30 day login streak', reward: 2000 },
+    reach_knight: { name: 'Knighted', emoji: '⚔️', description: 'Reach Knight rank', reward: 300 },
+    reach_baron: { name: 'Noble Blood', emoji: '🛡️', description: 'Reach Baron rank', reward: 600 },
+    reach_duke: { name: 'Royal Decree', emoji: '👑', description: 'Reach Duke rank', reward: 1500 },
+    reach_king: { name: 'Long Live the King', emoji: '🏰', description: 'Reach King rank', reward: 3000 },
+    rich_10k: { name: 'Wealthy', emoji: '💰', description: 'Have $10,000 in wallet', reward: 500 },
+    rich_50k: { name: 'Tycoon', emoji: '💎', description: 'Have $50,000 in wallet', reward: 2000 },
+    duel_win_5: { name: 'Duelist', emoji: '🗡️', description: 'Win 5 duels', reward: 750 },
+    property_owner: { name: 'Landlord', emoji: '🏛️', description: 'Own a property', reward: 1000 }
+};
+
+// Daily login reward tiers (streak day → reward)
+const DAILY_REWARDS = [
+    { day: 1, reward: 50 },
+    { day: 2, reward: 75 },
+    { day: 3, reward: 100 },
+    { day: 4, reward: 125 },
+    { day: 5, reward: 150 },
+    { day: 6, reward: 200 },
+    { day: 7, reward: 500 },
+    { day: 14, reward: 1000 },
+    { day: 30, reward: 3000 }
+];
+
+function getDailyReward(streak) {
+    // Find the highest reward tier for this streak
+    let reward = 50; // Base reward
+    for (const tier of DAILY_REWARDS) {
+        if (streak >= tier.day) reward = tier.reward;
+    }
+    return reward;
+}
+
+async function checkAndAwardAchievements(guildId, userId, stats, balance) {
+    const newAchievements = [];
+    
+    // Check game-based achievements
+    if (stats.mini_games_won >= 1 && !(await db.hasAchievement(guildId, userId, 'first_win'))) {
+        await db.unlockAchievement(guildId, userId, 'first_win');
+        newAchievements.push('first_win');
+    }
+    if (stats.mini_games_played >= 10 && !(await db.hasAchievement(guildId, userId, 'games_10'))) {
+        await db.unlockAchievement(guildId, userId, 'games_10');
+        newAchievements.push('games_10');
+    }
+    if (stats.mini_games_played >= 50 && !(await db.hasAchievement(guildId, userId, 'games_50'))) {
+        await db.unlockAchievement(guildId, userId, 'games_50');
+        newAchievements.push('games_50');
+    }
+    if (stats.mini_games_played >= 100 && !(await db.hasAchievement(guildId, userId, 'games_100'))) {
+        await db.unlockAchievement(guildId, userId, 'games_100');
+        newAchievements.push('games_100');
+    }
+    
+    // Check rank achievements
+    const rank = getRank(stats.total_earned);
+    if (rank.name === 'Knight' && !(await db.hasAchievement(guildId, userId, 'reach_knight'))) {
+        await db.unlockAchievement(guildId, userId, 'reach_knight');
+        newAchievements.push('reach_knight');
+    }
+    if (rank.name === 'Baron' && !(await db.hasAchievement(guildId, userId, 'reach_baron'))) {
+        await db.unlockAchievement(guildId, userId, 'reach_baron');
+        newAchievements.push('reach_baron');
+    }
+    if (rank.name === 'Duke' && !(await db.hasAchievement(guildId, userId, 'reach_duke'))) {
+        await db.unlockAchievement(guildId, userId, 'reach_duke');
+        newAchievements.push('reach_duke');
+    }
+    if (rank.name === 'King' && !(await db.hasAchievement(guildId, userId, 'reach_king'))) {
+        await db.unlockAchievement(guildId, userId, 'reach_king');
+        newAchievements.push('reach_king');
+    }
+    
+    // Check wealth achievements
+    if (balance >= 10000 && !(await db.hasAchievement(guildId, userId, 'rich_10k'))) {
+        await db.unlockAchievement(guildId, userId, 'rich_10k');
+        newAchievements.push('rich_10k');
+    }
+    if (balance >= 50000 && !(await db.hasAchievement(guildId, userId, 'rich_50k'))) {
+        await db.unlockAchievement(guildId, userId, 'rich_50k');
+        newAchievements.push('rich_50k');
+    }
+    
+    // Award achievement rewards
+    let totalReward = 0;
+    for (const achievementId of newAchievements) {
+        totalReward += ACHIEVEMENTS[achievementId].reward;
+    }
+    
+    if (totalReward > 0) {
+        await db.addBalance(guildId, userId, totalReward);
+    }
+    
+    return { newAchievements, totalReward };
+}
+
 async function getUserStats(guildId, userId) {
     try {
         const result = await db.query(
@@ -255,9 +358,28 @@ async function updateUserStats(guildId, userId, updates) {
             `UPDATE user_stats SET ${sets.join(', ')} WHERE guild_id = $${paramIndex} AND user_id = $${paramIndex + 1}`,
             values
         );
+        
+        // Track weekly earnings if total_earned was updated
+        if (updates.total_earned) {
+            await db.addWeeklyEarnings(guildId, userId, updates.total_earned);
+        }
     } catch (err) {
         console.error('[RANK] Error updating user stats:', err);
     }
+}
+
+// Helper to update stats after game completion and check achievements
+async function completeGame(guildId, userId, earned, won) {
+    await updateUserStats(guildId, userId, {
+        total_earned: earned,
+        mini_games_played: 1,
+        mini_games_won: won ? 1 : 0
+    });
+    
+    // Check achievements
+    const stats = await getUserStats(guildId, userId);
+    const balance = await db.getBalance(guildId, userId);
+    return await checkAndAwardAchievements(guildId, userId, stats, balance);
 }
 
 function getRank(totalEarned) {
@@ -471,6 +593,45 @@ module.exports = {
         new SlashCommandBuilder()
             .setName('siegedefense')
             .setDescription('🏰 Defend castle walls from attackers - Command thy defenders!'),
+        new SlashCommandBuilder()
+            .setName('daily')
+            .setDescription('🎁 Claim thy daily login reward - Streaks earn more!'),
+        new SlashCommandBuilder()
+            .setName('achievements')
+            .setDescription('🏆 View thy unlocked achievements and badges'),
+        new SlashCommandBuilder()
+            .setName('gift')
+            .setDescription('💝 Gift coin to another player')
+            .addUserOption(option =>
+                option.setName('user')
+                    .setDescription('Player to gift coin to')
+                    .setRequired(true))
+            .addIntegerOption(option =>
+                option.setName('amount')
+                    .setDescription('Amount to gift (min $50)')
+                    .setRequired(true)),
+        new SlashCommandBuilder()
+            .setName('properties')
+            .setDescription('🏛️ View and manage thy properties'),
+        new SlashCommandBuilder()
+            .setName('buyproperty')
+            .setDescription('🏰 Purchase property for passive income')
+            .addStringOption(option =>
+                option.setName('type')
+                    .setDescription('Type of property')
+                    .setRequired(true)
+                    .addChoices(
+                        { name: '🍺 Tavern ($10,000 - $50/day)', value: 'tavern' },
+                        { name: '⚒️ Blacksmith Shop ($20,000 - $125/day)', value: 'blacksmith_shop' },
+                        { name: '🏛️ Trading Post ($35,000 - $250/day)', value: 'trading_post' },
+                        { name: '🏰 Castle ($100,000 - $1,000/day)', value: 'castle' }
+                    )),
+        new SlashCommandBuilder()
+            .setName('inventory')
+            .setDescription('🎒 View thy crafting materials and items'),
+        new SlashCommandBuilder()
+            .setName('weeklyleaderboard')
+            .setDescription('📊 View this week\'s top earners'),
     ],
     async execute(interaction) {
         console.log(`[ECONOMY] execute called for command: ${interaction.commandName}, channel: ${interaction.channelId}`);
@@ -2969,6 +3130,303 @@ module.exports = {
                 if (collected.size === 0) {
                     interaction.editReply({ content: '⏰ The siege hath concluded.', components: [], embeds: [] });
                 }
+            });
+            
+        // ========== DAILY LOGIN REWARD ==========
+        } else if (commandName === 'daily') {
+            const today = new Date().toISOString().split('T')[0];
+            const loginData = await db.getDailyLogin(guildId, userId);
+            
+            let streak = 1;
+            let canClaim = true;
+            
+            if (loginData) {
+                const lastClaim = new Date(loginData.last_claim_date).toISOString().split('T')[0];
+                
+                if (lastClaim === today) {
+                    // Already claimed today
+                    const reward = getDailyReward(loginData.current_streak);
+                    const tomorrow = new Date(loginData.last_claim_date);
+                    tomorrow.setDate(tomorrow.getDate() + 1);
+                    return interaction.reply({
+                        embeds: [new MessageEmbed()
+                            .setColor('#ff6b6b')
+                            .setTitle('⏰ Already Claimed Today!')
+                            .setDescription(`Thou hast already claimed thy daily reward!\n\n🔥 Current Streak: **${loginData.current_streak} days**\n💰 Today's Reward: **$${reward}**\n\nReturn tomorrow for day **${loginData.current_streak + 1}** reward!`)
+                            .setFooter({ text: `Longest streak: ${loginData.longest_streak} days` })],
+                        ephemeral: true
+                    });
+                }
+                
+                const yesterday = new Date();
+                yesterday.setDate(yesterday.getDate() - 1);
+                const yesterdayStr = yesterday.toISOString().split('T')[0];
+                
+                if (lastClaim === yesterdayStr) {
+                    // Continuing streak
+                    streak = loginData.current_streak + 1;
+                } else {
+                    // Broke streak
+                    streak = 1;
+                }
+            }
+            
+            // Calculate rewards
+            const baseReward = getDailyReward(streak);
+            const connectedToday = loginData?.last_connection_date === today;
+            const bonusReward = connectedToday ? Math.floor(baseReward * 0.5) : 0;
+            const totalReward = baseReward + bonusReward;
+            
+            // Award rewards
+            await db.addBalance(guildId, userId, totalReward);
+            await db.updateDailyLogin(guildId, userId, streak);
+            
+            // Check for streak achievements
+            const stats = await getUserStats(guildId, userId);
+            if (streak === 7 && !(await db.hasAchievement(guildId, userId, 'streak_7'))) {
+                await db.unlockAchievement(guildId, userId, 'streak_7');
+                await db.addBalance(guildId, userId, ACHIEVEMENTS.streak_7.reward);
+                await interaction.reply({
+                    embeds: [new MessageEmbed()
+                        .setColor('#ffd700')
+                        .setTitle('🎁 Daily Reward Claimed!')
+                        .setDescription(`**Day ${streak} Reward!**\n\n💰 Base Reward: **$${baseReward}**${bonusReward > 0 ? `\n🎮 DayZ Bonus: **$${bonusReward}**` : ''}\n\n🏆 **ACHIEVEMENT UNLOCKED!**\n${ACHIEVEMENTS.streak_7.emoji} **${ACHIEVEMENTS.streak_7.name}** - $${ACHIEVEMENTS.streak_7.reward}\n\n💎 Total Earned: **$${totalReward + ACHIEVEMENTS.streak_7.reward}**`)
+                        .setFooter({ text: `Come back tomorrow for day ${streak + 1}!` })]
+                });
+                return;
+            }
+            if (streak === 30 && !(await db.hasAchievement(guildId, userId, 'streak_30'))) {
+                await db.unlockAchievement(guildId, userId, 'streak_30');
+                await db.addBalance(guildId, userId, ACHIEVEMENTS.streak_30.reward);
+                await interaction.reply({
+                    embeds: [new MessageEmbed()
+                        .setColor('#ffd700')
+                        .setTitle('🎁 Daily Reward Claimed!')
+                        .setDescription(`**Day ${streak} Reward!**\n\n💰 Base Reward: **$${baseReward}**${bonusReward > 0 ? `\n🎮 DayZ Bonus: **$${bonusReward}**` : ''}\n\n🏆 **ACHIEVEMENT UNLOCKED!**\n${ACHIEVEMENTS.streak_30.emoji} **${ACHIEVEMENTS.streak_30.name}** - $${ACHIEVEMENTS.streak_30.reward}\n\n💎 Total Earned: **$${totalReward + ACHIEVEMENTS.streak_30.reward}**`)
+                        .setFooter({ text: `Incredible dedication! Keep the streak alive!` })]
+                });
+                return;
+            }
+            
+            await interaction.reply({
+                embeds: [new MessageEmbed()
+                    .setColor('#00ff00')
+                    .setTitle('🎁 Daily Reward Claimed!')
+                    .setDescription(`**Day ${streak} Reward!**\n\n💰 Base Reward: **$${baseReward}**${bonusReward > 0 ? `\n🎮 DayZ Bonus: **$${bonusReward}** (Connected today!)` : `\n💡 Tip: Connect to DayZ for +50% bonus!`}\n\n💎 Total Earned: **$${totalReward}**\n🔥 Current Streak: **${streak} day${streak > 1 ? 's' : ''}**`)
+                    .setFooter({ text: `Come back tomorrow for day ${streak + 1}!` })]
+            });
+            
+        // ========== ACHIEVEMENTS ==========
+        } else if (commandName === 'achievements') {
+            const userAchievements = await db.getUserAchievements(guildId, userId);
+            const unlockedIds = userAchievements.map(a => a.achievement_id);
+            
+            let description = '**🏆 Unlocked Achievements:**\n\n';
+            let totalRewards = 0;
+            
+            for (const [id, achievement] of Object.entries(ACHIEVEMENTS)) {
+                const unlocked = unlockedIds.includes(id);
+                if (unlocked) {
+                    description += `✅ ${achievement.emoji} **${achievement.name}**\n*${achievement.description}* - $${achievement.reward}\n\n`;
+                    totalRewards += achievement.reward;
+                } else {
+                    description += `🔒 ??? **${achievement.name}**\n*${achievement.description}* - $${achievement.reward}\n\n`;
+                }
+            }
+            
+            await interaction.reply({
+                embeds: [new MessageEmbed()
+                    .setColor('#ffd700')
+                    .setTitle('🏆 Thy Achievements')
+                    .setDescription(description)
+                    .setFooter({ text: `${unlockedIds.length}/${Object.keys(ACHIEVEMENTS).length} unlocked | $${totalRewards} earned` })],
+                ephemeral: true
+            });
+            
+        // ========== GIFT ==========
+        } else if (commandName === 'gift') {
+            const targetUser = interaction.options.getUser('user');
+            const amount = interaction.options.getInteger('amount');
+            
+            if (targetUser.id === userId) {
+                return interaction.reply({ content: '❌ Thou cannot gift coin to thyself!', ephemeral: true });
+            }
+            if (targetUser.bot) {
+                return interaction.reply({ content: '❌ Bots cannot receive gifts!', ephemeral: true });
+            }
+            if (amount < 50) {
+                return interaction.reply({ content: '❌ Minimum gift is $50!', ephemeral: true });
+            }
+            
+            const balance = await db.getBalance(guildId, userId);
+            if (balance < amount) {
+                return interaction.reply({ content: `❌ Thou dost not have $${amount}! Balance: $${balance}`, ephemeral: true });
+            }
+            
+            await db.addBalance(guildId, userId, -amount);
+            await db.addBalance(guildId, targetUser.id, amount);
+            
+            await interaction.reply({
+                embeds: [new MessageEmbed()
+                    .setColor('#ff69b4')
+                    .setTitle('💝 Gift Sent!')
+                    .setDescription(`Thou hast gifted **$${amount}** to ${targetUser}!\n\nA noble gesture of generosity! 🎁`)
+                    .setFooter({ text: `Thy remaining balance: $${balance - amount}` })]
+            });
+            
+        // ========== PROPERTIES ==========
+        } else if (commandName === 'properties') {
+            const properties = await db.getUserProperties(guildId, userId);
+            
+            if (properties.length === 0) {
+                return interaction.reply({
+                    embeds: [new MessageEmbed()
+                        .setColor('#8b4513')
+                        .setTitle('🏛️ Thy Properties')
+                        .setDescription('Thou dost not own any properties yet!\n\nUse `/buyproperty` to purchase property for passive daily income!')
+                        .addField('Available Properties:', '🍺 **Tavern** - $10,000 ($50/day)\n⚒️ **Blacksmith Shop** - $20,000 ($125/day)\n🏛️ **Trading Post** - $35,000 ($250/day)\n🏰 **Castle** - $100,000 ($1,000/day)', false)],
+                    ephemeral: true
+                });
+            }
+            
+            const today = new Date().toISOString().split('T')[0];
+            let totalDailyIncome = 0;
+            let uncollected = 0;
+            
+            let description = '';
+            for (const property of properties) {
+                totalDailyIncome += property.daily_income;
+                const canCollect = !property.last_collection_date || property.last_collection_date < today;
+                if (canCollect) uncollected += property.daily_income;
+                
+                description += `🏛️ **${property.property_name}**\n💰 Income: $${property.daily_income}/day\n${canCollect ? '✅ Ready to collect!' : '⏰ Collected today'}\n\n`;
+            }
+            
+            // Auto-collect if available
+            if (uncollected > 0) {
+                const collected = await db.collectPropertyIncome(guildId, userId);
+                await db.addBalance(guildId, userId, collected);
+                description += `\n💎 **Auto-collected $${collected}!**`;
+            }
+            
+            await interaction.reply({
+                embeds: [new MessageEmbed()
+                    .setColor('#daa520')
+                    .setTitle('🏛️ Thy Properties')
+                    .setDescription(description)
+                    .setFooter({ text: `Total daily income: $${totalDailyIncome}` })],
+                ephemeral: true
+            });
+            
+        // ========== BUY PROPERTY ==========
+        } else if (commandName === 'buyproperty') {
+            const propertyType = interaction.options.getString('type');
+            
+            const PROPERTY_TYPES = {
+                tavern: { name: '🍺 The Drunken Dragon Tavern', price: 10000, income: 50 },
+                blacksmith_shop: { name: '⚒️ Ironforge Blacksmith', price: 20000, income: 125 },
+                trading_post: { name: '🏛️ Silk Road Trading Post', price: 35000, income: 250 },
+                castle: { name: '🏰 Castle Stoneguard', price: 100000, income: 1000 }
+            };
+            
+            const property = PROPERTY_TYPES[propertyType];
+            const balance = await db.getBalance(guildId, userId);
+            
+            if (balance < property.price) {
+                return interaction.reply({ content: `❌ Thou needest $${property.price}! Balance: $${balance}`, ephemeral: true });
+            }
+            
+            // Check if already owns this type
+            const existing = await db.getUserProperties(guildId, userId);
+            if (existing.some(p => p.property_type === propertyType)) {
+                return interaction.reply({ content: `❌ Thou already ownest a ${property.name}!`, ephemeral: true });
+            }
+            
+            await db.addBalance(guildId, userId, -property.price);
+            await db.purchaseProperty(guildId, userId, propertyType, property.name, property.price, property.income);
+            
+            // Check property achievement
+            const stats = await getUserStats(guildId, userId);
+            let achievementText = '';
+            if (!(await db.hasAchievement(guildId, userId, 'property_owner'))) {
+                await db.unlockAchievement(guildId, userId, 'property_owner');
+                await db.addBalance(guildId, userId, ACHIEVEMENTS.property_owner.reward);
+                achievementText = `\n\n🏆 **ACHIEVEMENT UNLOCKED!**\n${ACHIEVEMENTS.property_owner.emoji} **${ACHIEVEMENTS.property_owner.name}** - $${ACHIEVEMENTS.property_owner.reward}`;
+            }
+            
+            await interaction.reply({
+                embeds: [new MessageEmbed()
+                    .setColor('#00ff00')
+                    .setTitle('🏛️ Property Purchased!')
+                    .setDescription(`Congratulations! Thou art now the proud owner of:\n\n${property.name}\n\n💰 Purchase Price: $${property.price}\n📈 Daily Income: $${property.income}\n\nIncome is collected automatically when using \`/properties\`!${achievementText}`)
+                    .setFooter({ text: `Thy remaining balance: $${balance - property.price}` })]
+            });
+            
+        // ========== INVENTORY ==========
+        } else if (commandName === 'inventory') {
+            const inventory = await db.getInventory(guildId, userId);
+            
+            if (inventory.length === 0) {
+                return interaction.reply({
+                    embeds: [new MessageEmbed()
+                        .setColor('#8b4513')
+                        .setTitle('🎒 Thy Inventory')
+                        .setDescription('Thy inventory is empty!\n\nGather materials from `/mining` and use them in `/blacksmith` for enhanced rewards!')],
+                    ephemeral: true
+                });
+            }
+            
+            const ITEM_NAMES = {
+                gold_ore: '💛 Gold Ore',
+                silver_ore: '⚪ Silver Ore',
+                gem: '💎 Gem'
+            };
+            
+            let description = '**Crafting Materials:**\n\n';
+            for (const item of inventory) {
+                const name = ITEM_NAMES[item.item_id] || item.item_id;
+                description += `${name} x${item.quantity}\n`;
+            }
+            
+            description += '\n💡 Use these materials in `/blacksmith` to craft enhanced items for bonus rewards!';
+            
+            await interaction.reply({
+                embeds: [new MessageEmbed()
+                    .setColor('#daa520')
+                    .setTitle('🎒 Thy Inventory')
+                    .setDescription(description)],
+                ephemeral: true
+            });
+            
+        // ========== WEEKLY LEADERBOARD ==========
+        } else if (commandName === 'weeklyleaderboard') {
+            const leaderboard = await db.getWeeklyLeaderboard(guildId, 10);
+            
+            if (leaderboard.length === 0) {
+                return interaction.reply({
+                    embeds: [new MessageEmbed()
+                        .setColor('#ffd700')
+                        .setTitle('📊 Weekly Leaderboard')
+                        .setDescription('No earnings this week yet! Be the first!')],
+                    ephemeral: true
+                });
+            }
+            
+            let description = '';
+            const medals = ['🥇', '🥈', '🥉'];
+            
+            for (let i = 0; i < leaderboard.length; i++) {
+                const medal = i < 3 ? medals[i] : `${i + 1}.`;
+                const user = await interaction.client.users.fetch(leaderboard[i].user_id);
+                description += `${medal} **${user.username}** - $${leaderboard[i].total_earned}\n`;
+            }
+            
+            await interaction.reply({
+                embeds: [new MessageEmbed()
+                    .setColor('#ffd700')
+                    .setTitle('📊 Weekly Leaderboard')
+                    .setDescription(`**Top Earners This Week:**\n\n${description}\n\n🏆 Top 3 win bonus rewards on Monday!`)
+                    .setFooter({ text: 'Leaderboard resets every Monday' })]
             });
         }
     }

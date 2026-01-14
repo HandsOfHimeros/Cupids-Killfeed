@@ -253,6 +253,155 @@ async function endPlayerSession(guildId, playerName) {
     return result.rows[0]?.total_distance || 0;
 }
 
+// ============ DAILY LOGIN REWARDS ============
+async function getDailyLogin(guildId, userId) {
+    const result = await pool.query(
+        'SELECT * FROM daily_logins WHERE guild_id = $1 AND user_id = $2',
+        [guildId, userId]
+    );
+    return result.rows[0] || null;
+}
+
+async function updateDailyLogin(guildId, userId, streak, lastConnectionDate = null) {
+    const today = new Date().toISOString().split('T')[0];
+    await pool.query(`
+        INSERT INTO daily_logins (guild_id, user_id, current_streak, longest_streak, last_claim_date, last_connection_date, total_claims)
+        VALUES ($1, $2, $3, $3, $4, $5, 1)
+        ON CONFLICT (guild_id, user_id) DO UPDATE SET
+            current_streak = $3,
+            longest_streak = GREATEST(daily_logins.longest_streak, $3),
+            last_claim_date = $4,
+            last_connection_date = COALESCE($5, daily_logins.last_connection_date),
+            total_claims = daily_logins.total_claims + 1
+    `, [guildId, userId, streak, today, lastConnectionDate]);
+}
+
+async function recordConnection(guildId, userId) {
+    const today = new Date().toISOString().split('T')[0];
+    await pool.query(`
+        INSERT INTO daily_logins (guild_id, user_id, last_connection_date, current_streak, last_claim_date, total_claims)
+        VALUES ($1, $2, $3, 0, $3, 0)
+        ON CONFLICT (guild_id, user_id) DO UPDATE SET
+            last_connection_date = $3
+    `, [guildId, userId, today]);
+}
+
+// ============ ACHIEVEMENTS ============
+async function getUserAchievements(guildId, userId) {
+    const result = await pool.query(
+        'SELECT achievement_id, unlocked_at FROM user_achievements WHERE guild_id = $1 AND user_id = $2 ORDER BY unlocked_at DESC',
+        [guildId, userId]
+    );
+    return result.rows;
+}
+
+async function unlockAchievement(guildId, userId, achievementId) {
+    try {
+        await pool.query(`
+            INSERT INTO user_achievements (guild_id, user_id, achievement_id)
+            VALUES ($1, $2, $3)
+            ON CONFLICT DO NOTHING
+        `, [guildId, userId, achievementId]);
+        return true;
+    } catch (error) {
+        return false;
+    }
+}
+
+async function hasAchievement(guildId, userId, achievementId) {
+    const result = await pool.query(
+        'SELECT 1 FROM user_achievements WHERE guild_id = $1 AND user_id = $2 AND achievement_id = $3',
+        [guildId, userId, achievementId]
+    );
+    return result.rows.length > 0;
+}
+
+// ============ PROPERTIES ============
+async function getUserProperties(guildId, userId) {
+    const result = await pool.query(
+        'SELECT * FROM user_properties WHERE guild_id = $1 AND user_id = $2',
+        [guildId, userId]
+    );
+    return result.rows;
+}
+
+async function purchaseProperty(guildId, userId, propertyType, propertyName, purchasePrice, dailyIncome) {
+    await pool.query(`
+        INSERT INTO user_properties (guild_id, user_id, property_type, property_name, purchase_price, daily_income)
+        VALUES ($1, $2, $3, $4, $5, $6)
+    `, [guildId, userId, propertyType, propertyName, purchasePrice, dailyIncome]);
+}
+
+async function collectPropertyIncome(guildId, userId) {
+    const today = new Date().toISOString().split('T')[0];
+    const result = await pool.query(`
+        UPDATE user_properties
+        SET last_collection_date = $3
+        WHERE guild_id = $1 AND user_id = $2 
+        AND (last_collection_date IS NULL OR last_collection_date < $3)
+        RETURNING daily_income
+    `, [guildId, userId, today]);
+    
+    const totalIncome = result.rows.reduce((sum, row) => sum + row.daily_income, 0);
+    return totalIncome;
+}
+
+// ============ INVENTORY ============
+async function getInventory(guildId, userId) {
+    const result = await pool.query(
+        'SELECT item_id, quantity FROM user_inventory WHERE guild_id = $1 AND user_id = $2 AND quantity > 0',
+        [guildId, userId]
+    );
+    return result.rows;
+}
+
+async function addInventoryItem(guildId, userId, itemId, quantity) {
+    await pool.query(`
+        INSERT INTO user_inventory (guild_id, user_id, item_id, quantity)
+        VALUES ($1, $2, $3, $4)
+        ON CONFLICT (guild_id, user_id, item_id) DO UPDATE SET
+            quantity = user_inventory.quantity + $4,
+            updated_at = CURRENT_TIMESTAMP
+    `, [guildId, userId, itemId, quantity]);
+}
+
+async function removeInventoryItem(guildId, userId, itemId, quantity) {
+    await pool.query(`
+        UPDATE user_inventory
+        SET quantity = GREATEST(0, quantity - $4),
+            updated_at = CURRENT_TIMESTAMP
+        WHERE guild_id = $1 AND user_id = $2 AND item_id = $3
+    `, [guildId, userId, itemId, quantity]);
+}
+
+// ============ WEEKLY EARNINGS ============
+async function addWeeklyEarnings(guildId, userId, amount) {
+    const today = new Date();
+    const weekStart = new Date(today.setDate(today.getDate() - today.getDay())).toISOString().split('T')[0];
+    
+    await pool.query(`
+        INSERT INTO weekly_earnings (guild_id, user_id, week_start, total_earned)
+        VALUES ($1, $2, $3, $4)
+        ON CONFLICT (guild_id, user_id, week_start) DO UPDATE SET
+            total_earned = weekly_earnings.total_earned + $4
+    `, [guildId, userId, weekStart, amount]);
+}
+
+async function getWeeklyLeaderboard(guildId, limit = 10) {
+    const today = new Date();
+    const weekStart = new Date(today.setDate(today.getDate() - today.getDay())).toISOString().split('T')[0];
+    
+    const result = await pool.query(`
+        SELECT user_id, total_earned
+        FROM weekly_earnings
+        WHERE guild_id = $1 AND week_start = $2
+        ORDER BY total_earned DESC
+        LIMIT $3
+    `, [guildId, weekStart, limit]);
+    
+    return result.rows;
+}
+
 module.exports = {
     pool,
     query: (text, params) => pool.query(text, params),
@@ -278,5 +427,24 @@ module.exports = {
     setPlayerLocation,
     startPlayerSession,
     updatePlayerDistance,
-    endPlayerSession
+    endPlayerSession,
+    // Daily rewards
+    getDailyLogin,
+    updateDailyLogin,
+    recordConnection,
+    // Achievements
+    getUserAchievements,
+    unlockAchievement,
+    hasAchievement,
+    // Properties
+    getUserProperties,
+    purchaseProperty,
+    collectPropertyIncome,
+    // Inventory
+    getInventory,
+    addInventoryItem,
+    removeInventoryItem,
+    // Weekly leaderboards
+    addWeeklyEarnings,
+    getWeeklyLeaderboard
 };
