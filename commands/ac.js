@@ -161,101 +161,127 @@ module.exports = {
 
 async function handleWhitelistCommand(interaction) {
   const guildId = interaction.guildId;
-  if (guildId && guildId === GUILDID) {
-    const target = interaction.options.getString('gamertag');
-    const choice = interaction.options.getString('action');
+  
+  // Check if guild has a configuration in database
+  const guildConfig = await db.getGuildConfig(guildId);
+  if (!guildConfig) {
+    return interaction.reply({ content: 'This server is not configured. Please run `/admin killfeed setup` first.', ephemeral: true });
+  }
+  
+  const target = interaction.options.getString('gamertag');
+  const choice = interaction.options.getString('action');
 
-    if (choice === 'add') {
-      await addToList('./logs/whitelist.txt', target, 'whitelist', interaction);
-    } else if (choice === 'remove') {
-      await removeFromList('./logs/whitelist.txt', target, 'whitelist', interaction);
-    }
+  if (choice === 'add') {
+    await addToList('./logs/whitelist.txt', target, 'whitelist', interaction);
+  } else if (choice === 'remove') {
+    await removeFromList('./logs/whitelist.txt', target, 'whitelist', interaction);
   }
 }
 
 async function handleBanlistCommand(interaction) {
   const guildId = interaction.guildId;
-  if (guildId && guildId === GUILDID) {
-    const target = interaction.options.getString('gamertag');
-    const choice = interaction.options.getString('action');
+  
+  // Check if guild has a configuration in database
+  const guildConfig = await db.getGuildConfig(guildId);
+  if (!guildConfig) {
+    return interaction.reply({ content: 'This server is not configured. Please run `/admin killfeed setup` first.', ephemeral: true });
+  }
+  
+  const target = interaction.options.getString('gamertag');
+  const choice = interaction.options.getString('action');
 
-    if (choice === 'add') {
-      await addToList('./logs/ban.txt', target, 'bans', interaction);
-    } else if (choice === 'remove') {
-      await removeFromList('./logs/ban.txt', target, 'bans', interaction);
-    }
+  if (choice === 'add') {
+    await addToList('./logs/ban.txt', target, 'bans', interaction);
+  } else if (choice === 'remove') {
+    await removeFromList('./logs/ban.txt', target, 'bans', interaction);
   }
 }
 
 async function handlePriorityCommand(interaction) {
   const guildId = interaction.guildId;
-  if (guildId && guildId === GUILDID) {
-    const target = interaction.options.getString('gamertag');
-    const choice = interaction.options.getString('action');
+  
+  // Check if guild has a configuration in database
+  const guildConfig = await db.getGuildConfig(guildId);
+  if (!guildConfig) {
+    return interaction.reply({ content: 'This server is not configured. Please run `/admin killfeed setup` first.', ephemeral: true });
+  }
+  
+  const target = interaction.options.getString('gamertag');
+  const choice = interaction.options.getString('action');
 
-    if (choice === 'add') {
-      await addToList('./logs/priority.txt', target, 'priority', interaction);
-    } else if (choice === 'remove') {
-      await removeFromList('./logs/priority.txt', target, 'priority', interaction);
-    }
+  if (choice === 'add') {
+    await addToList('./logs/priority.txt', target, 'priority', interaction);
+  } else if (choice === 'remove') {
+    await removeFromList('./logs/priority.txt', target, 'priority', interaction);
+  }
   }
 }
 
 async function handleGetlistCommand(interaction) {
   const guildId = interaction.guildId;
-  if (guildId && guildId === GUILDID) {
-    const choice = interaction.options.getString('action');
-    let filePath = '';
+  
+  // Check if guild has a configuration in database
+  const guildConfig = await db.getGuildConfig(guildId);
+  if (!guildConfig) {
+    return interaction.reply({ content: 'This server is not configured. Please run `/admin killfeed setup` first.', ephemeral: true });
+  }
+  
+  const choice = interaction.options.getString('action');
+  let filePath = '';
 
-    switch (choice) {
-      case 'wl':
-        filePath = './logs/whitelist.txt';
-        break;
-      case 'ban':
-        filePath = './logs/ban.txt';
-        break;
-      case 'pl':
-        filePath = './logs/priority.txt';
-        break;
-      default:
-        break;
-    }
+  switch (choice) {
+    case 'wl':
+      filePath = './logs/whitelist.txt';
+      break;
+    case 'ban':
+      filePath = './logs/ban.txt';
+      break;
+    case 'pl':
+      filePath = './logs/priority.txt';
+      break;
+    default:
+      break;
+  }
 
-    if (filePath) {
-      await getList(filePath, interaction);
-    }
+  if (filePath) {
+    await getList(filePath, interaction);
   }
 }
 
 async function handleResetlistCommand(interaction) {
   const guildId = interaction.guildId;
-  if (guildId && guildId === GUILDID) {
-    const choice = interaction.options.getString('action');
-    let filePath = '';
+  
+  // Check if guild has a configuration in database
+  const guildConfig = await db.getGuildConfig(guildId);
+  if (!guildConfig) {
+    return interaction.reply({ content: 'This server is not configured. Please run `/admin killfeed setup` first.', ephemeral: true });
+  }
+  
+  const choice = interaction.options.getString('action');
+  let filePath = '';
 
-    switch (choice) {
-      case 'wl':
-        filePath = './logs/whitelist.txt';
-        break;
-      case 'ban':
-        filePath = './logs/ban.txt';
-        break;
-      case 'pl':
-        filePath = './logs/priority.txt';
-        break;
-      default:
-        break;
-    }
+  switch (choice) {
+    case 'wl':
+      filePath = './logs/whitelist.txt';
+      break;
+    case 'ban':
+      filePath = './logs/ban.txt';
+      break;
+    case 'pl':
+      filePath = './logs/priority.txt';
+      break;
+    default:
+      break;
+  }
 
-    if (filePath) {
-      fs.truncate(filePath, (err) => {
-        if (err) {
-          interaction.reply("Reset Failed!").catch(console.error);
-        } else {
-          interaction.reply(`${choice.charAt(0).toUpperCase() + choice.slice(1)} list reset successfully!`).catch(console.error);
-        }
-      });
-    }
+  if (filePath) {
+    fs.truncate(filePath, (err) => {
+      if (err) {
+        interaction.reply("Reset Failed!").catch(console.error);
+      } else {
+        interaction.reply(`${choice.charAt(0).toUpperCase() + choice.slice(1)} list reset successfully!`).catch(console.error);
+      }
+    });
   }
 }
 

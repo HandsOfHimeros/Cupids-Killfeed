@@ -186,41 +186,51 @@ module.exports = {
 
 async function handleClearCommand(interaction) {
     const guildId = interaction.guildId;
-    if (guildId && guildId === GUILDID) {
-        const integer = interaction.options.getInteger('value');
-        if (integer > 100) {
-            return interaction.reply('The max number of messages you can delete is 100')
-                .catch(console.error);
-        }
-        await interaction.channel.bulkDelete(integer).catch(console.error);
-        await interaction.reply('clearing messages...').catch(console.error);
-        await interaction.deleteReply().catch(console.error);
+    
+    // Check if guild has a configuration in database
+    const guildConfig = await db.getGuildConfig(guildId);
+    if (!guildConfig) {
+        return interaction.reply({ content: 'This server is not configured. Please run `/admin killfeed setup` first.', ephemeral: true });
     }
+    
+    const integer = interaction.options.getInteger('value');
+    if (integer > 100) {
+        return interaction.reply('The max number of messages you can delete is 100')
+            .catch(console.error);
+    }
+    await interaction.channel.bulkDelete(integer).catch(console.error);
+    await interaction.reply('clearing messages...').catch(console.error);
+    await interaction.deleteReply().catch(console.error);
 }
 
 async function handleMapChange(interaction) {
     const guildId = interaction.guildId;
-    if (guildId && guildId === GUILDID) {
-        config = ini.parse(fs.readFileSync('./config.ini', 'utf-8'));
-        const choice = interaction.options.getString('new-map')
-        if (choice === "cherno") {
-            config.mapLoc = 0;
-            fs.writeFileSync('./config.ini', ini.stringify(config, { mapLoc: `0`}))
-            interaction.reply("Killfeed Map set to **Chernaus**").catch(function (error) {console.log(error);});
-            return;
-        }
-        if (choice === "livonia") {
-            config.mapLoc = 1;
-            fs.writeFileSync('./config.ini', ini.stringify(config, { mapLoc: `1`}))
-            interaction.reply("Killfeed Map set to **Livonia**").catch(function (error) {console.log(error);});
-            return;
-        }
-        if (choice === "sakhal") {
-            config.mapLoc = 2;
-            fs.writeFileSync('./config.ini', ini.stringify(config, { mapLoc: `2`}))
-            interaction.reply("Killfeed Map set to **Sakhal**").catch(function (error) {console.log(error);});
-            return;
-        }
+    
+    // Check if guild has a configuration in database
+    const guildConfig = await db.getGuildConfig(guildId);
+    if (!guildConfig) {
+        return interaction.reply({ content: 'This server is not configured. Please run `/admin killfeed setup` first.', ephemeral: true });
+    }
+    
+    config = ini.parse(fs.readFileSync('./config.ini', 'utf-8'));
+    const choice = interaction.options.getString('new-map')
+    if (choice === "cherno") {
+        config.mapLoc = 0;
+        fs.writeFileSync('./config.ini', ini.stringify(config, { mapLoc: `0`}))
+        interaction.reply("Killfeed Map set to **Chernarus**").catch(function (error) {console.log(error);});
+        return;
+    }
+    if (choice === "livonia") {
+        config.mapLoc = 1;
+        fs.writeFileSync('./config.ini', ini.stringify(config, { mapLoc: `1`}))
+        interaction.reply("Killfeed Map set to **Livonia**").catch(function (error) {console.log(error);});
+        return;
+    }
+    if (choice === "sakhal") {
+        config.mapLoc = 2;
+        fs.writeFileSync('./config.ini', ini.stringify(config, { mapLoc: `2`}))
+        interaction.reply("Killfeed Map set to **Sakhal**").catch(function (error) {console.log(error);});
+        return;
     }
 }
 
@@ -387,7 +397,14 @@ async function handleSetupCommand(interaction) {
 
 async function handleStopCommand(interaction) {
     const guildId = interaction.guildId;
-    if (guildId && guildId === GUILDID && feedStart) {
+    
+    // Check if guild has a configuration in database
+    const guildConfig = await db.getGuildConfig(guildId);
+    if (!guildConfig) {
+        return interaction.reply({ content: 'This server is not configured. Please run `/admin killfeed setup` first.', ephemeral: true });
+    }
+    
+    if (feedStart) {
         await interaction.reply('Terminating Project.....').catch(console.error);
         setTimeout(() => process.exit(22), 5000);
     } else {
@@ -397,7 +414,14 @@ async function handleStopCommand(interaction) {
 
 async function handleDeathlocCommand(interaction) {
     const guildId = interaction.guildId;
-    if (guildId && guildId === GUILDID && feedStart) {
+    
+    // Check if guild has a configuration in database
+    const guildConfig = await db.getGuildConfig(guildId);
+    if (!guildConfig) {
+        return interaction.reply({ content: 'This server is not configured. Please run `/admin killfeed setup` first.', ephemeral: true });
+    }
+    
+    if (feedStart) {
         const choice = interaction.options.getString('state');
         config.showLoc = choice === "on" ? 1 : 0;
         fs.writeFileSync('./config.ini', ini.stringify(config));
@@ -410,19 +434,24 @@ async function handleDeathlocCommand(interaction) {
 
 async function handleStartCommand(interaction) {
     const guildId = interaction.guildId;
-    if (guildId && guildId === GUILDID) {
-        kfChannel = interaction.guild.channels.cache.find(channel => channel.name.includes("➖》💀-killfeed"));
-        if (!kfChannel) return;
-
-        if (feedStart) {
-            await interaction.channel.send('THE KILLFEED IS ALREADY RUNNING!.....TRY RESETING IF YOU NEED TO RESTART').catch(console.error);
-            return;
-        }
-
-        await interaction.reply("**Starting Killfeed....**").catch(console.error);
-        feedStart = true;
-        getDetails(interaction).catch(console.error);
+    
+    // Check if guild has a configuration in database
+    const guildConfig = await db.getGuildConfig(guildId);
+    if (!guildConfig) {
+        return interaction.reply({ content: 'This server is not configured. Please run `/admin killfeed setup` first.', ephemeral: true });
     }
+    
+    kfChannel = interaction.guild.channels.cache.find(channel => channel.name.includes("➖》💀-killfeed"));
+    if (!kfChannel) return;
+
+    if (feedStart) {
+        await interaction.channel.send('THE KILLFEED IS ALREADY RUNNING!.....TRY RESETING IF YOU NEED TO RESTART').catch(console.error);
+        return;
+    }
+
+    await interaction.reply("**Starting Killfeed....**").catch(console.error);
+    feedStart = true;
+    getDetails(interaction).catch(console.error);
 }
 
 async function getDetails(interaction) {
