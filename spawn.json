@@ -3037,6 +3037,758 @@
       ],
       "scale": 1,
       "enableCEPersistency": 0
+    },
+    "GorkaEJacket_Autumn": {
+      "name": "GorkaEJacket_Autumn",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "GorkaEJacket_Winter": {
+      "name": "GorkaEJacket_Winter",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "USMCJacket_Desert": {
+      "name": "USMCJacket_Desert",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "USMCJacket_Woodland": {
+      "name": "USMCJacket_Woodland",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "M65Jacket_Black": {
+      "name": "M65Jacket_Black",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "M65Jacket_Olive": {
+      "name": "M65Jacket_Olive",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "M65Jacket_Tan": {
+      "name": "M65Jacket_Tan",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "LeatherJacket_Black": {
+      "name": "LeatherJacket_Black",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "LeatherJacket_Brown": {
+      "name": "LeatherJacket_Brown",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "LeatherJacket_Natural": {
+      "name": "LeatherJacket_Natural",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "BomberJacket_Black": {
+      "name": "BomberJacket_Black",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "BomberJacket_Olive": {
+      "name": "BomberJacket_Olive",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "BomberJacket_Brown": {
+      "name": "BomberJacket_Brown",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "RidersJacket_Black": {
+      "name": "RidersJacket_Black",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "HuntingJacket_Autumn": {
+      "name": "HuntingJacket_Autumn",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "HuntingJacket_Brown": {
+      "name": "HuntingJacket_Brown",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "HuntingJacket_Spring": {
+      "name": "HuntingJacket_Spring",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "HuntingJacket_Winter": {
+      "name": "HuntingJacket_Winter",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "HikingJacket_Black": {
+      "name": "HikingJacket_Black",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "HikingJacket_Green": {
+      "name": "HikingJacket_Green",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "HikingJacket_Red": {
+      "name": "HikingJacket_Red",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "DownJacket_Blue": {
+      "name": "DownJacket_Blue",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "DownJacket_Orange": {
+      "name": "DownJacket_Orange",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "DownJacket_Green": {
+      "name": "DownJacket_Green",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "FirefighterJacket_Black": {
+      "name": "FirefighterJacket_Black",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "FirefighterJacket_Beige": {
+      "name": "FirefighterJacket_Beige",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "ParamedicJacket_Blue": {
+      "name": "ParamedicJacket_Blue",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "ParamedicJacket_Green": {
+      "name": "ParamedicJacket_Green",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "PoliceJacket": {
+      "name": "PoliceJacket",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "QuiltedJacket_Black": {
+      "name": "QuiltedJacket_Black",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "QuiltedJacket_Grey": {
+      "name": "QuiltedJacket_Grey",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "QuiltedJacket_Orange": {
+      "name": "QuiltedJacket_Orange",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "TrackSuitJacket_Black": {
+      "name": "TrackSuitJacket_Black",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "TrackSuitJacket_Blue": {
+      "name": "TrackSuitJacket_Blue",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "NBCJacketGray": {
+      "name": "NBCJacketGray",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "NBCJacketWhite": {
+      "name": "NBCJacketWhite",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "NBCJacketYellow": {
+      "name": "NBCJacketYellow",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "NBCPantsGray": {
+      "name": "NBCPantsGray",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "NBCPantsWhite": {
+      "name": "NBCPantsWhite",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "NBCBootsGray": {
+      "name": "NBCBootsGray",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "NBCBootsWhite": {
+      "name": "NBCBootsWhite",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "NBCBootsYellow": {
+      "name": "NBCBootsYellow",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "NBCGlovesGray": {
+      "name": "NBCGlovesGray",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "NBCGlovesYellow": {
+      "name": "NBCGlovesYellow",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "NBCHoodGray": {
+      "name": "NBCHoodGray",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "NBCHoodWhite": {
+      "name": "NBCHoodWhite",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "NBCHoodYellow": {
+      "name": "NBCHoodYellow",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
     }
   },
   "defaultSpawnTemplate": {
