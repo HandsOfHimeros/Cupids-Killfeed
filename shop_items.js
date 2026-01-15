@@ -25,7 +25,6 @@ module.exports = [
   { name: 'FAMAS', class: 'FAMAS', averagePrice: 1350, description: 'French 5.56 NATO bullpup rifle' },
   { name: 'LAR (FAL)', class: 'FAL', averagePrice: 1800, description: '7.62 NATO battle rifle, high power' },
   { name: 'AS VAL', class: 'ASVAL', averagePrice: 1950, description: 'Integrally suppressed 9x39mm rifle' },
-  { name: 'SVAL', class: 'SVAL', averagePrice: 1950, description: 'Modern suppressed 9x39mm rifle' },
   { name: 'MP5-K', class: 'MP5K', averagePrice: 800, description: 'Compact 9mm submachine gun' },
   { name: 'UMP-45', class: 'UMP45', averagePrice: 850, description: 'Tactical .45 ACP submachine gun' },
   { name: 'PP-19 Bizon', class: 'PP19', averagePrice: 750, description: '9mm helical mag submachine gun' },
@@ -111,7 +110,7 @@ module.exports = [
   // ===================================================================
   // Optics
   { name: 'ACOG Optic', class: 'ACOGOptic', averagePrice: 300, description: '4x combat scope' },
-  { name: 'ACOG 6x', class: 'ACOGOptic_6x', averagePrice: 350, description: '6x magnified scope' },
+  { name: 'ACOG 6x', class: 'ACOGOptic_6x', averagePrice: 350, description: '6x scope' },
   { name: 'PSO-1 Scope', class: 'PSO1Optic', averagePrice: 320, description: '4x Russian scope' },
   { name: 'Kashtan Optic', class: 'KashtanOptic', averagePrice: 350, description: 'Russian red dot' },
   { name: 'Hunting Scope', class: 'HuntingOptic', averagePrice: 280, description: 'Hunting scope' },
@@ -119,6 +118,9 @@ module.exports = [
   { name: 'M4 Carry Handle', class: 'M4_CarryHandleOptic', averagePrice: 150, description: 'Iron sights' },
   { name: 'Red Dot Sight', class: 'ReflexOptic', averagePrice: 200, description: 'Close range sight' },
   { name: 'M68 Optic', class: 'M68Optic', averagePrice: 220, description: 'Red dot optic' },
+  { name: 'MK4 Optic (Black)', class: 'MK4Optic_Black', averagePrice: 280, description: 'MK4 optic (black)' },
+  { name: 'MK4 Optic (Green)', class: 'MK4Optic_Green', averagePrice: 280, description: 'MK4 optic (green)' },
+  { name: 'MK4 Optic (Tan)', class: 'MK4Optic_Tan', averagePrice: 280, description: 'MK4 optic (tan)' },
   
   // Suppressors
   { name: 'NATO Suppressor', class: 'ImprovisedSuppressor', averagePrice: 400, description: '5.56mm suppressor' },
@@ -126,17 +128,22 @@ module.exports = [
   { name: 'AK Suppressor', class: 'AK_Suppressor', averagePrice: 380, description: '7.62x39mm suppressor' },
   
   // Stocks & Buttstocks
-  { name: 'M4 CQB Buttstock', class: 'M4_CQBBttstck', averagePrice: 100, description: 'Compact M4 stock' },
-  { name: 'M4 MP Buttstock', class: 'M4_MPBttstck', averagePrice: 90, description: 'Collapsible stock' },
-  { name: 'M4 OE Buttstock', class: 'M4_OEBttstck', averagePrice: 80, description: 'Standard M4 stock' },
+  { name: 'M4 CQB Buttstock (Black)', class: 'M4_CQBBttstck', averagePrice: 100, description: 'Compact M4 stock (black)' },
+  { name: 'M4 CQB Buttstock (Green)', class: 'M4_CQBBttstck_Green', averagePrice: 100, description: 'Compact M4 stock (green)' },
+  { name: 'M4 MP Buttstock (Black)', class: 'M4_MPBttstck', averagePrice: 90, description: 'Collapsible stock (black)' },
+  { name: 'M4 MP Buttstock (Green)', class: 'M4_MPBttstck_Green', averagePrice: 90, description: 'Collapsible stock (green)' },
+  { name: 'M4 OE Buttstock (Black)', class: 'M4_OEBttstck', averagePrice: 80, description: 'Standard M4 stock (black)' },
+  { name: 'M4 OE Buttstock (Green)', class: 'M4_OEBttstck_Green', averagePrice: 80, description: 'Standard M4 stock (green)' },
   { name: 'AK Folding Stock', class: 'AK_FoldingBttstck', averagePrice: 110, description: 'AK folding stock' },
   { name: 'AK Plastic Stock', class: 'AK_PlasticBttstck', averagePrice: 85, description: 'AK synthetic stock' },
   { name: 'AK Wood Stock', class: 'AK_WoodBttstck', averagePrice: 95, description: 'Wooden AK stock' },
   { name: 'Saiga Stock', class: 'Saiga_Bttstck', averagePrice: 90, description: 'Saiga polymer stock' },
   
   // Handguards
-  { name: 'M4 MP Handguard', class: 'M4_MPHndgrd', averagePrice: 70, description: 'M4 rail handguard' },
-  { name: 'M4 RIS Handguard', class: 'M4_RISHndgrd', averagePrice: 80, description: 'M4 tactical handguard' },
+  { name: 'M4 MP Handguard (Black)', class: 'M4_MPHndgrd', averagePrice: 70, description: 'M4 rail handguard (black)' },
+  { name: 'M4 MP Handguard (Green)', class: 'M4_MPHndgrd_Green', averagePrice: 70, description: 'M4 rail handguard (green)' },
+  { name: 'M4 RIS Handguard (Black)', class: 'M4_RISHndgrd', averagePrice: 80, description: 'M4 tactical handguard (black)' },
+  { name: 'M4 RIS Handguard (Green)', class: 'M4_RISHndgrd_Green', averagePrice: 80, description: 'M4 tactical handguard (green)' },
   { name: 'AK Plastic Handguard', class: 'AK_PlasticHndgrd', averagePrice: 60, description: 'AK synthetic handguard' },
   { name: 'AK Rail Handguard', class: 'AK_RailHndgrd', averagePrice: 75, description: 'AK tactical rail' },
   { name: 'AK Wood Handguard', class: 'AK_WoodHndgrd', averagePrice: 65, description: 'Wooden AK handguard' },
@@ -261,12 +268,11 @@ module.exports = [
   { name: 'Sardines Can', class: 'Sardines', averagePrice: 35, description: 'Canned fish' },
   { name: 'Tuna Can', class: 'TunaCan', averagePrice: 40, description: 'Canned tuna' },
   { name: 'Pate Can', class: 'Pate', averagePrice: 45, description: 'Meat spread' },
-  { name: 'Zagorky Can', class: 'Zagorky', averagePrice: 40, description: 'Canned meat' },
-  { name: 'Zagorky Pate Can', class: 'ZagorkyPate', averagePrice: 45, description: 'Pate spread' },
   { name: 'UnknownFoodCan', class: 'UnknownFoodCan', averagePrice: 30, description: 'Mystery food' },
   
   // Dry Goods
   { name: 'Rice', class: 'Rice', averagePrice: 50, description: 'Bag of rice' },
+  { name: 'Zagorky', class: 'Zagorky', averagePrice: 40, description: 'Packaged food' },
   { name: 'Powdered Milk', class: 'PowderedMilk', averagePrice: 45, description: 'Milk powder' },
   { name: 'Box Cereal Crunchin', class: 'BoxCerealCrunchin', averagePrice: 40, description: 'Breakfast cereal' },
   
@@ -294,7 +300,6 @@ module.exports = [
   // ===================================================================
   { name: 'Duct Tape', class: 'DuctTape', averagePrice: 120, description: 'Repairs items' },
   { name: 'Epoxy Putty', class: 'EpoxyPutty', averagePrice: 150, description: 'Advanced repairs' },
-  { name: 'Sewing Kit', class: 'SewingKit', averagePrice: 100, description: 'Repairs clothing' },
   { name: 'Leather Sewing Kit', class: 'LeatherSewingKit', averagePrice: 110, description: 'Repairs leather' },
   { name: 'Weapon Cleaning Kit', class: 'WeaponCleaningKit', averagePrice: 130, description: 'Cleans weapons' },
   { name: 'Sharpening Stone', class: 'SharpeningStone', averagePrice: 80, description: 'Sharpens blades' },
@@ -304,12 +309,8 @@ module.exports = [
   { name: 'Hacksaw', class: 'Hacksaw', averagePrice: 100, description: 'Metal cutting saw' },
   { name: 'Screwdriver', class: 'Screwdriver', averagePrice: 40, description: 'Basic tool' },
   { name: 'Pliers', class: 'Pliers', averagePrice: 50, description: 'Multi-purpose tool' },
-  { name: 'Pipe Wrench', class: 'PipeWrench', averagePrice: 70, description: 'Heavy wrench' },
-  { name: 'Lug Wrench', class: 'LugWrench', averagePrice: 60, description: 'Vehicle tool' },
   { name: 'Lockpick', class: 'Lockpick', averagePrice: 150, description: 'Opens locks' },
   { name: 'Rope', class: 'Rope', averagePrice: 80, description: 'Crafting material' },
-  { name: 'Metal Wire', class: 'MetalWire', averagePrice: 70, description: 'Crafting wire' },
-  { name: 'Barbed Wire', class: 'BarbedWire', averagePrice: 90, description: 'Defense material' },
 
   // ===================================================================
   // 👕 CLOTHING & ARMOR
@@ -331,11 +332,53 @@ module.exports = [
   
   // Jackets
   { name: 'TTsKO Jacket', class: 'TTsKOJacket_Camo', averagePrice: 300, description: 'Military jacket' },
-  { name: 'Gorka Jacket', class: 'GorkaEJacket_Summer', averagePrice: 320, description: 'Russian military jacket' },
-  { name: 'USMC Jacket', class: 'USMCJacket_Desert', averagePrice: 350, description: 'Marine jacket' },
+  { name: 'Gorka Jacket (Summer)', class: 'GorkaEJacket_Summer', averagePrice: 320, description: 'Russian military jacket' },
+  { name: 'Gorka Jacket (Autumn)', class: 'GorkaEJacket_Autumn', averagePrice: 330, description: 'Russian military jacket' },
+  { name: 'Gorka Jacket (Winter)', class: 'GorkaEJacket_Winter', averagePrice: 340, description: 'Russian military jacket' },
+  { name: 'USMC Jacket (Desert)', class: 'USMCJacket_Desert', averagePrice: 350, description: 'Marine jacket' },
+  { name: 'USMC Jacket (Woodland)', class: 'USMCJacket_Woodland', averagePrice: 360, description: 'Marine jacket' },
   { name: 'BDU Jacket', class: 'BDUJacket', averagePrice: 280, description: 'Battle dress uniform' },
-  { name: 'M65 Jacket', class: 'M65Jacket_Black', averagePrice: 300, description: 'Field jacket' },
-  { name: 'NBC Jacket', class: 'NBCJacketGray', averagePrice: 600, description: 'Hazmat suit top' },
+  { name: 'M65 Jacket (Black)', class: 'M65Jacket_Black', averagePrice: 300, description: 'Field jacket' },
+  { name: 'M65 Jacket (Olive)', class: 'M65Jacket_Olive', averagePrice: 310, description: 'Field jacket' },
+  { name: 'M65 Jacket (Tan)', class: 'M65Jacket_Tan', averagePrice: 310, description: 'Field jacket' },
+  
+  // Premium Jackets
+  { name: 'Leather Jacket (Black)', class: 'LeatherJacket_Black', averagePrice: 550, description: 'Stylish leather jacket' },
+  { name: 'Leather Jacket (Brown)', class: 'LeatherJacket_Brown', averagePrice: 550, description: 'Stylish leather jacket' },
+  { name: 'Leather Jacket (Natural)', class: 'LeatherJacket_Natural', averagePrice: 550, description: 'Stylish leather jacket' },
+  { name: 'Bomber Jacket (Black)', class: 'BomberJacket_Black', averagePrice: 500, description: 'Bomber jacket' },
+  { name: 'Bomber Jacket (Olive)', class: 'BomberJacket_Olive', averagePrice: 500, description: 'Bomber jacket' },
+  { name: 'Bomber Jacket (Brown)', class: 'BomberJacket_Brown', averagePrice: 500, description: 'Bomber jacket' },
+  { name: 'Riders Jacket', class: 'RidersJacket_Black', averagePrice: 520, description: 'Motorcycle jacket' },
+  
+  // Hunting & Outdoor
+  { name: 'Hunting Jacket (Autumn)', class: 'HuntingJacket_Autumn', averagePrice: 400, description: 'Camouflage hunting jacket' },
+  { name: 'Hunting Jacket (Brown)', class: 'HuntingJacket_Brown', averagePrice: 400, description: 'Camouflage hunting jacket' },
+  { name: 'Hunting Jacket (Spring)', class: 'HuntingJacket_Spring', averagePrice: 400, description: 'Camouflage hunting jacket' },
+  { name: 'Hunting Jacket (Winter)', class: 'HuntingJacket_Winter', averagePrice: 420, description: 'Camouflage hunting jacket' },
+  { name: 'Hiking Jacket (Black)', class: 'HikingJacket_Black', averagePrice: 380, description: 'Outdoor hiking jacket' },
+  { name: 'Hiking Jacket (Green)', class: 'HikingJacket_Green', averagePrice: 380, description: 'Outdoor hiking jacket' },
+  { name: 'Hiking Jacket (Red)', class: 'HikingJacket_Red', averagePrice: 380, description: 'Outdoor hiking jacket' },
+  { name: 'Down Jacket (Blue)', class: 'DownJacket_Blue', averagePrice: 450, description: 'Insulated down jacket' },
+  { name: 'Down Jacket (Orange)', class: 'DownJacket_Orange', averagePrice: 450, description: 'Insulated down jacket' },
+  { name: 'Down Jacket (Green)', class: 'DownJacket_Green', averagePrice: 450, description: 'Insulated down jacket' },
+  
+  // Professional
+  { name: 'Firefighter Jacket (Black)', class: 'FirefighterJacket_Black', averagePrice: 650, description: 'Fire-resistant jacket' },
+  { name: 'Firefighter Jacket (Beige)', class: 'FirefighterJacket_Beige', averagePrice: 650, description: 'Fire-resistant jacket' },
+  { name: 'Paramedic Jacket (Blue)', class: 'ParamedicJacket_Blue', averagePrice: 600, description: 'Medical responder jacket' },
+  { name: 'Paramedic Jacket (Green)', class: 'ParamedicJacket_Green', averagePrice: 600, description: 'Medical responder jacket' },
+  { name: 'Police Jacket', class: 'PoliceJacket', averagePrice: 580, description: 'Law enforcement jacket' },
+  
+  // Casual & Utility
+  { name: 'Quilted Jacket (Black)', class: 'QuiltedJacket_Black', averagePrice: 350, description: 'Insulated quilted jacket' },
+  { name: 'Quilted Jacket (Grey)', class: 'QuiltedJacket_Grey', averagePrice: 350, description: 'Insulated quilted jacket' },
+  { name: 'Quilted Jacket (Orange)', class: 'QuiltedJacket_Orange', averagePrice: 350, description: 'Insulated quilted jacket' },
+  { name: 'Track Suit Jacket (Black)', class: 'TrackSuitJacket_Black', averagePrice: 280, description: 'Athletic track jacket' },
+  { name: 'Track Suit Jacket (Blue)', class: 'TrackSuitJacket_Blue', averagePrice: 280, description: 'Athletic track jacket' },
+  { name: 'NBC Jacket (Gray)', class: 'NBCJacketGray', averagePrice: 600, description: 'Hazmat suit top' },
+  { name: 'NBC Jacket (White)', class: 'NBCJacketWhite', averagePrice: 600, description: 'Hazmat suit top' },
+  { name: 'NBC Jacket (Yellow)', class: 'NBCJacketYellow', averagePrice: 600, description: 'Hazmat suit top' },
   
   // Pants
   { name: 'TTsKO Pants', class: 'TTSKOPants', averagePrice: 250, description: 'Military pants' },
@@ -343,7 +386,8 @@ module.exports = [
   { name: 'USMC Pants', class: 'USMCPants_Desert', averagePrice: 280, description: 'Marine pants' },
   { name: 'BDU Pants', class: 'BDUPants', averagePrice: 230, description: 'Battle dress pants' },
   { name: 'Cargo Pants', class: 'CargoPants_Beige', averagePrice: 200, description: 'Utility pants' },
-  { name: 'NBC Pants', class: 'NBCPantsGray', averagePrice: 500, description: 'Hazmat suit pants' },
+  { name: 'NBC Pants (Gray)', class: 'NBCPantsGray', averagePrice: 500, description: 'Hazmat suit pants' },
+  { name: 'NBC Pants (White)', class: 'NBCPantsWhite', averagePrice: 500, description: 'Hazmat suit pants' },
   
   // Boots
   { name: 'Combat Boots (Black)', class: 'CombatBoots_Black', averagePrice: 150, description: 'Military boots' },
@@ -351,16 +395,23 @@ module.exports = [
   { name: 'Military Boots', class: 'MilitaryBoots_Black', averagePrice: 160, description: 'Army boots' },
   { name: 'Jungle Boots', class: 'JungleBoots_Beige', averagePrice: 140, description: 'Tropical boots' },
   { name: 'TTsKO Boots', class: 'TTSKOBoots', averagePrice: 155, description: 'Russian boots' },
+  { name: 'NBC Boots (Gray)', class: 'NBCBootsGray', averagePrice: 300, description: 'Hazmat suit boots' },
+  { name: 'NBC Boots (White)', class: 'NBCBootsWhite', averagePrice: 300, description: 'Hazmat suit boots' },
+  { name: 'NBC Boots (Yellow)', class: 'NBCBootsYellow', averagePrice: 300, description: 'Hazmat suit boots' },
   
   // Gloves
   { name: 'Tactical Gloves (Black)', class: 'TacticalGloves_Black', averagePrice: 100, description: 'Combat gloves' },
   { name: 'Tactical Gloves (Green)', class: 'TacticalGloves_Green', averagePrice: 100, description: 'Combat gloves' },
-  { name: 'NBC Gloves', class: 'NBCGlovesGray', averagePrice: 150, description: 'Hazmat gloves' },
+  { name: 'NBC Gloves (Gray)', class: 'NBCGlovesGray', averagePrice: 150, description: 'Hazmat gloves' },
+  { name: 'NBC Gloves (Yellow)', class: 'NBCGlovesYellow', averagePrice: 150, description: 'Hazmat gloves' },
   { name: 'Leather Gloves', class: 'LeatherGloves_Natural', averagePrice: 80, description: 'Warm gloves' },
   
   // Masks & Eyewear
   { name: 'Gas Mask', class: 'GasMask', averagePrice: 400, description: 'Full face mask' },
   { name: 'GP5 Gas Mask', class: 'GP5GasMask', averagePrice: 350, description: 'Soviet gas mask' },
+  { name: 'NBC Hood (Gray)', class: 'NBCHoodGray', averagePrice: 350, description: 'Hazmat hood' },
+  { name: 'NBC Hood (White)', class: 'NBCHoodWhite', averagePrice: 350, description: 'Hazmat hood' },
+  { name: 'NBC Hood (Yellow)', class: 'NBCHoodYellow', averagePrice: 350, description: 'Hazmat hood' },
   { name: 'Balaclava', class: 'Balaclava3Holes_Black', averagePrice: 80, description: 'Face covering' },
   { name: 'NVG Headstrap', class: 'NVGHeadstrap', averagePrice: 2000, description: 'Night vision mount' },
   { name: 'NV Goggles', class: 'NVGoggles', averagePrice: 3500, description: 'Night vision' },
@@ -476,6 +527,7 @@ module.exports = [
   { name: 'Megaphone', class: 'Megaphone', averagePrice: 150, description: 'Loudspeaker' },
   { name: 'Flashlight', class: 'Flashlight', averagePrice: 80, description: 'Hand flashlight' },
   { name: 'Headtorch', class: 'Headtorch_Grey', averagePrice: 100, description: 'Head-mounted light' },
+  { name: 'Universal Flashlight', class: 'UniversalLight', averagePrice: 400, description: 'NVG attachment light' },
   { name: 'Battery 9V', class: 'Battery9V', averagePrice: 30, description: '9V battery' },
   { name: 'Chemlight (Blue)', class: 'Chemlight_Blue', averagePrice: 20, description: 'Blue glow stick' },
   { name: 'Chemlight (Green)', class: 'Chemlight_Green', averagePrice: 20, description: 'Green glow stick' },

@@ -1062,21 +1062,21 @@ module.exports = {
                     // Assign items by index ranges (based on shop_items.js structure)
                     // This is more reliable than parsing comments
                     const ranges = {
-                        'ASSAULT_SMG': [0, 23],           // Indices 0-22: Assault rifles & SMGs
-                        'SNIPER_MARKSMAN': [23, 40],      // Indices 23-39: Sniper & marksman rifles
-                        'RIFLES_SHOTGUNS': [40, 49],      // Indices 40-48: Rifles & shotguns
-                        'PISTOLS': [49, 63],              // Indices 49-62: Pistols
-                        'MELEE': [63, 83],                // Indices 63-82: Melee weapons
-                        'ATTACHMENTS': [83, 159],         // Indices 83-158: Attachments + Magazines
-                        'AMMUNITION': [159, 178],         // Indices 159-177: Ammunition
-                        'MEDICAL': [178, 195],            // Indices 178-194: Medical
-                        'FOOD_DRINK': [195, 223],         // Indices 195-222: Food & drink
-                        'TOOLS': [223, 241],              // Indices 223-240: Tools & repair
-                        'CLOTHING_ARMOR': [241, 289],     // Indices 241-288: Clothing & armor
-                        'BACKPACKS': [289, 315],          // Indices 289-314: Backpacks & storage
-                        'BUILDING': [315, 327],           // Indices 315-326: Building materials
-                        'VEHICLE': [327, 339],            // Indices 327-338: Vehicle parts
-                        'ELECTRONICS': [339, 362]         // Indices 339-361: Electronics & grenades
+                        'ASSAULT_SMG': [0, 22],           // Indices 0-21: Assault rifles & SMGs
+                        'SNIPER_MARKSMAN': [22, 39],      // Indices 22-38: Sniper & marksman rifles
+                        'RIFLES_SHOTGUNS': [39, 48],      // Indices 39-47: Rifles & shotguns
+                        'PISTOLS': [48, 62],              // Indices 48-61: Pistols
+                        'MELEE': [62, 82],                // Indices 62-81: Melee weapons
+                        'ATTACHMENTS': [82, 166],         // Indices 82-165: Attachments (optics, suppressors, stocks, etc.)
+                        'AMMUNITION': [166, 185],         // Indices 166-184: Ammunition
+                        'MEDICAL': [185, 202],            // Indices 185-201: Medical supplies
+                        'FOOD_DRINK': [202, 229],         // Indices 202-228: Food & drink
+                        'TOOLS': [229, 242],              // Indices 229-241: Tools & repair
+                        'CLOTHING_ARMOR': [242, 332],     // Indices 242-331: Clothing & armor (jackets, pants, boots, gloves, NBC gear)
+                        'BACKPACKS': [332, 358],          // Indices 332-357: Backpacks & storage
+                        'BUILDING': [358, 370],           // Indices 358-369: Building materials
+                        'VEHICLE': [370, 382],            // Indices 370-381: Vehicle parts
+                        'ELECTRONICS': [382, 406]         // Indices 382-405: Electronics & explosives (total 406 items)
                     };
                     
                     for (const [categoryKey, [start, end]] of Object.entries(ranges)) {
@@ -1345,12 +1345,13 @@ module.exports = {
                                 for (let idx = 0; idx < pageItems.length; idx++) {
                                     const item = pageItems[idx];
                                     const globalIdx = startIdx + idx;
+                                    const actualIdx = shopItems.findIndex(si => si.name === item.name && si.class === item.class);
                                     desc += `${idx + 1}. **${item.name}** — $${item.averagePrice}\n   ${item.description || 'No description'}\n\n`;
                                     
                                     selectOptions.push({
                                         label: item.name.substring(0, 100),
                                         description: `$${item.averagePrice}`,
-                                        value: `item_${globalIdx}`
+                                        value: `item_${actualIdx}`
                                     });
                                 }
                                 
@@ -1409,12 +1410,13 @@ module.exports = {
                                 for (let idx = 0; idx < pageItems.length; idx++) {
                                     const item = pageItems[idx];
                                     const globalIdx = startIdx + idx;
+                                    const actualIdx = shopItems.findIndex(si => si.name === item.name && si.class === item.class);
                                     desc += `${idx + 1}. **${item.name}** — $${item.averagePrice}\n   ${item.description || 'No description'}\n\n`;
                                     
                                     selectOptions.push({
                                         label: item.name.substring(0, 100),
                                         description: `$${item.averagePrice}`,
-                                        value: `item_${globalIdx}`
+                                        value: `item_${actualIdx}`
                                     });
                                 }
                                 
@@ -1474,12 +1476,13 @@ module.exports = {
                                 for (let idx = 0; idx < pageItems.length; idx++) {
                                     const item = pageItems[idx];
                                     const globalIdx = startIdx + idx;
+                                    const actualIdx = shopItems.findIndex(si => si.name === item.name && si.class === item.class);
                                     desc += `${idx + 1}. **${item.name}** — $${item.averagePrice}\n   ${item.description || 'No description'}\n\n`;
                                     
                                     selectOptions.push({
                                         label: item.name.substring(0, 100),
                                         description: `$${item.averagePrice}`,
-                                        value: `item_${globalIdx}`
+                                        value: `item_${actualIdx}`
                                     });
                                 }
                                 
@@ -1605,12 +1608,15 @@ module.exports = {
                             
                             // Checkout
                             if (i.customId === 'checkout') {
+                                // Defer reply immediately to prevent timeout
+                                await i.deferUpdate();
+                                
                                 const totalCost = Array.from(shoppingCart.entries())
                                     .reduce((sum, [idx, qty]) => sum + (shopItems[idx].averagePrice * qty), 0);
                                 
                                 const bal = await db.getBalance(guildId, userId);
                                 if (bal < totalCost) {
-                                    await i.reply({ content: 'Insufficient funds!', ephemeral: true });
+                                    await i.editReply({ content: 'Insufficient funds!', ephemeral: true });
                                     return;
                                 }
                                 
@@ -1624,20 +1630,21 @@ module.exports = {
                                 for (const [itemIdx, qty] of shoppingCart.entries()) {
                                     const item = shopItems[itemIdx];
                                     
-                                    if (DEV_MODE) {
-                                        console.log(`[DEV] Would spawn ${qty}x ${item.name} for ${dayzName}`);
-                                    } else {
+                                    // Create separate spawn entry for each item
+                                    for (let i = 0; i < qty; i++) {
                                         const spawnEntry = {
                                             userId,
                                             dayzPlayerName: dayzName,
                                             item: item.name,
                                             class: item.class,
-                                            amount: qty,
                                             timestamp: Date.now(),
                                             restart_id: Date.now().toString()
                                         };
+                                        
                                         await addCupidSpawnEntry(spawnEntry, guildId);
                                     }
+                                    
+                                    console.log(`[SHOP] Added ${qty}x ${item.name} for ${dayzName}`);
                                 }
                                 
                                 const itemList = Array.from(shoppingCart.entries())
@@ -1646,14 +1653,12 @@ module.exports = {
                                 
                                 shoppingCart.clear();
                                 
-                                await i.update({
+                                await i.editReply({
                                     embeds: [
                                         new MessageEmbed()
                                             .setColor('#00ff00')
                                             .setTitle('✅ Purchase Complete!')
-                                            .setDescription(DEV_MODE 
-                                                ? `**DEV MODE**: Simulated purchase of:\n${itemList}\n\nTotal: $${totalCost}\n\nIn production, items will spawn on server restart.`
-                                                : `You purchased:\n${itemList}\n\nTotal: $${totalCost}\nNew balance: $${bal - totalCost}\n\nItems will spawn on next server restart!`)
+                                            .setDescription(`You purchased:\n${itemList}\n\nTotal: $${totalCost}\nNew balance: $${bal - totalCost}\n\nItems will spawn on next server restart!`)
                                     ],
                                     components: [
                                         new MessageActionRow()
