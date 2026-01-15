@@ -1037,6 +1037,7 @@ module.exports = {
                 console.log('[SHOP] Passed channel check');
                 // --- SHOP COMMAND LOGIC ---
                 const shopItems = require('../shop_items.js');
+                const { addCupidSpawnEntry } = require('../index.js');
                 
                 // Helper function to group items by category
                 function getCategorizedItems() {
