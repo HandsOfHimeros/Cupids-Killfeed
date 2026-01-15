@@ -3789,6 +3789,166 @@
       "scale": 1,
       "enableCEPersistency": 0,
       "attachments": []
+    },
+    "MediumTent": {
+      "name": "MediumTent",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "LargeTent": {
+      "name": "LargeTent",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "CarTent": {
+      "name": "CarTent",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Barrel_Blue": {
+      "name": "Barrel_Blue",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Barrel_Green": {
+      "name": "Barrel_Green",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Barrel_Red": {
+      "name": "Barrel_Red",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Barrel_Yellow": {
+      "name": "Barrel_Yellow",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "SeaChest": {
+      "name": "SeaChest",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "WoodenCrate": {
+      "name": "WoodenCrate",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "ProtectorCase": {
+      "name": "ProtectorCase",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
     }
   },
   "defaultSpawnTemplate": {
