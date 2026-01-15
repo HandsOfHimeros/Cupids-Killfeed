@@ -1,9 +1,30 @@
+// Load environment variables FIRST before any other imports
+require('dotenv').config();
+
 // --- Killfeed Channel Monitor ---
 const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
+const { Pool } = require('pg');
 const db = require('./database.js');
 const MultiGuildKillfeed = require('./multi_guild_killfeed.js');
+
+// Create database pool for spawn tables
+const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: process.env.DATABASE_URL.includes('localhost') ? false : { rejectUnauthorized: false }
+});
+
+// Patch Discord.js v13 for Node.js 24 compatibility
+const discord = require('discord.js');
+const BaseChannel = discord.BaseChannel || discord.Channel;
+if (BaseChannel && !BaseChannel.prototype.isText) {
+    BaseChannel.prototype.isText = function() {
+        return ['GUILD_TEXT', 'DM', 'GUILD_NEWS', 'GUILD_NEWS_THREAD', 'GUILD_PUBLIC_THREAD', 'GUILD_PRIVATE_THREAD'].includes(this.type);
+    };
+    console.log('[PATCH] Applied isText() patch to Discord.js Channel');
+}
+
 const KILLFEED_CHANNEL_ID = '1404256735245373511'; // Discord channel for Killfeed (legacy)
 let lastSeenKillfeedLogLine = '';
 let multiGuildKillfeed = null; // Will be initialized on bot ready
@@ -274,6 +295,8 @@ async function addCupidSpawnEntry(spawnEntry, guildId) {
     
     const FILE_PATH = `/games/${guildConfig.nitrado_instance}/ftproot/dayzps_missions/dayzOffline.${guildConfig.map_name}/custom/spawn.json`;
     const FTP_FILE_PATH = `/dayzps_missions/dayzOffline.${guildConfig.map_name}/custom/spawn.json`;
+    const GAMEPLAY_FILE_PATH = `/games/${guildConfig.nitrado_instance}/ftproot/dayzps_missions/dayzOffline.${guildConfig.map_name}/cfggameplay.json`;
+    const GAMEPLAY_FTP_PATH = `/dayzps_missions/dayzOffline.${guildConfig.map_name}/cfggameplay.json`;
     const BASE_URL = 'https://api.nitrado.net/services';
     
     try {
@@ -321,28 +344,107 @@ async function addCupidSpawnEntry(spawnEntry, guildId) {
         
         // Step 3: Get spawn template for this item class
         const template = spawnTemplates[spawnEntry.class] || { ...defaultTemplate, name: spawnEntry.class };
+        const itemYOffset = (template.pos && template.pos[1]) || 0.55; // Default to +0.55 for standing items on table surface
         
-        // Step 3.5: Try to get player's actual location from database
-        let playerPos = template.pos || [0, 0, 0];
+        // Step 3.5: Get player's current location from database
+        let playerLocation = null;
         if (spawnEntry.dayzPlayerName) {
             console.log(`[SPAWN] Looking up location for: "${spawnEntry.dayzPlayerName}"`);
-            const location = await db.getPlayerLocation(guildId, spawnEntry.dayzPlayerName);
-            if (location) {
-                // DayZ spawn format is [X, Z, Y] where Z is elevation
-                playerPos = [location.x, location.z, location.y];
-                console.log(`[SPAWN] Found location for ${spawnEntry.dayzPlayerName}:`, playerPos);
+            playerLocation = await db.getPlayerLocation(guildId, spawnEntry.dayzPlayerName);
+            if (playerLocation) {
+                console.log(`[SPAWN] Found location for ${spawnEntry.dayzPlayerName}: [${playerLocation.x}, ${playerLocation.z}, ${playerLocation.y}]`);
             } else {
-                console.log(`[SPAWN] No location found for ${spawnEntry.dayzPlayerName}, using template position`);
+                console.log(`[SPAWN] No location found for ${spawnEntry.dayzPlayerName}`);
+                return; // Can't spawn without location
             }
         } else {
             console.log('[SPAWN] No dayzPlayerName provided in spawn entry');
+            return;
         }
         
-        // Step 4: Create spawn object using template from spawn.json
+        // Step 4: Check if there's a table near player's current location (within 5 meters)
+        const playerX = playerLocation.x;
+        const playerY = playerLocation.z; // Z in database is Y (elevation) in DayZ
+        const playerZ = playerLocation.y; // Y in database is Z in DayZ
+        
+        let nearbyTable = null;
+        for (const obj of spawnJson.Objects) {
+            if (obj.name === 'StaticObj_Furniture_lobby_table') {
+                const distance = Math.sqrt(
+                    Math.pow(obj.pos[0] - playerX, 2) + 
+                    Math.pow(obj.pos[2] - playerZ, 2) // Use X and Z for horizontal distance
+                );
+                
+                if (distance < 5) { // Within 5 meters
+                    nearbyTable = obj;
+                    console.log(`[SPAWN] Found nearby table at [${obj.pos[0]}, ${obj.pos[1]}, ${obj.pos[2]}], distance: ${distance.toFixed(2)}m`);
+                    break;
+                }
+            }
+        }
+        
+        let tablePos = [playerX, playerY, playerZ];
+        let itemCount = 0;
+        
+        if (!nearbyTable) {
+            // Create new table at player's current location
+            console.log(`[SPAWN] Creating new table at player location [${playerX}, ${playerY}, ${playerZ}]`);
+            
+            const tableObject = {
+                name: 'StaticObj_Furniture_lobby_table',
+                pos: [playerX, playerY, playerZ],
+                ypr: [90, 0, 0],
+                scale: 1,
+                enableCEPersistency: 0,
+                customString: JSON.stringify({
+                    owner: spawnEntry.dayzPlayerName,
+                    created: Date.now(),
+                    restart_id: spawnEntry.restart_id,
+                    item_count: 0
+                })
+            };
+            
+            spawnJson.Objects.push(tableObject);
+            nearbyTable = tableObject;
+        } else {
+            // Use existing nearby table
+            tablePos = nearbyTable.pos;
+            try {
+                const tableData = JSON.parse(nearbyTable.customString);
+                itemCount = tableData.item_count || 0;
+                console.log(`[SPAWN] Using existing table, current items: ${itemCount}`);
+            } catch (e) {
+                console.log(`[SPAWN] Using existing table, couldn't parse item count`);
+            }
+        }
+        
+        // Step 5: Calculate grid position for item on table
+        // Table is ~0.64 wide (X) and ~1.45 long (Z)
+        // Start at corner: table_X - 0.3, table_Z - 0.7
+        // Grid: 4 items per row, spacing: X+0.15, Z+0.3
+        const itemsPerRow = 4;
+        const row = Math.floor(itemCount / itemsPerRow);
+        const col = itemCount % itemsPerRow;
+        
+        const gridStartX = tablePos[0] - 0.3;
+        const gridStartZ = tablePos[2] - 0.7;
+        const gridSpacingX = 0.15;
+        const gridSpacingZ = 0.3;
+        
+        const itemX = gridStartX + (col * gridSpacingX);
+        const itemY = tablePos[1] + itemYOffset; // Use template offset for proper height
+        const itemZ = gridStartZ + (row * gridSpacingZ);
+        
+        console.log(`[SPAWN] Item grid position: row ${row}, col ${col} => [${itemX}, ${itemY}, ${itemZ}] (offset: ${itemYOffset})`);
+        
+        // Step 6: Create spawn object for item on table (no quantity - each purchase creates individual items)
         const spawnObject = {
-            ...template,
-            name: spawnEntry.class, // Ensure name is always the item class
-            pos: playerPos,
+            name: spawnEntry.class,
+            pos: [itemX, itemY, itemZ],
+            ypr: template.ypr || [0, 0, 0],
+            scale: template.scale || 1,
+            enableCEPersistency: template.enableCEPersistency || 0,
+            ...(template.attachments && { attachments: template.attachments }),
             customString: JSON.stringify({
                 userId: spawnEntry.userId,
                 dayzPlayerName: spawnEntry.dayzPlayerName,
@@ -352,12 +454,18 @@ async function addCupidSpawnEntry(spawnEntry, guildId) {
             })
         };
         
-        console.log('[SPAWN] Using template for', spawnEntry.class, ':', JSON.stringify(template));
-        console.log('[SPAWN] Spawn position:', playerPos);
-        
-        // Step 5: Add to Objects array
         spawnJson.Objects.push(spawnObject);
-        console.log(`[SPAWN] Added spawn, total objects: ${spawnJson.Objects.length}`);
+        console.log(`[SPAWN] Added ${spawnEntry.class} to table at [${itemX.toFixed(2)}, ${itemY.toFixed(2)}, ${itemZ.toFixed(2)}], total objects: ${spawnJson.Objects.length}`);
+        
+        // Update item count in table's customString
+        try {
+            const tableData = JSON.parse(nearbyTable.customString);
+            tableData.item_count = itemCount + 1;
+            nearbyTable.customString = JSON.stringify(tableData);
+            console.log(`[SPAWN] Updated table item count to ${tableData.item_count}`);
+        } catch (e) {
+            console.log(`[SPAWN] Couldn't update table item count`);
+        }
         
         // Step 6: Get FTP credentials from Nitrado API
         console.log('[SPAWN] Getting FTP credentials...');
@@ -390,7 +498,7 @@ async function addCupidSpawnEntry(spawnEntry, guildId) {
             
             console.log('[SPAWN] Connected to FTP');
             
-            // Write to temp file and upload
+            // Write to temp file and upload spawn.json
             const tmpPath = path.join(__dirname, 'logs', `spawn_${Date.now()}.json`);
             fs.writeFileSync(tmpPath, JSON.stringify(spawnJson, null, 2), 'utf8');
             
@@ -398,6 +506,57 @@ async function addCupidSpawnEntry(spawnEntry, guildId) {
             fs.unlinkSync(tmpPath);
             
             console.log('[SPAWN] Successfully uploaded spawn.json via FTP');
+            
+            // Step 8: Update cfggameplay.json to register spawn.json in objectSpawnersArr
+            console.log('[SPAWN] Updating cfggameplay.json to register spawn.json...');
+            
+            try {
+                // Download cfggameplay.json as text to preserve formatting
+                const downloadUrl = `${BASE_URL}/${guildConfig.nitrado_service_id}/gameservers/file_server/download?file=${encodeURIComponent(GAMEPLAY_FILE_PATH)}`;
+                const downloadResp = await axios.get(downloadUrl, {
+                    headers: { 'Authorization': `Bearer ${guildConfig.nitrado_token}` }
+                });
+                
+                const fileUrl = downloadResp.data.data.token.url;
+                const fileResp = await axios.get(fileUrl, { responseType: 'text' });
+                let fileContent = fileResp.data;
+                
+                // Check if spawn.json is already registered
+                const spawnJsonPath = '"./custom/spawn.json"';
+                
+                if (!fileContent.includes(spawnJsonPath)) {
+                    // Find empty objectSpawnersArr and add spawn.json to it using text replacement
+                    // This preserves the original file formatting and location
+                    const updatedContent = fileContent.replace(
+                        /"objectSpawnersArr"\s*:\s*\[\s*\]/,
+                        `"objectSpawnersArr": [\n        "./custom/spawn.json"\n    ]`
+                    );
+                    
+                    if (updatedContent !== fileContent) {
+                        fileContent = updatedContent;
+                        console.log('[SPAWN] Added "./custom/spawn.json" to objectSpawnersArr');
+                        
+                        // Upload updated cfggameplay.json
+                        const gameplayTmpPath = path.join(__dirname, 'logs', `cfggameplay_${Date.now()}.json`);
+                        fs.writeFileSync(gameplayTmpPath, fileContent, 'utf8');
+                        
+                        await client.uploadFrom(gameplayTmpPath, GAMEPLAY_FTP_PATH);
+                        fs.unlinkSync(gameplayTmpPath);
+                        
+                        console.log('[SPAWN] Successfully updated cfggameplay.json');
+                    } else {
+                        console.log('[SPAWN] Could not find empty objectSpawnersArr to update');
+                    }
+                } else {
+                    console.log('[SPAWN] "./custom/spawn.json" already registered in objectSpawnersArr');
+                }
+            } catch (gameplayErr) {
+                console.error('[SPAWN] Warning: Could not update cfggameplay.json:', gameplayErr.message);
+                console.error('[SPAWN] Full error:', gameplayErr);
+                console.error('[SPAWN] Stack:', gameplayErr.stack);
+                console.error('[SPAWN] You may need to manually add "./custom/spawn.json" to objectSpawnersArr');
+            }
+            
         } finally {
             client.close();
         }
@@ -408,7 +567,69 @@ async function addCupidSpawnEntry(spawnEntry, guildId) {
     }
 }
 
+// Function to spawn weapon kits from kit_purchases table
+async function spawnPendingKits(guildId) {
+    try {
+        console.log('[KIT] Checking for pending kits to spawn...');
+        const weaponKits = require('./weapon_kits.js');
+        
+        // Get all unspawned kits for this guild
+        const kits = await db.pool.query(
+            'SELECT * FROM kit_purchases WHERE guild_id = $1 AND spawned = false',
+            [guildId]
+        );
+
+        if (kits.rows.length === 0) {
+            console.log('[KIT] No pending kits to spawn');
+            return;
+        }
+
+        console.log(`[KIT] Found ${kits.rows.length} kits to spawn`);
+
+        for (const kit of kits.rows) {
+            try {
+                console.log(`[KIT] Spawning ${kit.kit_name} for user ${kit.user_id}`);
+                
+                // Get player's DayZ name
+                const dayzName = await db.getDayZName(guildId, kit.user_id);
+                if (!dayzName) {
+                    console.log(`[KIT] No DayZ name found for ${kit.user_id}, skipping`);
+                    continue;
+                }
+
+                // Spawn the weapon
+                await addCupidSpawnEntry({
+                    class: kit.weapon_variant,
+                    userId: kit.user_id,
+                    dayzPlayerName: dayzName
+                }, guildId);
+
+                // Spawn all attachments
+                const attachments = JSON.parse(kit.attachments);
+                for (const [slotName, className] of Object.entries(attachments)) {
+                    await addCupidSpawnEntry({
+                        class: className,
+                        userId: kit.user_id,
+                        dayzPlayerName: dayzName
+                    }, guildId);
+                }
+
+                // Mark as spawned
+                await db.markKitSpawned(kit.id);
+                console.log(`[KIT] Successfully spawned kit #${kit.id}`);
+
+            } catch (kitError) {
+                console.error(`[KIT] Error spawning kit #${kit.id}:`, kitError.message);
+            }
+        }
+
+    } catch (error) {
+        console.error('[KIT] Error in spawnPendingKits:', error);
+    }
+}
+
 module.exports.addCupidSpawnEntry = addCupidSpawnEntry;
+module.exports.spawnPendingKits = spawnPendingKits;
 
 // --- Player Location Tracking ---
 function parsePlayerLocation(logEntry) {
@@ -457,9 +678,25 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>. */
 
 require('dotenv').config();
 const { Client, Collection, Intents } = require('discord.js');
-const config = require('./config.json');
+const configFile = require('./config.json');
 const moment = require('moment-timezone');
 const nodeoutlook = require('nodejs-nodemailer-outlook');
+
+// Merge config: Use .env for local dev, config.json for production (Heroku)
+const config = {
+    TOKEN: process.env.TOKEN || configFile.TOKEN,
+    CLIENTID: process.env.CLIENTID || configFile.CLIENTID,
+    GUILDID: process.env.GUILDID || configFile.GUILDID,
+    PLATFORM: process.env.PLATFORM || configFile.PLATFORM,
+    ID1: process.env.ID1 || configFile.ID1,
+    ID2: process.env.ID2 || configFile.ID2,
+    NITRATOKEN: process.env.NITRATOKEN || configFile.NITRATOKEN,
+    REGION: process.env.REGION || configFile.REGION,
+    DEV_MODE: process.env.DEV_MODE === 'true',
+    TEST_GUILD_ID: process.env.TEST_GUILD_ID
+};
+
+console.log(`[CONFIG] Running in ${config.DEV_MODE ? 'DEVELOPMENT' : 'PRODUCTION'} mode`);
 
 if (!fs.existsSync("./logs/log.ADM")) {
     fs.writeFileSync("./logs/log.ADM", "");
@@ -510,6 +747,8 @@ for (const file of commandFiles) {
 }
 
 bot.on('interactionCreate', async interaction => {
+    console.log('[INTERACTION] Received:', interaction.type, interaction.commandName || interaction.customId);
+    
     // Handle modal submissions
     if (interaction.isModalSubmit()) {
         if (interaction.customId === 'guild_setup_modal') {
@@ -517,6 +756,30 @@ bot.on('interactionCreate', async interaction => {
             if (adminCommand && adminCommand.handleSetupModalSubmit) {
                 await adminCommand.handleSetupModalSubmit(interaction);
             }
+        }
+        return;
+    }
+    
+    // Handle kit system interactions
+    if ((interaction.isButton() || interaction.isSelectMenu()) && interaction.customId.startsWith('kit_')) {
+        const kitCommand = bot.commands.get('kit');
+        if (!kitCommand) return;
+
+        try {
+            if (interaction.customId.startsWith('kit_weapon_')) {
+                await kitCommand.handleWeaponSelection(interaction);
+            } else if (interaction.customId.startsWith('kit_variant_')) {
+                await kitCommand.handleVariantSelection(interaction);
+            } else if (interaction.customId.startsWith('kit_attach_')) {
+                await kitCommand.handleAttachmentSelection(interaction);
+            } else if (interaction.customId.startsWith('kit_finish_')) {
+                await kitCommand.handleFinishKit(interaction);
+            } else if (interaction.customId.startsWith('kit_cancel_')) {
+                await kitCommand.handleCancelKit(interaction);
+            }
+        } catch (error) {
+            console.error('[KIT] Error handling interaction:', error);
+            await interaction.reply({ content: '❌ An error occurred! Please try again.', ephemeral: true }).catch(() => {});
         }
         return;
     }
@@ -595,6 +858,14 @@ bot.on('error', err => {
     console.log(err);
 });
 
+// Process error handlers to prevent silent crashes
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+process.on('uncaughtException', (error) => {
+    console.error('Uncaught Exception:', error);
+});
 
 // --- Connection/Disconnection Log Monitor ---
 const CONNECTIONS_CHANNEL_ID = '1405195781639770224'; // Discord channel for connections
@@ -607,7 +878,7 @@ let lastCleanupCheck = 0;
 const RESTART_HOURS = [8, 11, 14, 17, 20, 23, 2, 5]; // UTC hours
 
 // Helper: Check if it's time to cleanup after scheduled restart
-function checkScheduledCleanup() {
+async function checkScheduledCleanup(guildId) {
     const now = new Date();
     const currentHour = now.getHours();
     const currentMinute = now.getMinutes();
@@ -631,7 +902,12 @@ function checkScheduledCleanup() {
             lastCleanupCheck = Date.now();
             
             console.log(`[RESTART] Cleanup window detected after ${restartHour}:00 restart`);
-            cleanupSpawnJson(guildId); // Use time-based filtering to preserve new purchases
+            
+            // Spawn pending kits BEFORE cleanup
+            await spawnPendingKits(guildId);
+            
+            // Then cleanup old spawns
+            await cleanupSpawnJson(guildId);
             return;
         }
     }
