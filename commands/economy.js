@@ -2,7 +2,7 @@
 const path = require('path');
 const fs = require('fs');
 const db = require('../database.js');
-const { MessageActionRow, MessageButton } = require('discord.js');
+const { MessageActionRow, MessageButton, MessageSelectMenu, MessageEmbed } = require('discord.js');
 const COOLDOWN_FILE = path.join(__dirname, '../logs/economy_cooldowns.json');
 const MINI_GAMES = ['fortuneteller','pillage','archery','tarot','quest','liarsdice','smuggle','pickpocket','bribe','labor','questboard','taverndice','duel','joust','hunting','fishing','mining','herbalism','blacksmith','alchemy','bard','horseracing','chess','relics','tournamentmelee','beasttaming','siegedefense','campaign'];
 const COOLDOWN_LIMIT = 1; // times allowed
@@ -891,11 +891,7 @@ module.exports = {
                     .setRequired(true)),
         new SlashCommandBuilder()
             .setName('shop')
-            .setDescription('View and purchase items from the shop')
-            .addStringOption(option =>
-                option.setName('item')
-                    .setDescription('Item to purchase (leave blank to view shop)')
-                    .setRequired(false)),
+            .setDescription('View and purchase items from the shop'),
         new SlashCommandBuilder()
             .setName('setname')
             .setDescription('Set your DayZ player name for spawn locations')
@@ -1003,7 +999,9 @@ module.exports = {
         
         // Get guild config for channel IDs
         const guildConfig = await db.getGuildConfig(guildId);
-        if (!guildConfig) {
+        const DEV_MODE = process.env.DEV_MODE === 'true';
+        
+        if (!guildConfig && !DEV_MODE) {
             await interaction.reply({
                 embeds: [
                     new MessageEmbed()
@@ -1016,14 +1014,14 @@ module.exports = {
             return;
         }
         
-        const SHOP_CHANNEL_ID = guildConfig.shop_channel_id;
-        const ECONOMY_CHANNEL_ID = guildConfig.economy_channel_id;
+        const SHOP_CHANNEL_ID = guildConfig?.shop_channel_id;
+        const ECONOMY_CHANNEL_ID = guildConfig?.economy_channel_id;
         
         if (interaction.commandName === 'shop') {
             console.log('[SHOP] Entered /shop logic');
             try {
                 console.log('[SHOP] Channel check');
-                if (interaction.channelId !== SHOP_CHANNEL_ID) {
+                if (!DEV_MODE && interaction.channelId !== SHOP_CHANNEL_ID) {
                     await interaction.reply({
                         embeds: [
                             new MessageEmbed()
@@ -1039,190 +1037,639 @@ module.exports = {
                 console.log('[SHOP] Passed channel check');
                 // --- SHOP COMMAND LOGIC ---
                 const shopItems = require('../shop_items.js');
-                const itemName = interaction.options.getString('item');
-                if (!itemName) {
-                    console.log('[SHOP] No itemName, showing shop menu');
-                    // Paginate shop items to avoid Discord's 4096 character limit
-                    const ITEMS_PER_PAGE = 20;
-                    const pages = [];
-                    for (let i = 0; i < shopItems.length; i += ITEMS_PER_PAGE) {
-                        const chunk = shopItems.slice(i, i + ITEMS_PER_PAGE);
-                        let desc = '';
-                        for (const item of chunk) {
-                            desc += `**${item.name}** — $${item.averagePrice}\n`;
-                        }
-                        pages.push(desc);
+                
+                // Helper function to group items by category
+                function getCategorizedItems() {
+                    const categories = {
+                        'ASSAULT_SMG': { name: 'Assault Rifles & SMGs', emoji: '🔫', items: [] },
+                        'SNIPER_MARKSMAN': { name: 'Sniper & Marksman Rifles', emoji: '🎯', items: [] },
+                        'RIFLES_SHOTGUNS': { name: 'Rifles & Shotguns', emoji: '🏹', items: [] },
+                        'PISTOLS': { name: 'Pistols & Sidearms', emoji: '🔫', items: [] },
+                        'MELEE': { name: 'Melee Weapons', emoji: '🔪', items: [] },
+                        'ATTACHMENTS': { name: 'Weapon Attachments', emoji: '🔭', items: [] },
+                        'AMMUNITION': { name: 'Ammunition', emoji: '📦', items: [] },
+                        'MEDICAL': { name: 'Medical Supplies', emoji: '💉', items: [] },
+                        'FOOD_DRINK': { name: 'Food & Drink', emoji: '🍖', items: [] },
+                        'TOOLS': { name: 'Tools & Repair', emoji: '🔧', items: [] },
+                        'CLOTHING_ARMOR': { name: 'Clothing & Armor', emoji: '👕', items: [] },
+                        'BACKPACKS': { name: 'Backpacks & Storage', emoji: '🎒', items: [] },
+                        'BUILDING': { name: 'Base Building', emoji: '🏗️', items: [] },
+                        'VEHICLE': { name: 'Vehicle Parts', emoji: '🚗', items: [] },
+                        'ELECTRONICS': { name: 'Explosives & Electronics', emoji: '💣', items: [] }
+                    };
+                    
+                    // Assign items by index ranges (based on shop_items.js structure)
+                    // This is more reliable than parsing comments
+                    const ranges = {
+                        'ASSAULT_SMG': [0, 23],           // Indices 0-22: Assault rifles & SMGs
+                        'SNIPER_MARKSMAN': [23, 40],      // Indices 23-39: Sniper & marksman rifles
+                        'RIFLES_SHOTGUNS': [40, 49],      // Indices 40-48: Rifles & shotguns
+                        'PISTOLS': [49, 63],              // Indices 49-62: Pistols
+                        'MELEE': [63, 83],                // Indices 63-82: Melee weapons
+                        'ATTACHMENTS': [83, 159],         // Indices 83-158: Attachments + Magazines
+                        'AMMUNITION': [159, 178],         // Indices 159-177: Ammunition
+                        'MEDICAL': [178, 195],            // Indices 178-194: Medical
+                        'FOOD_DRINK': [195, 223],         // Indices 195-222: Food & drink
+                        'TOOLS': [223, 241],              // Indices 223-240: Tools & repair
+                        'CLOTHING_ARMOR': [241, 289],     // Indices 241-288: Clothing & armor
+                        'BACKPACKS': [289, 315],          // Indices 289-314: Backpacks & storage
+                        'BUILDING': [315, 327],           // Indices 315-326: Building materials
+                        'VEHICLE': [327, 339],            // Indices 327-338: Vehicle parts
+                        'ELECTRONICS': [339, 362]         // Indices 339-361: Electronics & grenades
+                    };
+                    
+                    for (const [categoryKey, [start, end]] of Object.entries(ranges)) {
+                        categories[categoryKey].items = shopItems.slice(start, end);
                     }
                     
-                    // Send first page with navigation buttons
-                    let currentPage = 0;
-                    const row = new MessageActionRow()
+                    return categories;
+                }
+                
+                console.log('[SHOP] Showing category browser');
+                    
+                    // Shopping cart storage (per user session)
+                    const shoppingCart = new Map();
+                    
+                    // Show category selection
+                    const row1 = new MessageActionRow()
                         .addComponents(
                             new MessageButton()
-                                .setCustomId('prev_page')
-                                .setLabel('◀ Previous')
-                                .setStyle('PRIMARY')
-                                .setDisabled(true),
+                                .setCustomId('cat_assault_smg')
+                                .setLabel('🔫 Assault/SMG')
+                                .setStyle('PRIMARY'),
                             new MessageButton()
-                                .setCustomId('next_page')
-                                .setLabel('Next ▶')
+                                .setCustomId('cat_sniper')
+                                .setLabel('🎯 Sniper')
+                                .setStyle('PRIMARY'),
+                            new MessageButton()
+                                .setCustomId('cat_rifles')
+                                .setLabel('🏹 Rifles/Shotguns')
+                                .setStyle('PRIMARY'),
+                            new MessageButton()
+                                .setCustomId('cat_pistols')
+                                .setLabel('🔫 Pistols')
                                 .setStyle('PRIMARY')
-                                .setDisabled(pages.length <= 1)
+                        );
+                    
+                    const row2 = new MessageActionRow()
+                        .addComponents(
+                            new MessageButton()
+                                .setCustomId('cat_melee')
+                                .setLabel('🔪 Melee')
+                                .setStyle('PRIMARY'),
+                            new MessageButton()
+                                .setCustomId('cat_attachments')
+                                .setLabel('🔭 Attachments')
+                                .setStyle('PRIMARY'),
+                            new MessageButton()
+                                .setCustomId('cat_ammo')
+                                .setLabel('📦 Ammunition')
+                                .setStyle('PRIMARY'),
+                            new MessageButton()
+                                .setCustomId('cat_medical')
+                                .setLabel('💉 Medical')
+                                .setStyle('PRIMARY')
+                        );
+                    
+                    const row3 = new MessageActionRow()
+                        .addComponents(
+                            new MessageButton()
+                                .setCustomId('cat_food')
+                                .setLabel('🍖 Food/Drink')
+                                .setStyle('PRIMARY'),
+                            new MessageButton()
+                                .setCustomId('cat_tools')
+                                .setLabel('🔧 Tools')
+                                .setStyle('PRIMARY'),
+                            new MessageButton()
+                                .setCustomId('cat_clothing')
+                                .setLabel('👕 Clothing/Armor')
+                                .setStyle('PRIMARY'),
+                            new MessageButton()
+                                .setCustomId('cat_backpacks')
+                                .setLabel('🎒 Backpacks')
+                                .setStyle('PRIMARY')
+                        );
+                    
+                    const row4 = new MessageActionRow()
+                        .addComponents(
+                            new MessageButton()
+                                .setCustomId('cat_building')
+                                .setLabel('🏗️ Building')
+                                .setStyle('PRIMARY'),
+                            new MessageButton()
+                                .setCustomId('cat_vehicle')
+                                .setLabel('🚗 Vehicle')
+                                .setStyle('PRIMARY'),
+                            new MessageButton()
+                                .setCustomId('cat_electronics')
+                                .setLabel('💣 Electronics')
+                                .setStyle('PRIMARY'),
+                            new MessageButton()
+                                .setCustomId('view_cart')
+                                .setLabel('🛒 View Cart (0)')
+                                .setStyle('SUCCESS')
                         );
                     
                     const message = await interaction.reply({
                         embeds: [
                             new MessageEmbed()
                                 .setColor('#ff69b4')
-                                .setTitle('DayZ Shop')
-                                .setDescription(pages[currentPage])
-                                .setFooter({ text: `Page ${currentPage + 1}/${pages.length} • Use /shop item:<name> to purchase.` })
+                                .setTitle('🛒 DayZ Shop - Select a Category')
+                                .setDescription('Browse items by category. Click a button below to view items.')
                         ],
-                        components: [row],
+                        components: [row1, row2, row3, row4],
                         fetchReply: true
                     });
                     
-                    // Create button collector with filter
+                    // Create unified collector for all interactions (buttons and select menus)
                     const filter = i => i.user.id === interaction.user.id;
                     const collector = message.createMessageComponentCollector({ 
-                        filter, 
-                        componentType: 'BUTTON',
-                        time: 300000 
-                    }); // 5 minutes
+                        filter,
+                        time: 600000 
+                    }); // 10 minutes
                     
-                    collector.on('collect', async i => {
-                        if (i.customId === 'prev_page') {
-                            currentPage = Math.max(0, currentPage - 1);
-                        } else if (i.customId === 'next_page') {
-                            currentPage = Math.min(pages.length - 1, currentPage + 1);
-                        }
-                        
-                        const newRow = new MessageActionRow()
+                    const categories = getCategorizedItems();
+                    let currentCategory = null;
+                    let currentPage = 0;
+                    const ITEMS_PER_PAGE = 10;
+                    
+                    // Helper to update cart button
+                    function updateCartButton(components) {
+                        const cartSize = Array.from(shoppingCart.values()).reduce((sum, qty) => sum + qty, 0);
+                        const row4Updated = new MessageActionRow()
                             .addComponents(
                                 new MessageButton()
-                                    .setCustomId('prev_page')
-                                    .setLabel('◀ Previous')
-                                    .setStyle('PRIMARY')
-                                    .setDisabled(currentPage === 0),
+                                    .setCustomId('cat_building')
+                                    .setLabel('🏗️ Building')
+                                    .setStyle('PRIMARY'),
                                 new MessageButton()
-                                    .setCustomId('next_page')
-                                    .setLabel('Next ▶')
-                                    .setStyle('PRIMARY')
-                                    .setDisabled(currentPage === pages.length - 1)
+                                    .setCustomId('cat_vehicle')
+                                    .setLabel('🚗 Vehicle')
+                                    .setStyle('PRIMARY'),
+                                new MessageButton()
+                                    .setCustomId('cat_electronics')
+                                    .setLabel('💣 Electronics')
+                                    .setStyle('PRIMARY'),
+                                new MessageButton()
+                                    .setCustomId('view_cart')
+                                    .setLabel(`🛒 View Cart (${cartSize})`)
+                                    .setStyle('SUCCESS')
                             );
-                        
-                        await i.update({
-                            embeds: [
-                                new MessageEmbed()
-                                    .setColor('#ff69b4')
-                                    .setTitle('DayZ Shop')
-                                    .setDescription(pages[currentPage])
-                                    .setFooter({ text: `Page ${currentPage + 1}/${pages.length} • Use /shop item:<name> to purchase.` })
-                            ],
-                            components: [newRow]
-                        });
+                        return [row1, row2, row3, row4Updated];
+                    }
+                    
+                    collector.on('collect', async i => {
+                        console.log(`[SHOP-COLLECTOR] Received: ${i.customId}, isSelectMenu: ${i.isSelectMenu()}, user: ${i.user.tag}`);
+                        try {
+                            // Handle SELECT MENU (item selection)
+                            if (i.isSelectMenu() && i.customId === 'select_item') {
+                                console.log(`[SHOP] SELECT MENU detected, value: ${i.values[0]}`);
+                                const itemIdx = parseInt(i.values[0].split('_')[1]);
+                                const item = shopItems[itemIdx];
+                                
+                                // Show quantity selection
+                                const qtyRow = new MessageActionRow()
+                                    .addComponents(
+                                        new MessageButton()
+                                            .setCustomId(`qty_${itemIdx}_1`)
+                                            .setLabel('1x')
+                                            .setStyle('SECONDARY'),
+                                        new MessageButton()
+                                            .setCustomId(`qty_${itemIdx}_2`)
+                                            .setLabel('2x')
+                                            .setStyle('SECONDARY'),
+                                        new MessageButton()
+                                            .setCustomId(`qty_${itemIdx}_3`)
+                                            .setLabel('3x')
+                                            .setStyle('SECONDARY'),
+                                        new MessageButton()
+                                            .setCustomId(`qty_${itemIdx}_5`)
+                                            .setLabel('5x')
+                                            .setStyle('SECONDARY')
+                                    );
+                                
+                                const qtyMessage = await i.reply({
+                                    embeds: [
+                                        new MessageEmbed()
+                                            .setColor('#ff69b4')
+                                            .setTitle(`Add ${item.name} to Cart`)
+                                            .setDescription(`**Price:** $${item.averagePrice} each\n\n${item.description}\n\nSelect quantity:`)
+                                    ],
+                                    components: [qtyRow],
+                                    ephemeral: true,
+                                    fetchReply: true
+                                });
+                                
+                                // Create a collector for THIS ephemeral message
+                                const qtyCollector = qtyMessage.createMessageComponentCollector({
+                                    time: 60000 // 1 minute to select quantity
+                                });
+                                
+                                qtyCollector.on('collect', async qtyInteraction => {
+                                    console.log(`[QTY-COLLECTOR] Received: ${qtyInteraction.customId}`);
+                                    if (qtyInteraction.customId.startsWith('qty_')) {
+                                        const parts = qtyInteraction.customId.split('_');
+                                        const qtyItemIdx = parseInt(parts[1]);
+                                        const qty = parseInt(parts[2]);
+                                        const qtyItem = shopItems[qtyItemIdx];
+                                        
+                                        const existing = shoppingCart.get(qtyItemIdx) || 0;
+                                        shoppingCart.set(qtyItemIdx, existing + qty);
+                                        
+                                        console.log(`[SHOP] Adding ${qty}x ${qtyItem.name} to cart. Total now: ${shoppingCart.get(qtyItemIdx)}`);
+                                        
+                                        await qtyInteraction.update({
+                                            embeds: [
+                                                new MessageEmbed()
+                                                    .setColor('#00ff00')
+                                                    .setTitle('✅ Added to Cart')
+                                                    .setDescription(`Added ${qty}x **${qtyItem.name}** to your cart!\n\nTotal in cart: ${shoppingCart.get(qtyItemIdx)}x`)
+                                            ],
+                                            components: []
+                                        });
+                                        
+                                        console.log(`[SHOP] Ephemeral message updated, now updating main message cart button...`);
+                                        // Update main message cart button
+                                        await message.edit({ components: updateCartButton() }).catch(err => {
+                                            console.error(`[SHOP] Failed to update cart button:`, err);
+                                        });
+                                        console.log(`[SHOP] Cart button updated successfully`);
+                                        qtyCollector.stop();
+                                    }
+                                });
+                                
+                                return;
+                            }
+                            
+                            // Handle category selection
+                            const categoryButtonMap = {
+                                'cat_assault_smg': 'ASSAULT_SMG',
+                                'cat_sniper': 'SNIPER_MARKSMAN',
+                                'cat_rifles': 'RIFLES_SHOTGUNS',
+                                'cat_pistols': 'PISTOLS',
+                                'cat_melee': 'MELEE',
+                                'cat_attachments': 'ATTACHMENTS',
+                                'cat_ammo': 'AMMUNITION',
+                                'cat_medical': 'MEDICAL',
+                                'cat_food': 'FOOD_DRINK',
+                                'cat_tools': 'TOOLS',
+                                'cat_clothing': 'CLOTHING_ARMOR',
+                                'cat_backpacks': 'BACKPACKS',
+                                'cat_building': 'BUILDING',
+                                'cat_vehicle': 'VEHICLE',
+                                'cat_electronics': 'ELECTRONICS'
+                            };
+                            
+                            if (categoryButtonMap[i.customId]) {
+                                const categoryKey = categoryButtonMap[i.customId];
+                                currentCategory = categoryKey;
+                                currentPage = 0;
+                                const category = categories[categoryKey];
+                                const items = category.items;
+                                
+                                if (items.length === 0) {
+                                    await i.reply({ content: 'No items in this category yet!', ephemeral: true });
+                                    return;
+                                }
+                                
+                                // Show items with Select menus for adding to cart
+                                const startIdx = currentPage * ITEMS_PER_PAGE;
+                                const endIdx = Math.min(startIdx + ITEMS_PER_PAGE, items.length);
+                                const pageItems = items.slice(startIdx, endIdx);
+                                
+                                let desc = `**Page ${currentPage + 1}/${Math.ceil(items.length / ITEMS_PER_PAGE)}**\n\n`;
+                                const selectOptions = [];
+                                
+                                for (let idx = 0; idx < pageItems.length; idx++) {
+                                    const item = pageItems[idx];
+                                    const globalIdx = startIdx + idx;
+                                    desc += `${idx + 1}. **${item.name}** — $${item.averagePrice}\n   ${item.description || 'No description'}\n\n`;
+                                    
+                                    selectOptions.push({
+                                        label: item.name.substring(0, 100),
+                                        description: `$${item.averagePrice}`,
+                                        value: `item_${globalIdx}`
+                                    });
+                                }
+                                
+                                const selectRow = new MessageActionRow()
+                                    .addComponents(
+                                        new MessageSelectMenu()
+                                            .setCustomId('select_item')
+                                            .setPlaceholder('Select an item to add to cart')
+                                            .addOptions(selectOptions.slice(0, 25)) // Discord limit
+                                    );
+                                
+                                const navRow = new MessageActionRow()
+                                    .addComponents(
+                                        new MessageButton()
+                                            .setCustomId('prev_cat_page')
+                                            .setLabel('◀ Previous')
+                                            .setStyle('SECONDARY')
+                                            .setDisabled(currentPage === 0),
+                                        new MessageButton()
+                                            .setCustomId('next_cat_page')
+                                            .setLabel('Next ▶')
+                                            .setStyle('SECONDARY')
+                                            .setDisabled(endIdx >= items.length),
+                                        new MessageButton()
+                                            .setCustomId('back_to_categories')
+                                            .setLabel('← Back')
+                                            .setStyle('PRIMARY')
+                                    );
+                                
+                                await i.update({
+                                    embeds: [
+                                        new MessageEmbed()
+                                            .setColor('#ff69b4')
+                                            .setTitle(`${category.emoji} ${category.name}`)
+                                            .setDescription(desc)
+                                            .setFooter({ text: `${items.length} items total` })
+                                    ],
+                                    components: [selectRow, navRow]
+                                });
+                                return;
+                            }
+                            
+                            // Handle pagination - PREV
+                            if (i.customId === 'prev_cat_page') {
+                                currentPage = Math.max(0, currentPage - 1);
+                                
+                                const category = categories[currentCategory];
+                                const items = category.items;
+                                const startIdx = currentPage * ITEMS_PER_PAGE;
+                                const endIdx = Math.min(startIdx + ITEMS_PER_PAGE, items.length);
+                                const pageItems = items.slice(startIdx, endIdx);
+                                
+                                let desc = `**Page ${currentPage + 1}/${Math.ceil(items.length / ITEMS_PER_PAGE)}**\n\n`;
+                                const selectOptions = [];
+                                
+                                for (let idx = 0; idx < pageItems.length; idx++) {
+                                    const item = pageItems[idx];
+                                    const globalIdx = startIdx + idx;
+                                    desc += `${idx + 1}. **${item.name}** — $${item.averagePrice}\n   ${item.description || 'No description'}\n\n`;
+                                    
+                                    selectOptions.push({
+                                        label: item.name.substring(0, 100),
+                                        description: `$${item.averagePrice}`,
+                                        value: `item_${globalIdx}`
+                                    });
+                                }
+                                
+                                const selectRow = new MessageActionRow()
+                                    .addComponents(
+                                        new MessageSelectMenu()
+                                            .setCustomId('select_item')
+                                            .setPlaceholder('Select an item to add to cart')
+                                            .addOptions(selectOptions.slice(0, 25))
+                                    );
+                                
+                                const navRow = new MessageActionRow()
+                                    .addComponents(
+                                        new MessageButton()
+                                            .setCustomId('prev_cat_page')
+                                            .setLabel('◀ Previous')
+                                            .setStyle('SECONDARY')
+                                            .setDisabled(currentPage === 0),
+                                        new MessageButton()
+                                            .setCustomId('next_cat_page')
+                                            .setLabel('Next ▶')
+                                            .setStyle('SECONDARY')
+                                            .setDisabled(endIdx >= items.length),
+                                        new MessageButton()
+                                            .setCustomId('back_to_categories')
+                                            .setLabel('← Back')
+                                            .setStyle('PRIMARY')
+                                    );
+                                
+                                await i.update({
+                                    embeds: [
+                                        new MessageEmbed()
+                                            .setColor('#ff69b4')
+                                            .setTitle(`${category.emoji} ${category.name}`)
+                                            .setDescription(desc)
+                                            .setFooter({ text: `${items.length} items total` })
+                                    ],
+                                    components: [selectRow, navRow]
+                                });
+                                return;
+                            }
+                            
+                            // Handle pagination - NEXT
+                            if (i.customId === 'next_cat_page') {
+                                const category = categories[currentCategory];
+                                const maxPages = Math.ceil(category.items.length / ITEMS_PER_PAGE);
+                                currentPage = Math.min(maxPages - 1, currentPage + 1);
+                                
+                                const items = category.items;
+                                const startIdx = currentPage * ITEMS_PER_PAGE;
+                                const endIdx = Math.min(startIdx + ITEMS_PER_PAGE, items.length);
+                                const pageItems = items.slice(startIdx, endIdx);
+                                
+                                let desc = `**Page ${currentPage + 1}/${Math.ceil(items.length / ITEMS_PER_PAGE)}**\n\n`;
+                                const selectOptions = [];
+                                
+                                for (let idx = 0; idx < pageItems.length; idx++) {
+                                    const item = pageItems[idx];
+                                    const globalIdx = startIdx + idx;
+                                    desc += `${idx + 1}. **${item.name}** — $${item.averagePrice}\n   ${item.description || 'No description'}\n\n`;
+                                    
+                                    selectOptions.push({
+                                        label: item.name.substring(0, 100),
+                                        description: `$${item.averagePrice}`,
+                                        value: `item_${globalIdx}`
+                                    });
+                                }
+                                
+                                const selectRow = new MessageActionRow()
+                                    .addComponents(
+                                        new MessageSelectMenu()
+                                            .setCustomId('select_item')
+                                            .setPlaceholder('Select an item to add to cart')
+                                            .addOptions(selectOptions.slice(0, 25))
+                                    );
+                                
+                                const navRow = new MessageActionRow()
+                                    .addComponents(
+                                        new MessageButton()
+                                            .setCustomId('prev_cat_page')
+                                            .setLabel('◀ Previous')
+                                            .setStyle('SECONDARY')
+                                            .setDisabled(currentPage === 0),
+                                        new MessageButton()
+                                            .setCustomId('next_cat_page')
+                                            .setLabel('Next ▶')
+                                            .setStyle('SECONDARY')
+                                            .setDisabled(endIdx >= items.length),
+                                        new MessageButton()
+                                            .setCustomId('back_to_categories')
+                                            .setLabel('← Back')
+                                            .setStyle('PRIMARY')
+                                    );
+                                
+                                await i.update({
+                                    embeds: [
+                                        new MessageEmbed()
+                                            .setColor('#ff69b4')
+                                            .setTitle(`${category.emoji} ${category.name}`)
+                                            .setDescription(desc)
+                                            .setFooter({ text: `${items.length} items total` })
+                                    ],
+                                    components: [selectRow, navRow]
+                                });
+                                return;
+                            }
+                            
+                            // Back to categories
+                            if (i.customId === 'back_to_categories') {
+                                await i.update({
+                                    embeds: [
+                                        new MessageEmbed()
+                                            .setColor('#ff69b4')
+                                            .setTitle('🛒 DayZ Shop - Select a Category')
+                                            .setDescription('Browse items by category. Click a button below to view items.')
+                                    ],
+                                    components: updateCartButton()
+                                });
+                                return;
+                            }
+                            
+                            // View cart
+                            if (i.customId === 'view_cart') {
+                                if (shoppingCart.size === 0) {
+                                    await i.reply({ content: 'Your cart is empty!', ephemeral: true });
+                                    return;
+                                }
+                                
+                                let cartDesc = '';
+                                let totalCost = 0;
+                                const cartItems = [];
+                                
+                                for (const [itemIdx, qty] of shoppingCart.entries()) {
+                                    const item = shopItems[itemIdx];
+                                    const itemTotal = item.averagePrice * qty;
+                                    totalCost += itemTotal;
+                                    cartDesc += `**${item.name}** x${qty} — $${item.averagePrice} each = $${itemTotal}\n`;
+                                    cartItems.push({ item, qty });
+                                }
+                                
+                                const bal = await db.getBalance(guildId, userId);
+                                cartDesc += `\n**Total: $${totalCost}**\n**Your Balance: $${bal}**`;
+                                
+                                const cartRow = new MessageActionRow()
+                                    .addComponents(
+                                        new MessageButton()
+                                            .setCustomId('checkout')
+                                            .setLabel('💳 Checkout')
+                                            .setStyle('SUCCESS')
+                                            .setDisabled(bal < totalCost),
+                                        new MessageButton()
+                                            .setCustomId('clear_cart')
+                                            .setLabel('🗑️ Clear Cart')
+                                            .setStyle('DANGER'),
+                                        new MessageButton()
+                                            .setCustomId('back_to_categories')
+                                            .setLabel('← Continue Shopping')
+                                            .setStyle('PRIMARY')
+                                    );
+                                
+                                await i.update({
+                                    embeds: [
+                                        new MessageEmbed()
+                                            .setColor('#ff69b4')
+                                            .setTitle('🛒 Your Shopping Cart')
+                                            .setDescription(cartDesc)
+                                            .setFooter({ text: bal < totalCost ? 'Insufficient funds!' : 'Ready to checkout' })
+                                    ],
+                                    components: [cartRow]
+                                });
+                                return;
+                            }
+                            
+                            // Clear cart
+                            if (i.customId === 'clear_cart') {
+                                shoppingCart.clear();
+                                await i.update({
+                                    embeds: [
+                                        new MessageEmbed()
+                                            .setColor('#ff69b4')
+                                            .setTitle('🛒 DayZ Shop - Select a Category')
+                                            .setDescription('Cart cleared! Browse items by category.')
+                                    ],
+                                    components: updateCartButton()
+                                });
+                                return;
+                            }
+                            
+                            // Checkout
+                            if (i.customId === 'checkout') {
+                                const totalCost = Array.from(shoppingCart.entries())
+                                    .reduce((sum, [idx, qty]) => sum + (shopItems[idx].averagePrice * qty), 0);
+                                
+                                const bal = await db.getBalance(guildId, userId);
+                                if (bal < totalCost) {
+                                    await i.reply({ content: 'Insufficient funds!', ephemeral: true });
+                                    return;
+                                }
+                                
+                                // Deduct money
+                                await db.addBalance(guildId, userId, -totalCost);
+                                
+                                // Get DayZ name
+                                const dayzName = await db.getDayZName(guildId, userId) || interaction.user.username;
+                                
+                                // Add all items to spawn
+                                for (const [itemIdx, qty] of shoppingCart.entries()) {
+                                    const item = shopItems[itemIdx];
+                                    
+                                    if (DEV_MODE) {
+                                        console.log(`[DEV] Would spawn ${qty}x ${item.name} for ${dayzName}`);
+                                    } else {
+                                        await addCupidSpawnEntry(guildId, dayzName, item.class, qty);
+                                    }
+                                }
+                                
+                                const itemList = Array.from(shoppingCart.entries())
+                                    .map(([idx, qty]) => `${qty}x ${shopItems[idx].name}`)
+                                    .join(', ');
+                                
+                                shoppingCart.clear();
+                                
+                                await i.update({
+                                    embeds: [
+                                        new MessageEmbed()
+                                            .setColor('#00ff00')
+                                            .setTitle('✅ Purchase Complete!')
+                                            .setDescription(DEV_MODE 
+                                                ? `**DEV MODE**: Simulated purchase of:\n${itemList}\n\nTotal: $${totalCost}\n\nIn production, items will spawn on server restart.`
+                                                : `You purchased:\n${itemList}\n\nTotal: $${totalCost}\nNew balance: $${bal - totalCost}\n\nItems will spawn on next server restart!`)
+                                    ],
+                                    components: [
+                                        new MessageActionRow()
+                                            .addComponents(
+                                                new MessageButton()
+                                                    .setCustomId('back_to_categories')
+                                                    .setLabel('← Back to Shop')
+                                                    .setStyle('PRIMARY')
+                                            )
+                                    ]
+                                });
+                                return;
+                            }
+                            
+                        } catch (error) {
+                            console.error('[SHOP] Error in collector:', error);
+                            await i.reply({ content: 'An error occurred. Please try again.', ephemeral: true }).catch(() => {});
+                        }
                     });
                     
                     collector.on('end', () => {
-                        // Disable buttons after timeout
-                        const disabledRow = new MessageActionRow()
-                            .addComponents(
-                                new MessageButton()
-                                    .setCustomId('prev_page')
-                                    .setLabel('◀ Previous')
-                                    .setStyle('PRIMARY')
-                                    .setDisabled(true),
-                                new MessageButton()
-                                    .setCustomId('next_page')
-                                    .setLabel('Next ▶')
-                                    .setStyle('PRIMARY')
-                                    .setDisabled(true)
-                            );
-                        message.edit({ components: [disabledRow] }).catch(() => {});
+                        message.edit({ components: [] }).catch(() => {});
                     });
                     
-                    console.log('[SHOP] Shop menu sent');
+                    console.log('[SHOP] Category browser sent');
                     return;
-                }
-                console.log('[SHOP] Looking for item:', itemName);
-                const item = shopItems.find(i => i.name.toLowerCase() === itemName.toLowerCase());
-                if (!item) {
-                    console.log('[SHOP] Item not found:', itemName);
-                    await interaction.reply({
-                        embeds: [
-                            new MessageEmbed()
-                                .setColor('#ff5555')
-                                .setTitle('Item Not Found')
-                                .setDescription('That item does not exist in the shop.')
-                        ], ephemeral: true
-                    });
-                    return;
-                }
-                // Check balance
-                const bal = await db.getBalance(guildId, userId);
-                if (bal < item.averagePrice) {
-                    console.log('[SHOP] Insufficient funds:', bal, 'needed:', item.averagePrice);
-                    await interaction.reply({
-                        embeds: [
-                            new MessageEmbed()
-                                .setColor('#ffaa00')
-                                .setTitle('Insufficient Funds')
-                                .setDescription(`You need $${item.averagePrice} to buy ${item.name}. Your balance: $${bal}`)
-                        ], ephemeral: true
-                    });
-                    return;
-                }
-                // Deduct money
-                await db.addBalance(guildId, userId, -item.averagePrice);
-                // Get registered DayZ name or use Discord username
-                const dayzName = await db.getDayZName(guildId, userId) || interaction.user.username;
-                // Write spawn entry to Cupid.json via Nitrado API
-                const { addCupidSpawnEntry } = require('../index.js');
-                const spawnEntry = {
-                    userId,
-                    dayzPlayerName: dayzName,
-                    item: item.name,
-                    class: item.class,
-                    amount: item.amount || 1,
-                    timestamp: Date.now(),
-                    restart_id: Date.now().toString()
-                };
-                // Reply immediately before FTP upload (Discord has 3s timeout)
-                await interaction.reply({
-                    embeds: [
-                        new MessageEmbed()
-                            .setColor('#00ff99')
-                            .setTitle('Purchase Successful!')
-                            .setDescription(`You bought **${item.name}** for $${item.averagePrice}. Writing spawn entry...`)
-                    ]
-                });
-                
-                try {
-                    console.log('[SHOP] Adding Cupid spawn entry:', spawnEntry);
-                    await addCupidSpawnEntry(spawnEntry, guildId);
-                    console.log('[SHOP] Purchase successful, spawn entry written');
-                    // Update the message to confirm spawn was written
-                    await interaction.editReply({
-                        embeds: [
-                            new MessageEmbed()
-                                .setColor('#00ff99')
-                                .setTitle('Purchase Successful!')
-                                .setDescription(`You bought **${item.name}** for $${item.averagePrice}. It will spawn at your location after the next restart! ✅`)
-                        ]
-                    });
-                } catch (err) {
-                    console.error('[SHOP] Error writing spawn entry:', err);
-                    // Update the message to show error
-                    await interaction.editReply({
-                        embeds: [
-                            new MessageEmbed()
-                                .setColor('#ff5555')
-                                .setTitle('Spawn Error')
-                                .setDescription('Purchase succeeded, but failed to write spawn entry. Please contact an admin.')
-                        ]
-                    });
-                }
-                return;
             } catch (err) {
                 console.error('[SHOP] Fatal error in /shop logic:', err);
                 try {
