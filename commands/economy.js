@@ -1080,7 +1080,10 @@ module.exports = {
                     };
                     
                     for (const [categoryKey, [start, end]] of Object.entries(ranges)) {
-                        categories[categoryKey].items = shopItems.slice(start, end);
+                        categories[categoryKey].items = shopItems.slice(start, end).map((item, idx) => ({
+                            ...item,
+                            originalIndex: start + idx
+                        }));
                     }
                     
                     return categories;
@@ -1345,7 +1348,7 @@ module.exports = {
                                 for (let idx = 0; idx < pageItems.length; idx++) {
                                     const item = pageItems[idx];
                                     const globalIdx = startIdx + idx;
-                                    const actualIdx = shopItems.findIndex(si => si.name === item.name && si.class === item.class);
+                                    const actualIdx = item.originalIndex;
                                     desc += `${idx + 1}. **${item.name}** — $${item.averagePrice}\n   ${item.description || 'No description'}\n\n`;
                                     
                                     selectOptions.push({
@@ -1410,7 +1413,7 @@ module.exports = {
                                 for (let idx = 0; idx < pageItems.length; idx++) {
                                     const item = pageItems[idx];
                                     const globalIdx = startIdx + idx;
-                                    const actualIdx = shopItems.findIndex(si => si.name === item.name && si.class === item.class);
+                                    const actualIdx = item.originalIndex;
                                     desc += `${idx + 1}. **${item.name}** — $${item.averagePrice}\n   ${item.description || 'No description'}\n\n`;
                                     
                                     selectOptions.push({
@@ -1476,7 +1479,7 @@ module.exports = {
                                 for (let idx = 0; idx < pageItems.length; idx++) {
                                     const item = pageItems[idx];
                                     const globalIdx = startIdx + idx;
-                                    const actualIdx = shopItems.findIndex(si => si.name === item.name && si.class === item.class);
+                                    const actualIdx = item.originalIndex;
                                     desc += `${idx + 1}. **${item.name}** — $${item.averagePrice}\n   ${item.description || 'No description'}\n\n`;
                                     
                                     selectOptions.push({
