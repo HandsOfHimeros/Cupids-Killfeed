@@ -1661,7 +1661,7 @@ module.exports = {
                                         new MessageEmbed()
                                             .setColor('#00ff00')
                                             .setTitle('✅ Purchase Complete!')
-                                            .setDescription(`You purchased:\n${itemList}\n\nTotal: $${totalCost}\nNew balance: $${bal - totalCost}\n\nItems will spawn on next server restart!`)
+                                            .setDescription(`You purchased:\n${itemList}\n\nTotal: $${totalCost}\nNew balance: $${bal - totalCost}\n\n**Items will spawn on a table near your current location!**\nIf no table exists within 5m, a new one will be created.\nMake sure you're in-game and your location is being tracked.`)
                                     ],
                                     components: [
                                         new MessageActionRow()
