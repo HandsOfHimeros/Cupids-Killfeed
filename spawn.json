@@ -3949,6 +3949,3190 @@
       "scale": 1,
       "enableCEPersistency": 0,
       "attachments": []
+    },
+    "AugShort": {
+      "name": "AugShort",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "ASVAL": {
+      "name": "ASVAL",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "B95": {
+      "name": "B95",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Blaze95": {
+      "name": "Blaze95",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "M70Tundra": {
+      "name": "M70Tundra",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "SV98": {
+      "name": "SV98",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Longhorn": {
+      "name": "Longhorn",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "BK133Shotgun": {
+      "name": "BK133Shotgun",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "M1014": {
+      "name": "M1014",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Colt1911": {
+      "name": "Colt1911",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Engraved1911": {
+      "name": "Engraved1911",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Revolver_357": {
+      "name": "Revolver_357",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Derringer_Black": {
+      "name": "Derringer_Black",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Derringer_Grey": {
+      "name": "Derringer_Grey",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Derringer_Pink": {
+      "name": "Derringer_Pink",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "BaseballBat": {
+      "name": "BaseballBat",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "BarbedBaseballBat": {
+      "name": "BarbedBaseballBat",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Crowbar": {
+      "name": "Crowbar",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "FirefighterAxe": {
+      "name": "FirefighterAxe",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "WoodAxe": {
+      "name": "WoodAxe",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Hatchet": {
+      "name": "Hatchet",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Pickaxe": {
+      "name": "Pickaxe",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "SledgeHammer": {
+      "name": "SledgeHammer",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Machete": {
+      "name": "Machete",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Cleaver": {
+      "name": "Cleaver",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "KitchenKnife": {
+      "name": "KitchenKnife",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "CombatKnife": {
+      "name": "CombatKnife",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "HuntingKnife": {
+      "name": "HuntingKnife",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Kukri": {
+      "name": "Kukri",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "OrientalSword": {
+      "name": "OrientalSword",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Pitchfork": {
+      "name": "Pitchfork",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Shovel": {
+      "name": "Shovel",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "FieldShovel": {
+      "name": "FieldShovel",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "PipeWrench": {
+      "name": "PipeWrench",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "LugWrench": {
+      "name": "LugWrench",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "M4_CQBBttstck_Green": {
+      "name": "M4_CQBBttstck_Green",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "M4_MPBttstck_Green": {
+      "name": "M4_MPBttstck_Green",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "M4_OEBttstck_Green": {
+      "name": "M4_OEBttstck_Green",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "M4_MPHndgrd_Green": {
+      "name": "M4_MPHndgrd_Green",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "AmmoBox_308Win_20Rnd": {
+      "name": "AmmoBox_308Win_20Rnd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "AmmoBox_308WinTracer_20Rnd": {
+      "name": "AmmoBox_308WinTracer_20Rnd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "AmmoBox_556x45_20Rnd": {
+      "name": "AmmoBox_556x45_20Rnd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "AmmoBox_556x45Tracer_20Rnd": {
+      "name": "AmmoBox_556x45Tracer_20Rnd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "AmmoBox_762x39_20Rnd": {
+      "name": "AmmoBox_762x39_20Rnd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "AmmoBox_762x39Tracer_20Rnd": {
+      "name": "AmmoBox_762x39Tracer_20Rnd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "AmmoBox_545x39_20Rnd": {
+      "name": "AmmoBox_545x39_20Rnd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "AmmoBox_545x39Tracer_20Rnd": {
+      "name": "AmmoBox_545x39Tracer_20Rnd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "AmmoBox_762x54_20Rnd": {
+      "name": "AmmoBox_762x54_20Rnd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "AmmoBox_762x54Tracer_20Rnd": {
+      "name": "AmmoBox_762x54Tracer_20Rnd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "AmmoBox_9x19_25rnd": {
+      "name": "AmmoBox_9x19_25rnd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "AmmoBox_45ACP_25rnd": {
+      "name": "AmmoBox_45ACP_25rnd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "AmmoBox_380_35rnd": {
+      "name": "AmmoBox_380_35rnd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "AmmoBox_357_20Rnd": {
+      "name": "AmmoBox_357_20Rnd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "AmmoBox_9x18_25rnd": {
+      "name": "AmmoBox_9x18_25rnd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "AmmoBox_00buck_10rnd": {
+      "name": "AmmoBox_00buck_10rnd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "AmmoBox_12gaSlug_10Rnd": {
+      "name": "AmmoBox_12gaSlug_10Rnd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "AmmoBox_12gaRubberSlug_10Rnd": {
+      "name": "AmmoBox_12gaRubberSlug_10Rnd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "AmmoBox_22_50Rnd": {
+      "name": "AmmoBox_22_50Rnd",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "BloodBagIV": {
+      "name": "BloodBagIV",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "BloodTestKit": {
+      "name": "BloodTestKit",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "VitaminBottle": {
+      "name": "VitaminBottle",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "CharcoalTablets": {
+      "name": "CharcoalTablets",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "PainkillerTablets": {
+      "name": "PainkillerTablets",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "WoodSplint": {
+      "name": "WoodSplint",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "DisinfectantSpray": {
+      "name": "DisinfectantSpray",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "DisinfectantAlcohol": {
+      "name": "DisinfectantAlcohol",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "IodineTincture": {
+      "name": "IodineTincture",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "SewingKit": {
+      "name": "SewingKit",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "BloodBagEmpty": {
+      "name": "BloodBagEmpty",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "SalineBag": {
+      "name": "SalineBag",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "BakedBeansCan": {
+      "name": "BakedBeansCan",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "PeachesCan": {
+      "name": "PeachesCan",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "TacticalBaconCan": {
+      "name": "TacticalBaconCan",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "SpaghettiCan": {
+      "name": "SpaghettiCan",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Sardines": {
+      "name": "Sardines",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "TunaCan": {
+      "name": "TunaCan",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Pate": {
+      "name": "Pate",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "UnknownFoodCan": {
+      "name": "UnknownFoodCan",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Rice": {
+      "name": "Rice",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Zagorky": {
+      "name": "Zagorky",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "PowderedMilk": {
+      "name": "PowderedMilk",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "BoxCerealCrunchin": {
+      "name": "BoxCerealCrunchin",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "WaterBottle": {
+      "name": "WaterBottle",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "SodaCan_Pipsi": {
+      "name": "SodaCan_Pipsi",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "SodaCan_Spite": {
+      "name": "SodaCan_Spite",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "SodaCan_Kvass": {
+      "name": "SodaCan_Kvass",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "SodaCan_Cola": {
+      "name": "SodaCan_Cola",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "SodaCan_Fronta": {
+      "name": "SodaCan_Fronta",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Apple": {
+      "name": "Apple",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Pear": {
+      "name": "Pear",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Plum": {
+      "name": "Plum",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Tomato": {
+      "name": "Tomato",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Potato": {
+      "name": "Potato",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Pumpkin": {
+      "name": "Pumpkin",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Zucchini": {
+      "name": "Zucchini",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "GreenBellPepper": {
+      "name": "GreenBellPepper",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "DuctTape": {
+      "name": "DuctTape",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "EpoxyPutty": {
+      "name": "EpoxyPutty",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "LeatherSewingKit": {
+      "name": "LeatherSewingKit",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "WeaponCleaningKit": {
+      "name": "WeaponCleaningKit",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "SharpeningStone": {
+      "name": "SharpeningStone",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Whetstone": {
+      "name": "Whetstone",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Hammer": {
+      "name": "Hammer",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "HandSaw": {
+      "name": "HandSaw",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Hacksaw": {
+      "name": "Hacksaw",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Screwdriver": {
+      "name": "Screwdriver",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Pliers": {
+      "name": "Pliers",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Rope": {
+      "name": "Rope",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "UKAssVest_Black": {
+      "name": "UKAssVest_Black",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "SmershVest": {
+      "name": "SmershVest",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "PoliceVest": {
+      "name": "PoliceVest",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "PressVest_Blue": {
+      "name": "PressVest_Blue",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "HighCapacityVest_Black": {
+      "name": "HighCapacityVest_Black",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Mich2001Helmet": {
+      "name": "Mich2001Helmet",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "TacticalGoggles": {
+      "name": "TacticalGoggles",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "AssaultHelmet_Black": {
+      "name": "AssaultHelmet_Black",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "TTsKOJacket_Camo": {
+      "name": "TTsKOJacket_Camo",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "GorkaEJacket_Summer": {
+      "name": "GorkaEJacket_Summer",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "BDUJacket": {
+      "name": "BDUJacket",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "TTSKOPants": {
+      "name": "TTSKOPants",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "GorkaPants_Summer": {
+      "name": "GorkaPants_Summer",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "USMCPants_Desert": {
+      "name": "USMCPants_Desert",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "BDUPants": {
+      "name": "BDUPants",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "CargoPants_Beige": {
+      "name": "CargoPants_Beige",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "CombatBoots_Black": {
+      "name": "CombatBoots_Black",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "CombatBoots_Brown": {
+      "name": "CombatBoots_Brown",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "MilitaryBoots_Black": {
+      "name": "MilitaryBoots_Black",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "JungleBoots_Beige": {
+      "name": "JungleBoots_Beige",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "TTSKOBoots": {
+      "name": "TTSKOBoots",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "TacticalGloves_Green": {
+      "name": "TacticalGloves_Green",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "LeatherGloves_Natural": {
+      "name": "LeatherGloves_Natural",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "GasMask": {
+      "name": "GasMask",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "GP5GasMask": {
+      "name": "GP5GasMask",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Balaclava3Holes_Black": {
+      "name": "Balaclava3Holes_Black",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "AviatorGlasses": {
+      "name": "AviatorGlasses",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "SportGlasses_Blue": {
+      "name": "SportGlasses_Blue",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "GhillieSuit_Tan": {
+      "name": "GhillieSuit_Tan",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "GhillieSuit_Woodland": {
+      "name": "GhillieSuit_Woodland",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "GhillieSuit_Mossy": {
+      "name": "GhillieSuit_Mossy",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "GhillieHood_Tan": {
+      "name": "GhillieHood_Tan",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "GhillieHood_Woodland": {
+      "name": "GhillieHood_Woodland",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "GhillieHood_Mossy": {
+      "name": "GhillieHood_Mossy",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "GhillieBushrag_Tan": {
+      "name": "GhillieBushrag_Tan",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "GhillieBushrag_Woodland": {
+      "name": "GhillieBushrag_Woodland",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "GhillieBushrag_Mossy": {
+      "name": "GhillieBushrag_Mossy",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "AliceBag_Black": {
+      "name": "AliceBag_Black",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "AliceBag_Camo": {
+      "name": "AliceBag_Camo",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "AliceBag_Green": {
+      "name": "AliceBag_Green",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "AssaultBag_Ttsko": {
+      "name": "AssaultBag_Ttsko",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "MountainBag_Blue": {
+      "name": "MountainBag_Blue",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "MountainBag_Green": {
+      "name": "MountainBag_Green",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "TaloonBag_Blue": {
+      "name": "TaloonBag_Blue",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "TaloonBag_Green": {
+      "name": "TaloonBag_Green",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "DryBag_Black": {
+      "name": "DryBag_Black",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "DryBag_Yellow": {
+      "name": "DryBag_Yellow",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "ChildBag_Blue": {
+      "name": "ChildBag_Blue",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "NailBox": {
+      "name": "NailBox",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Nails": {
+      "name": "Nails",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "WoodenPlank": {
+      "name": "WoodenPlank",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "MetalPlate": {
+      "name": "MetalPlate",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "MetalWire": {
+      "name": "MetalWire",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "BarbedWire": {
+      "name": "BarbedWire",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "FenceKit": {
+      "name": "FenceKit",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "WatchtowerKit": {
+      "name": "WatchtowerKit",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "CombinationLock": {
+      "name": "CombinationLock",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "CombinationLock4": {
+      "name": "CombinationLock4",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "CamoNet": {
+      "name": "CamoNet",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Tarp": {
+      "name": "Tarp",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "CivSedanWheel": {
+      "name": "CivSedanWheel",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Sedan_02_Wheel": {
+      "name": "Sedan_02_Wheel",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "HatchbackWheel": {
+      "name": "HatchbackWheel",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Hatchback_02_Wheel": {
+      "name": "Hatchback_02_Wheel",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Offroad_02_Wheel": {
+      "name": "Offroad_02_Wheel",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Truck_01_Wheel": {
+      "name": "Truck_01_Wheel",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "TruckBattery": {
+      "name": "TruckBattery",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "GlowPlug": {
+      "name": "GlowPlug",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "HeadlightH7": {
+      "name": "HeadlightH7",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "M67Grenade": {
+      "name": "M67Grenade",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "RGD5Grenade": {
+      "name": "RGD5Grenade",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "FlashGrenade": {
+      "name": "FlashGrenade",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "SmokeGrenadeWhite": {
+      "name": "SmokeGrenadeWhite",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "SmokeGrenadeRed": {
+      "name": "SmokeGrenadeRed",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "SmokeGrenadeGreen": {
+      "name": "SmokeGrenadeGreen",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Landmine": {
+      "name": "Landmine",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Claymore_Mine": {
+      "name": "Claymore_Mine",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "TripwireTrap": {
+      "name": "TripwireTrap",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "PersonalRadio": {
+      "name": "PersonalRadio",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "BaseRadio": {
+      "name": "BaseRadio",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Megaphone": {
+      "name": "Megaphone",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Headtorch_Grey": {
+      "name": "Headtorch_Grey",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Battery9V": {
+      "name": "Battery9V",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Chemlight_Blue": {
+      "name": "Chemlight_Blue",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Chemlight_Green": {
+      "name": "Chemlight_Green",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Chemlight_Red": {
+      "name": "Chemlight_Red",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Chemlight_Yellow": {
+      "name": "Chemlight_Yellow",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Roadflare": {
+      "name": "Roadflare",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Ammo_FlareRed": {
+      "name": "Ammo_FlareRed",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Ammo_FlareGreen": {
+      "name": "Ammo_FlareGreen",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
+    },
+    "Ammo_FlareBlue": {
+      "name": "Ammo_FlareBlue",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "ypr": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1,
+      "enableCEPersistency": 0,
+      "attachments": []
     }
   },
   "defaultSpawnTemplate": {
