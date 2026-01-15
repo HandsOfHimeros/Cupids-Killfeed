@@ -1627,7 +1627,16 @@ module.exports = {
                                     if (DEV_MODE) {
                                         console.log(`[DEV] Would spawn ${qty}x ${item.name} for ${dayzName}`);
                                     } else {
-                                        await addCupidSpawnEntry(guildId, dayzName, item.class, qty);
+                                        const spawnEntry = {
+                                            userId,
+                                            dayzPlayerName: dayzName,
+                                            item: item.name,
+                                            class: item.class,
+                                            amount: qty,
+                                            timestamp: Date.now(),
+                                            restart_id: Date.now().toString()
+                                        };
+                                        await addCupidSpawnEntry(spawnEntry, guildId);
                                     }
                                 }
                                 
