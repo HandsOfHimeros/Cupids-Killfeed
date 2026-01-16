@@ -146,7 +146,7 @@ module.exports = {
                 )
                 .addSubcommand(subcommand =>
                     subcommand
-                        .setName('mapchange')
+                        .setName('map')
                         .setDescription('Change the map setting for this server')
                         .addStringOption(option =>
                             option.setName('map')
@@ -200,7 +200,7 @@ module.exports = {
             case "announce_shop":
                 await handleAnnounceShop(interaction);
                 break;
-            case "mapchange":
+            case "map":
                 await handleMapChange(interaction);
                 break;
             case "deathloc":
