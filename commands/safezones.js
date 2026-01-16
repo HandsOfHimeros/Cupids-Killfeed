@@ -31,7 +31,7 @@ module.exports = {
             
             const mapName = guildConfig.map_name || 'chernarusplus';
             const mapUrlBase = mapName === 'sakhal' ? 'https://www.izurvive.com/sakhal/' : 
-                              mapName === 'livonia' ? 'https://www.izurvive.com/livonia/' :
+                              mapName === 'enoch' ? 'https://www.izurvive.com/livonia/' :
                               'https://www.izurvive.com/';
             const autoBanStatus = guildConfig.auto_ban_in_safe_zones ? '🔴 **AUTO-BAN ENABLED**' : '⚪ Informational only';
             

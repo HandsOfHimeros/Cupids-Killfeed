@@ -30,7 +30,7 @@ module.exports = {
             
             const mapName = guildConfig.map_name || 'chernarusplus';
             const mapUrlBase = mapName === 'sakhal' ? 'https://www.izurvive.com/sakhal/' : 
-                              mapName === 'livonia' ? 'https://www.izurvive.com/livonia/' :
+                              mapName === 'enoch' ? 'https://www.izurvive.com/livonia/' :
                               'https://www.izurvive.com/';
             
             let response = `**🎯 PVP Safe Zones (${zones.length})**\n`;
