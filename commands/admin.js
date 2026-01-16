@@ -159,6 +159,20 @@ module.exports = {
                                 )
                         )
                 )
+                .addSubcommand(subcommand =>
+                    subcommand
+                        .setName('deathloc')
+                        .setDescription('Toggle death location coordinates in killfeed')
+                        .addStringOption(option =>
+                            option.setName('state')
+                                .setDescription('Turn death locations on or off')
+                                .setRequired(true)
+                                .addChoices(
+                                    { name: 'On', value: 'on' },
+                                    { name: 'Off', value: 'off' }
+                                )
+                        )
+                )
         ),
 
     async execute(interaction) {
@@ -188,6 +202,9 @@ module.exports = {
                 break;
             case "mapchange":
                 await handleMapChange(interaction);
+                break;
+            case "deathloc":
+                await handleDeathlocCommand(interaction);
                 break;
             default:
                 break;
@@ -442,14 +459,21 @@ async function handleDeathlocCommand(interaction) {
         return interaction.reply({ content: 'This server is not configured. Please run `/admin killfeed setup` first.', ephemeral: true });
     }
     
-    if (feedStart) {
-        const choice = interaction.options.getString('state');
-        config.showLoc = choice === "on" ? 1 : 0;
-        fs.writeFileSync('./config.ini', ini.stringify(config));
-        const state = choice === "on" ? "Enabled" : "Disabled";
-        await interaction.reply(`Death Locations **${state}!**`).catch(console.error);
-    } else {
-        await interaction.reply('THE KILLFEED IS NOT CURRENTLY RUNNING!.....').catch(console.error);
+    const choice = interaction.options.getString('state');
+    const showLocations = choice === "on";
+    
+    try {
+        // Update database
+        await db.query(
+            'UPDATE guild_configs SET show_death_locations = $1 WHERE guild_id = $2',
+            [showLocations, guildId]
+        );
+        
+        const state = showLocations ? "Enabled" : "Disabled";
+        await interaction.reply(`Death Locations **${state}!**`);
+    } catch (error) {
+        console.error('Error updating death location setting:', error);
+        await interaction.reply({ content: 'Failed to update death location setting.', ephemeral: true });
     }
 }
 
