@@ -110,6 +110,11 @@ module.exports = {
                         .setName('viewconfig')
                         .setDescription('View current server configuration')
                 )
+                .addSubcommand(subcommand =>
+                    subcommand
+                        .setName('announce_shop')
+                        .setDescription('Send shop table announcement to all servers')
+                )
         ),
 
     async execute(interaction) {
@@ -125,6 +130,9 @@ module.exports = {
                 break;
             case "setup":
                 await handleSetupCommand(interaction);
+                break;
+            case "announce_shop":
+                await handleAnnounceShop(interaction);
                 break;
             default:
                 break;
@@ -988,5 +996,149 @@ async function handleSetupModalSubmit(interaction) {
         await interaction.editReply({
             content: 'Error during setup: ' + error.message
         }).catch(console.error);
+    }
+}
+
+async function handleAnnounceShop(interaction) {
+    await interaction.deferReply({ ephemeral: true });
+    
+    try {
+        // Get all configured guilds
+        const guilds = await db.getAllGuildConfigs();
+        console.log(`[ANNOUNCE_SHOP] Found ${guilds.length} configured guilds`);
+        
+        let successCount = 0;
+        let failCount = 0;
+        const results = [];
+        
+        for (const guildConfig of guilds) {
+            try {
+                const guild = await interaction.client.guilds.fetch(guildConfig.guild_id);
+                
+                // Look for general channel
+                const generalChannel = guild.channels.cache.find(ch => 
+                    ch.name.toLowerCase().includes('general') || 
+                    ch.name.toLowerCase().includes('announcement') ||
+                    ch.name === 'wop-general'
+                );
+                
+                if (!generalChannel) {
+                    console.log(`⚠️  No general channel found for guild ${guild.name}`);
+                    results.push(`❌ ${guild.name} - No general channel found`);
+                    failCount++;
+                    continue;
+                }
+                
+                const embed = new MessageEmbed()
+                    .setColor('#FFD700')
+                    .setTitle('⚡ **DIVINE PROCLAMATION FROM THE HEAVENS** ⚡')
+                    .setDescription(
+                        `@everyone\n\n` +
+                        `**HEAR YE, WARRIORS OF THE WASTELAND!**\n\n` +
+                        `*The gods have witnessed your struggles. They have heard your cries in the darkness. ` +
+                        `And now, from the celestial forge of Olympus itself, a gift beyond mortal comprehension...*\n\n` +
+                        `🏹 **CUPID'S DIVINE SHOP HAS TRANSCENDED!** 🏹`
+                    )
+                    .addFields(
+                        {
+                            name: '✨ **THE MIRACLE OF THE SACRED TABLES** ✨',
+                            value: 
+                                `No longer shall your treasures scatter across the realm like fallen stars!\n\n` +
+                                `**Behold the power of divine manifestation:**\n` +
+                                `• Your purchased gear now **materializes on SACRED TABLES**\n` +
+                                `• Tables spawn **within 5 meters** of your hallowed position\n` +
+                                `• Multiple purchases? They **accumulate in glorious grids** upon a single altar\n` +
+                                `• The gods organize your spoils with **celestial precision**\n\n` +
+                                `*This is not mere commerce—this is DIVINE INTERVENTION!*`,
+                            inline: false
+                        },
+                        {
+                            name: '⚔️ **HOW TO INVOKE THE BLESSING** ⚔️',
+                            value:
+                                `**Step 1:** Use \`/imhere\` to mark your sacred ground\n` +
+                                `**Step 2:** Browse Cupid's arsenal with \`/shop\`\n` +
+                                `**Step 3:** Purchase your legendary gear\n` +
+                                `**Step 4:** Wait for the server's divine restart\n` +
+                                `**Step 5:** Witness the **LOBBY TABLE** manifest with your bounty!`,
+                            inline: false
+                        },
+                        {
+                            name: '🌟 **THE POWER YOU NOW COMMAND** 🌟',
+                            value:
+                                `📦 **406 LEGENDARY ITEMS** across 15 categories\n` +
+                                `🎯 **ASSAULT RIFLES • SNIPERS • SHOTGUNS**\n` +
+                                `🗡️ **MELEE WEAPONS • ATTACHMENTS • AMMUNITION**\n` +
+                                `💊 **MEDICAL SUPPLIES • FOOD & DRINK**\n` +
+                                `🎒 **CLOTHING • ARMOR • BACKPACKS**\n` +
+                                `🔧 **TOOLS • BUILDING • VEHICLES • ELECTRONICS**\n\n` +
+                                `*Every item meticulously catalogued. Every template perfected.*`,
+                            inline: false
+                        },
+                        {
+                            name: '💰 **EARN YOUR GLORY** 💰',
+                            value:
+                                `• **10 COINS PER KILL** - The blood price of power\n` +
+                                `• \`/balance\` - Witness your accumulated wealth\n` +
+                                `• \`/bank\` - Secure your fortune from death's grasp\n` +
+                                `• \`/leaderboard\` - See who stands among legends\n\n` +
+                                `*Every kill brings you closer to godhood!*`,
+                            inline: false
+                        },
+                        {
+                            name: '🔥 **THE SACRED RESTART TIMES** 🔥',
+                            value:
+                                `Your divine purchases manifest when the servers commune with the gods:\n\n` +
+                                `⏰ **3:00 AM** • **9:00 AM** • **3:00 PM** • **9:00 PM** UTC\n\n` +
+                                `*Patience, warrior. Even gods respect the cosmic cycle.*`,
+                            inline: false
+                        },
+                        {
+                            name: '⚡ **COMMAND THE DIVINE** ⚡',
+                            value:
+                                `\`/imhere\` - **CRITICAL!** Mark your position before all else\n` +
+                                `\`/shop\` - Behold 406 items of legend\n` +
+                                `\`/balance\` - Know your power\n` +
+                                `\`/deposit\` \`/withdraw\` - Master your fortune\n` +
+                                `\`/leaderboard\` - Witness greatness`,
+                            inline: false
+                        }
+                    )
+                    .setFooter({ 
+                        text: '🏹 By Cupid\'s arrow and Himeros\' fire, may your tables overflow with glory! 🔥'
+                    })
+                    .setTimestamp();
+                
+                await generalChannel.send({ embeds: [embed] });
+                console.log(`✅ Announcement sent to ${guild.name} (${generalChannel.name})`);
+                results.push(`✅ ${guild.name} - #${generalChannel.name}`);
+                successCount++;
+                
+                // Small delay between servers
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+            } catch (error) {
+                console.error(`❌ Error sending to guild ${guildConfig.guild_id}:`, error.message);
+                results.push(`❌ ${guildConfig.guild_id} - ${error.message}`);
+                failCount++;
+            }
+        }
+        
+        // Send summary to admin
+        const summaryEmbed = new MessageEmbed()
+            .setColor(failCount === 0 ? '#00ff00' : '#ffaa00')
+            .setTitle('📢 Shop Announcement Results')
+            .setDescription(
+                `**Sent:** ${successCount} servers\n` +
+                `**Failed:** ${failCount} servers\n\n` +
+                results.join('\n')
+            )
+            .setTimestamp();
+        
+        await interaction.editReply({ embeds: [summaryEmbed] });
+        console.log('\n🎉 Shop announcement process complete!');
+        
+    } catch (error) {
+        console.error('❌ Fatal error in announce_shop:', error);
+        await interaction.editReply({ content: `Error: ${error.message}`, ephemeral: true });
     }
 }
