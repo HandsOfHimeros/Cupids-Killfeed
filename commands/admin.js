@@ -28,9 +28,38 @@ const readline = require('readline');
 const colors = require('colors');
 const moment = require('moment-timezone');
 
-var config = ini.parse(fs.readFileSync('./config.ini', 'utf-8'));
-var admRegex  = null, admPlat = null;
-const { GUILDID, PLATFORM, ID1, ID2, NITRATOKEN, REGION } = require('../config.json');
+// Support both config.ini (local) and environment variables (Heroku)
+let config = { mapLoc: 0, showLoc: 1, kfChan: '', locChan: '', alrmChan: '' };
+try {
+    if (fs.existsSync('./config.ini')) {
+        config = ini.parse(fs.readFileSync('./config.ini', 'utf-8'));
+    }
+} catch (err) {
+    console.log('[ADMIN] No config.ini found, using defaults');
+}
+
+let admRegex  = null, admPlat = null;
+
+// Support both config.json (local) and environment variables (Heroku)
+let GUILDID, PLATFORM, ID1, ID2, NITRATOKEN, REGION;
+try {
+    const configJson = require('../config.json');
+    GUILDID = configJson.GUILDID;
+    PLATFORM = configJson.PLATFORM;
+    ID1 = configJson.ID1;
+    ID2 = configJson.ID2;
+    NITRATOKEN = configJson.NITRATOKEN;
+    REGION = configJson.REGION;
+} catch (error) {
+    // Use environment variables on Heroku
+    GUILDID = process.env.GUILDID;
+    PLATFORM = process.env.PLATFORM || 'PLAYSTATION';
+    ID1 = process.env.ID1;
+    ID2 = process.env.ID2;
+    NITRATOKEN = process.env.NITRATOKEN;
+    REGION = process.env.REGION || 'New_York_City';
+}
+
 const bot = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_MEMBERS] });
 
 const logFile = "./logs/log.ADM";
