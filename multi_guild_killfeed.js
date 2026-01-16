@@ -215,19 +215,37 @@ class MultiGuildKillfeed {
             
             if (line.includes('killed by')) {
                 // Try to parse details for formatted output
-                let victim, killer, weapon;
-                let killMatch = line.match(/Player \"(.+?)\"\(id=[^)]*\) killed by Player \"(.+?)\"\(id=[^)]*\) with (.+)$/);
+                let victim, killer, weapon, position;
+                let killMatch = line.match(/Player \"(.+?)\"\(id=[^)]*\s+pos=<([^,]+),\s*([^,]+),\s*([^>]+)>\)\s+killed by Player \"(.+?)\"\(id=[^)]*\) with (.+)$/);
                 if (killMatch) {
                     victim = killMatch[1];
-                    killer = killMatch[2];
-                    weapon = killMatch[3];
+                    position = { x: parseFloat(killMatch[2]), y: parseFloat(killMatch[3]), z: parseFloat(killMatch[4]) };
+                    killer = killMatch[5];
+                    weapon = killMatch[6];
                 } else {
-                    // Try zombie/AI format
-                    killMatch = line.match(/(?:Player )?\"(.+?)\"(?:\s*\(DEAD\))?\s*\(id=[^)]*(?:\s+pos=[^)]+)?\)\s+killed by (.+)$/);
+                    // Try without position
+                    killMatch = line.match(/Player \"(.+?)\"\(id=[^)]*\) killed by Player \"(.+?)\"\(id=[^)]*\) with (.+)$/);
                     if (killMatch) {
                         victim = killMatch[1];
                         killer = killMatch[2];
-                        weapon = 'Unknown';
+                        weapon = killMatch[3];
+                    } else {
+                        // Try zombie/AI format with position
+                        killMatch = line.match(/(?:Player )?\"(.+?)\"(?:\s*\(DEAD\))?\s*\(id=[^)]*\s+pos=<([^,]+),\s*([^,]+),\s*([^>]+)>\)\s+killed by (.+)$/);
+                        if (killMatch) {
+                            victim = killMatch[1];
+                            position = { x: parseFloat(killMatch[2]), y: parseFloat(killMatch[3]), z: parseFloat(killMatch[4]) };
+                            killer = killMatch[5];
+                            weapon = 'Unknown';
+                        } else {
+                            // Try zombie/AI format without position
+                            killMatch = line.match(/(?:Player )?\"(.+?)\"(?:\s*\(DEAD\))?\s*\(id=[^)]*\)\s+killed by (.+)$/);
+                            if (killMatch) {
+                                victim = killMatch[1];
+                                killer = killMatch[2];
+                                weapon = 'Unknown';
+                            }
+                        }
                     }
                 }
                 
@@ -237,6 +255,7 @@ class MultiGuildKillfeed {
                     victim: victim,
                     killer: killer,
                     weapon: weapon,
+                    position: position,
                     raw: line 
                 });
             } else if (line.includes('hit by') || line.includes('Struck by')) {
@@ -323,15 +342,23 @@ class MultiGuildKillfeed {
                     raw: line
                 });
             } else if (line.includes('committed suicide')) {
-                // Parse player name
-                let player;
-                const suicideMatch = line.match(/Player \"(.+?)\"/);
-                if (suicideMatch) player = suicideMatch[1];
+                // Parse player name and position
+                let player, position;
+                const suicideMatch = line.match(/Player \"(.+?)\"\(id=[^)]*\s+pos=<([^,]+),\s*([^,]+),\s*([^>]+)>\)/);
+                if (suicideMatch) {
+                    player = suicideMatch[1];
+                    position = { x: parseFloat(suicideMatch[2]), y: parseFloat(suicideMatch[3]), z: parseFloat(suicideMatch[4]) };
+                } else {
+                    // Try without position
+                    const simpleMatch = line.match(/Player \"(.+?)\"/);
+                    if (simpleMatch) player = simpleMatch[1];
+                }
                 
                 events.push({
                     type: 'suicide',
                     time: time,
                     player: player,
+                    position: position,
                     raw: line
                 });
             } else if (line.includes('placed') || line.includes('raised') || line.includes('dismantled') || line.includes('Built')) {
@@ -455,6 +482,12 @@ class MultiGuildKillfeed {
                         embed.addFields({ name: '🗡️ Weapon of Choice', value: `\`${medievalWeapon}\`${distanceText}`, inline: true });
                     }
                     embed.addFields({ name: '🕐 Time of Battle', value: `\`${event.time}\``, inline: true });
+                    
+                    // Add position if enabled and available
+                    if (guildConfig.show_death_locations && event.position) {
+                        const mapUrl = this.getMapUrl(guildConfig.map_name, event.position);
+                        embed.addFields({ name: '📍 Location', value: mapUrl || `\`${Math.round(event.position.x)}, ${Math.round(event.position.z)}\``, inline: false });
+                    }
                 } else {
                     embed.setDescription(`\`\`\`\n${event.raw}\n\`\`\``);
                 }
@@ -533,6 +566,12 @@ class MultiGuildKillfeed {
                 if (event.player) {
                     embed.setDescription(`\`\`\`fix\n${event.player}\n\`\`\`\n🕯️ **${event.player} perished by their own hand**`);
                     embed.addFields({ name: '🕐 Time', value: `\`${event.time}\``, inline: true });
+                    
+                    // Add position if enabled and available
+                    if (guildConfig.show_death_locations && event.position) {
+                        const mapUrl = this.getMapUrl(guildConfig.map_name, event.position);
+                        embed.addFields({ name: '📍 Location', value: mapUrl || `\`${Math.round(event.position.x)}, ${Math.round(event.position.z)}\``, inline: false });
+                    }
                 } else {
                     embed.setDescription(`\`\`\`\n${event.raw}\n\`\`\``);
                 }
@@ -629,6 +668,29 @@ class MultiGuildKillfeed {
         
         // Default - clean up the weapon name
         return weapon.replace(/\(.*?\)/g, '').trim() || weapon;
+    }
+
+    // Helper function to generate map URLs for positions
+    getMapUrl(mapName, position) {
+        if (!position || !position.x || !position.z) return null;
+        
+        const x = Math.round(position.x);
+        const z = Math.round(position.z);
+        
+        // Map name to iZurvive map codes
+        const mapCodes = {
+            'chernarusplus': 'chenarus',
+            'enoch': 'livonia',
+            'sakhal': 'sakhal'
+        };
+        
+        const mapCode = mapCodes[mapName] || 'chenarus';
+        
+        // iZurvive uses a coordinate system - we'll provide both the URL and raw coords
+        // Format: https://www.izurvive.com/chernarusplussurvivor#location=X;Z
+        const url = `https://www.izurvive.com/${mapCode}#c=${x};${z};5`;
+        
+        return `[${x}, ${z}](${url})`;
     }
 
     stop() {
