@@ -1,0 +1,32 @@
+const items = require('./shop_items.js');
+
+console.log('Total items:', items.length);
+console.log('\n=== CATEGORY BOUNDARIES ===\n');
+
+console.log('ASSAULT_SMG [0-23]:');
+console.log('  Last 3:', items.slice(20, 23).map((i, idx) => `${idx+20}: ${i.name}`));
+console.log('\nSNIPER [23-40]:');
+console.log('  First 3:', items.slice(23, 26).map((i, idx) => `${idx+23}: ${i.name}`));
+console.log('  Last 3:', items.slice(37, 40).map((i, idx) => `${idx+37}: ${i.name}`));
+console.log('\nRIFLES_SHOTGUNS [40-49]:');
+console.log('  First 3:', items.slice(40, 43).map((i, idx) => `${idx+40}: ${i.name}`));
+console.log('  Last 3:', items.slice(46, 49).map((i, idx) => `${idx+46}: ${i.name}`));
+console.log('\nPISTOLS [49-63]:');
+console.log('  First 3:', items.slice(49, 52).map((i, idx) => `${idx+49}: ${i.name}`));
+console.log('  Last 3:', items.slice(60, 63).map((i, idx) => `${idx+60}: ${i.name}`));
+console.log('\nMELEE [63-83]:');
+console.log('  First 3:', items.slice(63, 66).map((i, idx) => `${idx+63}: ${i.name}`));
+console.log('  Last 3:', items.slice(80, 83).map((i, idx) => `${idx+80}: ${i.name}`));
+console.log('\nATTACHMENTS [83-159]:');
+console.log('  First 3:', items.slice(83, 86).map((i, idx) => `${idx+83}: ${i.name}`));
+console.log('  Last 3:', items.slice(156, 159).map((i, idx) => `${idx+156}: ${i.name}`));
+console.log('\nAMMUNITION [159-179]:');
+console.log('  First 3:', items.slice(159, 162).map((i, idx) => `${idx+159}: ${i.name}`));
+console.log('  Last 3:', items.slice(176, 179).map((i, idx) => `${idx+176}: ${i.name}`));
+console.log('\n=== CHECKING ALL BOUNDARIES ===');
+console.log('Item 178:', items[178].name);
+console.log('Item 179:', items[179].name);
+console.log('Item 195:', items[195].name);
+console.log('Item 196:', items[196].name);
+console.log('Item 225:', items[225].name);
+console.log('Item 226:', items[226].name);

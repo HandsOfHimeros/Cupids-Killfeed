@@ -5,7 +5,10 @@ const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: {
         rejectUnauthorized: false
-    }
+    },
+    connectionTimeoutMillis: 5000,
+    query_timeout: 10000,
+    idle_in_transaction_session_timeout: 10000
 });
 
 // Guild Config operations
@@ -469,5 +472,40 @@ module.exports = {
             'UPDATE campaign_progress SET current_chapter = $4, completed = $5, last_played = NOW() WHERE guild_id = $1 AND user_id = $2 AND campaign_id = $3',
             [guildId, userId, campaignId, chapter, completed]
         );
-    }
+    },
+
+    // Kit System
+    createKitPurchase: async (guildId, userId, kitName, weaponVariant, attachments, totalCost) => {
+        const result = await pool.query(
+            `INSERT INTO kit_purchases (guild_id, user_id, kit_name, weapon_variant, attachments, total_cost)
+             VALUES ($1, $2, $3, $4, $5, $6)
+             RETURNING id`,
+            [guildId, userId, kitName, weaponVariant, JSON.stringify(attachments), totalCost]
+        );
+        return result.rows[0].id;
+    },
+    getUnspawnedKits: async (guildId, userId) => {
+        const result = await pool.query(
+            'SELECT * FROM kit_purchases WHERE guild_id = $1 AND user_id = $2 AND spawned = false ORDER BY purchased_at DESC',
+            [guildId, userId]
+        );
+        return result.rows;
+    },
+    markKitSpawned: async (kitId) => {
+        await pool.query(
+            'UPDATE kit_purchases SET spawned = true, spawned_at = NOW() WHERE id = $1',
+            [kitId]
+        );
+    },
+    getKitHistory: async (guildId, userId, limit = 10) => {
+        const result = await pool.query(
+            'SELECT * FROM kit_purchases WHERE guild_id = $1 AND user_id = $2 ORDER BY purchased_at DESC LIMIT $3',
+            [guildId, userId, limit]
+        );
+        return result.rows;
+    },
+
+    // Export pool for direct queries
+    pool: pool
 };
+
