@@ -19,7 +19,25 @@ const path = require('node:path');
 const {REST} = require('@discordjs/rest');
 const {Routes} = require('discord-api-types/v10');
 const { Guild } = require('discord.js');
-const { CLIENTID, GUILDID, TOKEN } = require('./config.json');
+
+// Support both local config.json and Heroku environment variables
+let CLIENTID, GUILDID, TOKEN;
+try {
+    const config = require('./config.json');
+    CLIENTID = config.CLIENTID;
+    GUILDID = config.GUILDID;
+    TOKEN = config.TOKEN;
+} catch (err) {
+    // Use environment variables on Heroku
+    CLIENTID = process.env.CLIENTID || process.env.ID1;
+    GUILDID = process.env.GUILDID;
+    TOKEN = process.env.TOKEN;
+}
+
+if (!CLIENTID || !GUILDID || !TOKEN) {
+    console.error('Missing required environment variables: CLIENTID, GUILDID, TOKEN');
+    process.exit(1);
+}
 
 const commands = [];
 const commandsPath = path.join(__dirname, 'commands');
