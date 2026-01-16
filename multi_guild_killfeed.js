@@ -675,20 +675,23 @@ class MultiGuildKillfeed {
         if (!position || !position.x || !position.z) return null;
         
         const x = Math.round(position.x);
+        const y = Math.round(position.y);
         const z = Math.round(position.z);
         
-        // Map name to iZurvive map codes
-        const mapCodes = {
-            'chernarusplus': 'chenarus',
-            'enoch': 'livonia',
-            'sakhal': 'sakhal'
-        };
+        // Map name to iZurvive URLs
+        let baseUrl;
+        if (mapName === 'enoch') {
+            baseUrl = 'https://www.izurvive.com/livonia/#location=';
+        } else if (mapName === 'sakhal') {
+            baseUrl = 'https://www.izurvive.com/sakhal/#location=';
+        } else {
+            // chernarusplus or default
+            baseUrl = 'https://www.izurvive.com/#location=';
+        }
         
-        const mapCode = mapCodes[mapName] || 'chenarus';
-        
-        // iZurvive uses a coordinate system - we'll provide both the URL and raw coords
-        // Format: https://www.izurvive.com/chernarusplussurvivor#location=X;Z
-        const url = `https://www.izurvive.com/${mapCode}#c=${x};${z};5`;
+        // Format: X;Y;Z
+        const coords = `${x};${y};${z}`;
+        const url = `${baseUrl}${coords}`;
         
         return `[${x}, ${z}](${url})`;
     }
