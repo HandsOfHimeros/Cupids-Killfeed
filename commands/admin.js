@@ -144,6 +144,21 @@ module.exports = {
                         .setName('announce_shop')
                         .setDescription('Send shop table announcement to all servers')
                 )
+                .addSubcommand(subcommand =>
+                    subcommand
+                        .setName('mapchange')
+                        .setDescription('Change the map setting for this server')
+                        .addStringOption(option =>
+                            option.setName('map')
+                                .setDescription('Select map')
+                                .setRequired(true)
+                                .addChoices(
+                                    { name: 'Chernarus+', value: 'chernarusplus' },
+                                    { name: 'Livonia', value: 'enoch' },
+                                    { name: 'Sakhal', value: 'sakhal' }
+                                )
+                        )
+                )
         ),
 
     async execute(interaction) {
@@ -170,6 +185,9 @@ module.exports = {
                 break;
             case "announce_shop":
                 await handleAnnounceShop(interaction);
+                break;
+            case "mapchange":
+                await handleMapChange(interaction);
                 break;
             default:
                 break;
@@ -201,31 +219,39 @@ async function handleClearCommand(interaction) {
 async function handleMapChange(interaction) {
     const guildId = interaction.guildId;
     
-    // Check if guild has a configuration in database
-    const guildConfig = await db.getGuildConfig(guildId);
-    if (!guildConfig) {
-        return interaction.reply({ content: 'This server is not configured. Please run `/admin killfeed setup` first.', ephemeral: true });
-    }
-    
-    config = ini.parse(fs.readFileSync('./config.ini', 'utf-8'));
-    const choice = interaction.options.getString('new-map')
-    if (choice === "cherno") {
-        config.mapLoc = 0;
-        fs.writeFileSync('./config.ini', ini.stringify(config, { mapLoc: `0`}))
-        interaction.reply("Killfeed Map set to **Chernarus**").catch(function (error) {console.log(error);});
-        return;
-    }
-    if (choice === "livonia") {
-        config.mapLoc = 1;
-        fs.writeFileSync('./config.ini', ini.stringify(config, { mapLoc: `1`}))
-        interaction.reply("Killfeed Map set to **Livonia**").catch(function (error) {console.log(error);});
-        return;
-    }
-    if (choice === "sakhal") {
-        config.mapLoc = 2;
-        fs.writeFileSync('./config.ini', ini.stringify(config, { mapLoc: `2`}))
-        interaction.reply("Killfeed Map set to **Sakhal**").catch(function (error) {console.log(error);});
-        return;
+    try {
+        // Check if guild has a configuration in database
+        const guildConfig = await db.getGuildConfig(guildId);
+        if (!guildConfig) {
+            return interaction.reply({ content: 'This server is not configured. Please run `/admin killfeed setup` first.', ephemeral: true });
+        }
+        
+        const mapChoice = interaction.options.getString('map');
+        
+        // Update map in database
+        await db.query(
+            'UPDATE guild_configs SET map_name = $1 WHERE guild_id = $2',
+            [mapChoice, guildId]
+        );
+        
+        const mapNames = {
+            'chernarusplus': 'Chernarus+',
+            'enoch': 'Livonia',
+            'sakhal': 'Sakhal'
+        };
+        
+        await interaction.reply({
+            embeds: [
+                new MessageEmbed()
+                    .setColor('#00ff99')
+                    .setTitle('Map Updated')
+                    .setDescription(`Killfeed map set to **${mapNames[mapChoice]}**`)
+            ],
+            ephemeral: true
+        });
+    } catch (error) {
+        console.error('[MAPCHANGE] Error:', error);
+        await interaction.reply({ content: 'Error updating map: ' + error.message, ephemeral: true });
     }
 }
 
