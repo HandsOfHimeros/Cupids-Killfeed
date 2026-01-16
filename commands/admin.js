@@ -217,6 +217,37 @@ module.exports = {
                                 .setRequired(false)
                         )
                 )
+                .addSubcommand(subcommand =>
+                    subcommand
+                        .setName('safezone')
+                        .setDescription('Manage safe zones on PVP servers (no-kill areas)')
+                        .addStringOption(option =>
+                            option.setName('action')
+                                .setDescription('Add, remove, list zones, or toggle auto-ban')
+                                .setRequired(true)
+                                .addChoices(
+                                    { name: 'Add Zone', value: 'add' },
+                                    { name: 'Remove Zone', value: 'remove' },
+                                    { name: 'List Zones', value: 'list' },
+                                    { name: 'Toggle Auto-Ban', value: 'toggle' }
+                                )
+                        )
+                        .addStringOption(option =>
+                            option.setName('name')
+                                .setDescription('Zone name (e.g., "Trader City")')
+                                .setRequired(false)
+                        )
+                        .addStringOption(option =>
+                            option.setName('corner1')
+                                .setDescription('First corner from iZurvive (e.g., "058 094" or "11700.08 / 12652.43")')
+                                .setRequired(false)
+                        )
+                        .addStringOption(option =>
+                            option.setName('corner2')
+                                .setDescription('Second corner from iZurvive (e.g., "062 098" or "12036.42 / 12392.07")')
+                                .setRequired(false)
+                        )
+                )
         ),
 
     async execute(interaction) {
@@ -255,6 +286,9 @@ module.exports = {
                 break;
             case "pvpzone":
                 await handlePvpZoneCommand(interaction);
+                break;
+            case "safezone":
+                await handleSafeZoneCommand(interaction);
                 break;
             default:
                 break;
@@ -672,6 +706,141 @@ async function handlePvpZoneCommand(interaction) {
     } catch (error) {
         console.error('Error managing PVP zones:', error);
         await interaction.reply({ content: 'Failed to manage PVP zones.', ephemeral: true });
+    }
+}
+
+async function handleSafeZoneCommand(interaction) {
+    const guildId = interaction.guildId;
+    
+    // Check if guild has a configuration in database
+    const guildConfig = await db.getGuildConfig(guildId);
+    if (!guildConfig) {
+        return interaction.reply({ content: 'This server is not configured. Please run `/admin killfeed setup` first.', ephemeral: true });
+    }
+    
+    const action = interaction.options.getString('action');
+    
+    try {
+        // Toggle auto-ban in safe zones
+        if (action === 'toggle') {
+            const newState = !guildConfig.auto_ban_in_safe_zones;
+            await db.query(
+                'UPDATE guild_configs SET auto_ban_in_safe_zones = $1 WHERE guild_id = $2',
+                [newState, guildId]
+            );
+            
+            const status = newState ? '**ON** - Kills in safe zones will trigger auto-ban' : '**OFF** - Safe zones are informational only';
+            return interaction.reply(`✅ Safe zone auto-ban is now ${status}`);
+        }
+        
+        // Helper function to parse coordinates (same as PVP zones)
+        const parseCoords = (coordString) => {
+            if (!coordString) return null;
+            const numbers = coordString.match(/[\d.]+/g);
+            if (!numbers || numbers.length < 2) return null;
+            let [x, z] = numbers.map(parseFloat);
+            // If values are less than 1000, assume they're iZurvive format and multiply by 100
+            if (x < 1000) x *= 100;
+            if (z < 1000) z *= 100;
+            return { x, z };
+        };
+        
+        // List safe zones
+        if (action === 'list') {
+            const zones = guildConfig.safe_zones || [];
+            if (zones.length === 0) {
+                return interaction.reply('No safe zones configured for this server.');
+            }
+            
+            const mapName = guildConfig.map_name || 'chernarusplus';
+            const autoBanStatus = guildConfig.auto_ban_in_safe_zones ? '🔴 **AUTO-BAN ENABLED**' : '⚪ Auto-ban disabled (informational only)';
+            
+            let response = `**Safe Zones** (${zones.length}) - ${autoBanStatus}\n\n`;
+            zones.forEach((zone, index) => {
+                const centerX = Math.round((zone.x1 + zone.x2) / 2);
+                const centerZ = Math.round((zone.z1 + zone.z2) / 2);
+                const izX = Math.floor(centerX / 100);
+                const izZ = Math.floor(centerZ / 100);
+                const mapUrl = `https://www.izurvive.com/${mapName}/#location=${centerX};${centerZ};5`;
+                
+                const width = Math.abs(zone.x2 - zone.x1);
+                const height = Math.abs(zone.z2 - zone.z1);
+                
+                response += `**${index + 1}. ${zone.name}**\n`;
+                response += `📍 [View on Map](${mapUrl})\n`;
+                response += `iZurvive: (${Math.floor(zone.x1/100)}, ${Math.floor(zone.z1/100)}) to (${Math.floor(zone.x2/100)}, ${Math.floor(zone.z2/100)})\n`;
+                response += `Size: ${Math.round(width)}m × ${Math.round(height)}m\n\n`;
+            });
+            
+            return interaction.reply(response);
+        }
+        
+        // Add safe zone
+        if (action === 'add') {
+            const name = interaction.options.getString('name');
+            const corner1Str = interaction.options.getString('corner1');
+            const corner2Str = interaction.options.getString('corner2');
+            
+            if (!name || !corner1Str || !corner2Str) {
+                return interaction.reply({ content: 'Provide zone name and both corners.', ephemeral: true });
+            }
+            
+            const corner1 = parseCoords(corner1Str);
+            const corner2 = parseCoords(corner2Str);
+            
+            if (!corner1 || !corner2) {
+                return interaction.reply({ content: 'Invalid coordinates. Use format: "058 094" or "11700.08 / 12652.43"', ephemeral: true });
+            }
+            
+            const zone = {
+                name,
+                x1: corner1.x,
+                z1: corner1.z,
+                x2: corner2.x,
+                z2: corner2.z
+            };
+            
+            let zones = guildConfig.safe_zones || [];
+            zones.push(zone);
+            
+            await db.query(
+                'UPDATE guild_configs SET safe_zones = $1 WHERE guild_id = $2',
+                [JSON.stringify(zones), guildId]
+            );
+            
+            const mapName = guildConfig.map_name || 'chernarusplus';
+            const centerX = Math.round((zone.x1 + zone.x2) / 2);
+            const centerZ = Math.round((zone.z1 + zone.z2) / 2);
+            const mapUrl = `https://www.izurvive.com/${mapName}/#location=${centerX};${centerZ};5`;
+            
+            return interaction.reply(`✅ Added safe zone: **${name}**\n📍 [View on Map](${mapUrl})\nCorners: (${Math.round(zone.x1)}, ${Math.round(zone.z1)}) to (${Math.round(zone.x2)}, ${Math.round(zone.z2)})`);
+        }
+        
+        // Remove safe zone
+        if (action === 'remove') {
+            const name = interaction.options.getString('name');
+            if (!name) {
+                return interaction.reply({ content: 'Provide the zone name to remove.', ephemeral: true });
+            }
+            
+            let zones = guildConfig.safe_zones || [];
+            const originalLength = zones.length;
+            zones = zones.filter(z => z.name !== name);
+            
+            if (zones.length === originalLength) {
+                return interaction.reply({ content: `Zone "${name}" not found.`, ephemeral: true });
+            }
+            
+            await db.query(
+                'UPDATE guild_configs SET safe_zones = $1 WHERE guild_id = $2',
+                [JSON.stringify(zones), guildId]
+            );
+            
+            return interaction.reply(`✅ Removed safe zone: **${name}**`);
+        }
+    } catch (error) {
+        console.error('Error managing safe zones:', error);
+        await interaction.reply({ content: 'Failed to manage safe zones.', ephemeral: true });
     }
 }
 

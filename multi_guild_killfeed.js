@@ -515,6 +515,30 @@ class MultiGuildKillfeed {
                             }
                         }
                     }
+                    
+                    // Check for safe zone violations on PVP servers
+                    if (guildConfig.auto_ban_in_safe_zones && event.killer && event.victim && this.isPlayerName(event.killer)) {
+                        // Skip if suicide (killer = victim)
+                        if (event.killer === event.victim) {
+                            console.log(`[SAFE-ZONE] ${event.killer} committed suicide, no violation`);
+                        } else {
+                            // Check if kill happened in a safe zone
+                            const safeZoneName = event.position && this.isInSafeZone(guildConfig, event.position);
+                            
+                            if (safeZoneName) {
+                                console.log(`[SAFE-ZONE] Kill by ${event.killer} in safe zone: ${safeZoneName} - attempting ban`);
+                                try {
+                                    await this.banPlayerOnNitrado(guildConfig, event.killer);
+                                    embed.setColor('#FF0000'); // Bright red for safe zone violation
+                                    embed.addFields({ name: '🚫 SAFE ZONE VIOLATION', value: `**${event.killer}** has been automatically banned for PVP in **${safeZoneName}**!`, inline: false });
+                                    console.log(`[SAFE-ZONE] Successfully banned ${event.killer}`);
+                                } catch (error) {
+                                    console.error(`[SAFE-ZONE] Failed to ban ${event.killer}:`, error.message);
+                                    embed.addFields({ name: '❌ Auto-Ban Failed', value: `Could not ban ${event.killer}: ${error.message}`, inline: false });
+                                }
+                            }
+                        }
+                    }
                 } else {
                     embed.setDescription(`\`\`\`\n${event.raw}\n\`\`\``);
                 }
@@ -657,6 +681,29 @@ class MultiGuildKillfeed {
             if (x >= minX && x <= maxX && z >= minZ && z <= maxZ) {
                 console.log(`[PVP-ZONE] Position (${x}, ${z}) is in PVP zone: ${zone.name}`);
                 return true;
+            }
+        }
+        
+        return false;
+    }
+
+    isInSafeZone(guildConfig, position) {
+        const zones = guildConfig.safe_zones || [];
+        if (zones.length === 0) return false;
+        
+        const x = position.x;
+        const z = position.z;
+        
+        for (const zone of zones) {
+            // Check if position is within rectangular zone bounds
+            const minX = Math.min(zone.x1, zone.x2);
+            const maxX = Math.max(zone.x1, zone.x2);
+            const minZ = Math.min(zone.z1, zone.z2);
+            const maxZ = Math.max(zone.z1, zone.z2);
+            
+            if (x >= minX && x <= maxX && z >= minZ && z <= maxZ) {
+                console.log(`[SAFE-ZONE] Position (${x}, ${z}) is in safe zone: ${zone.name}`);
+                return zone.name; // Return zone name for display
             }
         }
         
