@@ -30,6 +30,9 @@ module.exports = {
             }
             
             const mapName = guildConfig.map_name || 'chernarusplus';
+            const mapUrlBase = mapName === 'sakhal' ? 'https://www.izurvive.com/sakhal/' : 
+                              mapName === 'livonia' ? 'https://www.izurvive.com/livonia/' :
+                              'https://www.izurvive.com/';
             const autoBanStatus = guildConfig.auto_ban_in_safe_zones ? '🔴 **AUTO-BAN ENABLED**' : '⚪ Informational only';
             
             let response = `# 🛡️ Safe Zones\n${autoBanStatus}\n\n`;
@@ -38,7 +41,7 @@ module.exports = {
             zones.forEach((zone, index) => {
                 const centerX = Math.round((zone.x1 + zone.x2) / 2);
                 const centerZ = Math.round((zone.z1 + zone.z2) / 2);
-                const mapUrl = `https://www.izurvive.com/${mapName}/#location=${centerX};${centerZ};5`;
+                const mapUrl = `${mapUrlBase}#location=${centerX};${centerZ};5`;
                 
                 const width = Math.abs(zone.x2 - zone.x1);
                 const height = Math.abs(zone.z2 - zone.z1);
@@ -48,8 +51,8 @@ module.exports = {
                 const izX2 = Math.floor(zone.x2 / 100);
                 const izZ2 = Math.floor(zone.z2 / 100);
                 
-                const corner1Url = `https://www.izurvive.com/${mapName}/#location=${zone.x1};${zone.z1};5`;
-                const corner2Url = `https://www.izurvive.com/${mapName}/#location=${zone.x2};${zone.z2};5`;
+                const corner1Url = `${mapUrlBase}#location=${zone.x1};${zone.z1};5`;
+                const corner2Url = `${mapUrlBase}#location=${zone.x2};${zone.z2};5`;
                 
                 response += `**${index + 1}. ${zone.name}**\n`;
                 response += `📍 [View on Map](${mapUrl})\n`;
