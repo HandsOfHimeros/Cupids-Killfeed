@@ -1,0 +1,10 @@
+[database]
+host = localhost
+port = 5432
+user = postgres
+password = YOUR_DATABASE_PASSWORD
+database = dayz_killfeed
+
+[bot]
+token = YOUR_DISCORD_BOT_TOKEN
+client_id = YOUR_DISCORD_CLIENT_ID

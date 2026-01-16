@@ -1,0 +1,30 @@
+# Environment variables
+.env
+.env.local
+config.json
+config.ini
+
+# Node modules
+node_modules/
+
+# Logs
+logs/
+*.log
+*.ADM
+
+# Database backups
+*.sql
+*.backup
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Temporary files
+tmp/
+temp/
+spawn_temp*.json

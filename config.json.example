@@ -1,0 +1,7 @@
+{
+  "clientId": "YOUR_DISCORD_CLIENT_ID",
+  "guildId": "YOUR_DEV_GUILD_ID",
+  "token": "YOUR_DISCORD_BOT_TOKEN",
+  "ftpUser": "YOUR_NITRADO_FTP_USERNAME",
+  "ftpPass": "YOUR_NITRADO_FTP_PASSWORD"
+}
