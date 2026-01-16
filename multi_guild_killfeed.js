@@ -239,27 +239,52 @@ class MultiGuildKillfeed {
                     weapon: weapon,
                     raw: line 
                 });
-            } else if (line.includes('hit by')) {
+            } else if (line.includes('hit by') || line.includes('Struck by')) {
                 // Try to parse hit details
-                let victim, source;
+                let victim, source, weapon, distance;
                 
+                // NEW FORMAT: "VictimName" Struck by: <Source>
+                // Check for "Struck by" first (covers both player and environmental hits)
+                if (line.includes('Struck by:')) {
+                    // Extract victim name (before "Struck by:")
+                    let victimMatch = line.match(/["']?([^"'\s]+)["']?\s*Struck by:/i);
+                    if (victimMatch) {
+                        victim = victimMatch[1];
+                        
+                        // Check if it's a player hit: Player "Name" (...) into BodyPart for damage with Weapon from distance meters
+                        let playerHitMatch = line.match(/Struck by:\s*Player\s*["'](.+?)["']\s*\([^)]*\)\s*into\s*\S+\s*for\s*[\d.]+\s*damage\s*\([^)]*\)\s*with\s*(.+?)\s*from\s*([\d.]+)\s*meters/i);
+                        if (playerHitMatch) {
+                            source = `${playerHitMatch[1]} with ${playerHitMatch[2]} (${Math.round(parseFloat(playerHitMatch[3]))}m)`;
+                        } else {
+                            // Environmental hit: Struck by: <Source> with <DamageType> OR just Struck by: <Source>
+                            let envMatch = line.match(/Struck by:\s*(.+?)(?:\s+with\s+(.+?))?$/i);
+                            if (envMatch) {
+                                let envSource = envMatch[1].trim();
+                                let damageType = envMatch[2] ? envMatch[2].trim() : null;
+                                source = damageType ? `${envSource} with ${damageType}` : envSource;
+                            }
+                        }
+                    }
+                }
                 // Check for vehicle hit with TransportHit
-                let vehicleHitMatch = line.match(/Player "(.+?)"\(id=[^)]*\)[^h]*hit by (.+?) with TransportHit/i);
-                if (vehicleHitMatch) {
-                    victim = vehicleHitMatch[1];
-                    source = `${vehicleHitMatch[2]} (Vehicle)`;
-                } else {
-                    // Try player-to-player hit
-                    let hitMatch = line.match(/Player \"(.+?)\"\(id=[^)]*\) hit by Player \"(.+?)\"\(id=[^)]*\) with (.+)$/);
-                    if (hitMatch) {
-                        victim = hitMatch[1];
-                        source = `${hitMatch[2]} with ${hitMatch[3]}`;
+                else {
+                    let vehicleHitMatch = line.match(/Player "(.+?)"\(id=[^)]*\)[^h]*hit by (.+?) with TransportHit/i);
+                    if (vehicleHitMatch) {
+                        victim = vehicleHitMatch[1];
+                        source = `${vehicleHitMatch[2]} (Vehicle)`;
                     } else {
-                        // Try environmental/zombie hit
-                        hitMatch = line.match(/(?:Player )?\"(.+?)\"(?:\s*\(DEAD\))?\s*(?:\(id=[^)]*(?:\s+pos=[^)]+)?\))?(?:\[HP:\s*\d+(?:\.\d+)?\])?\s+hit by (.+)$/);
+                        // Try player-to-player hit
+                        let hitMatch = line.match(/Player \"(.+?)\"\(id=[^)]*\) hit by Player \"(.+?)\"\(id=[^)]*\) with (.+)$/);
                         if (hitMatch) {
                             victim = hitMatch[1];
-                            source = hitMatch[2];
+                            source = `${hitMatch[2]} with ${hitMatch[3]}`;
+                        } else {
+                            // Try environmental/zombie hit
+                            hitMatch = line.match(/(?:Player )?\"(.+?)\"(?:\s*\(DEAD\))?\s*(?:\(id=[^)]*(?:\s+pos=[^)]+)?\))?(?:\[HP:\s*\d+(?:\.\d+)?\])?\s+hit by (.+)$/);
+                            if (hitMatch) {
+                                victim = hitMatch[1];
+                                source = hitMatch[2];
+                            }
                         }
                     }
                 }
