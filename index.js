@@ -678,7 +678,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>. */
 
 require('dotenv').config();
 const { Client, Collection, Intents } = require('discord.js');
-const configFile = require('./config.json');
+const fs = require('fs');
+const configFile = fs.existsSync('./config.json') ? require('./config.json') : {};
 const moment = require('moment-timezone');
 const nodeoutlook = require('nodejs-nodemailer-outlook');
 
