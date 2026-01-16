@@ -19,7 +19,21 @@ const path = require('path');
 require('dotenv').config();
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { Client, Intents, MessageEmbed } = require('discord.js');
-const { GUILDID, ID1, NITRATOKEN } = require('../config.json');
+
+// Support both config.json (local) and environment variables (Heroku)
+let GUILDID, ID1, NITRATOKEN;
+try {
+  const config = require('../config.json');
+  GUILDID = config.GUILDID;
+  ID1 = config.ID1;
+  NITRATOKEN = config.NITRATOKEN;
+} catch (error) {
+  // Use environment variables on Heroku
+  GUILDID = process.env.GUILDID;
+  ID1 = process.env.ID1;
+  NITRATOKEN = process.env.NITRATOKEN;
+}
+
 const db = require('../database');
 const ini = require('ini');
 const axios = require('axios');
