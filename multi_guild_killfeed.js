@@ -490,23 +490,28 @@ class MultiGuildKillfeed {
                     }
                     
                     // Auto-ban killer if enabled (PVE mode) - but only for player kills, not zombies/animals
-                    // Also check if kill happened outside PVP zones
+                    // Also check if kill happened outside PVP zones and is not suicide
                     if (guildConfig.auto_ban_on_kill && event.killer && this.isPlayerName(event.killer)) {
-                        // Check if kill is in a PVP safe zone
-                        const inPvpZone = event.position && this.isInPvpZone(guildConfig, event.position);
-                        
-                        if (inPvpZone) {
-                            console.log(`[AUTO-BAN] Kill by ${event.killer} is in PVP zone, no ban`);
+                        // Skip if suicide (killer = victim)
+                        if (event.killer === event.victim) {
+                            console.log(`[AUTO-BAN] ${event.killer} committed suicide, no ban`);
                         } else {
-                            console.log(`[AUTO-BAN] PVE mode enabled - attempting to ban player ${event.killer}`);
-                            try {
-                                await this.banPlayerOnNitrado(guildConfig, event.killer);
-                                embed.setColor('#FF0000'); // Bright red for PVE violation
-                                embed.addFields({ name: '⚠️ PVE VIOLATION', value: `**${event.killer}** has been automatically banned for PVP on a PVE server!`, inline: false });
-                                console.log(`[AUTO-BAN] Successfully banned ${event.killer}`);
-                            } catch (error) {
-                                console.error(`[AUTO-BAN] Failed to ban ${event.killer}:`, error.message);
-                                embed.addFields({ name: '❌ Auto-Ban Failed', value: `Could not ban ${event.killer}: ${error.message}`, inline: false });
+                            // Check if kill is in a PVP safe zone
+                            const inPvpZone = event.position && this.isInPvpZone(guildConfig, event.position);
+                            
+                            if (inPvpZone) {
+                                console.log(`[AUTO-BAN] Kill by ${event.killer} is in PVP zone, no ban`);
+                            } else {
+                                console.log(`[AUTO-BAN] PVE mode enabled - attempting to ban player ${event.killer}`);
+                                try {
+                                    await this.banPlayerOnNitrado(guildConfig, event.killer);
+                                    embed.setColor('#FF0000'); // Bright red for PVE violation
+                                    embed.addFields({ name: '⚠️ PVE VIOLATION', value: `**${event.killer}** has been automatically banned for PVP on a PVE server!`, inline: false });
+                                    console.log(`[AUTO-BAN] Successfully banned ${event.killer}`);
+                                } catch (error) {
+                                    console.error(`[AUTO-BAN] Failed to ban ${event.killer}:`, error.message);
+                                    embed.addFields({ name: '❌ Auto-Ban Failed', value: `Could not ban ${event.killer}: ${error.message}`, inline: false });
+                                }
                             }
                         }
                     }
