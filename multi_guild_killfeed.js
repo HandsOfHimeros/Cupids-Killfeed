@@ -488,6 +488,28 @@ class MultiGuildKillfeed {
                         const mapUrl = this.getMapUrl(guildConfig.map_name, event.position);
                         embed.addFields({ name: '📍 Location', value: mapUrl || `\`${Math.round(event.position.x)}, ${Math.round(event.position.z)}\``, inline: false });
                     }
+                    
+                    // Auto-ban killer if enabled (PVE mode) - but only for player kills, not zombies/animals
+                    // Also check if kill happened outside PVP zones
+                    if (guildConfig.auto_ban_on_kill && event.killer && this.isPlayerName(event.killer)) {
+                        // Check if kill is in a PVP safe zone
+                        const inPvpZone = event.position && this.isInPvpZone(guildConfig, event.position);
+                        
+                        if (inPvpZone) {
+                            console.log(`[AUTO-BAN] Kill by ${event.killer} is in PVP zone, no ban`);
+                        } else {
+                            console.log(`[AUTO-BAN] PVE mode enabled - attempting to ban player ${event.killer}`);
+                            try {
+                                await this.banPlayerOnNitrado(guildConfig, event.killer);
+                                embed.setColor('#FF0000'); // Bright red for PVE violation
+                                embed.addFields({ name: '⚠️ PVE VIOLATION', value: `**${event.killer}** has been automatically banned for PVP on a PVE server!`, inline: false });
+                                console.log(`[AUTO-BAN] Successfully banned ${event.killer}`);
+                            } catch (error) {
+                                console.error(`[AUTO-BAN] Failed to ban ${event.killer}:`, error.message);
+                                embed.addFields({ name: '❌ Auto-Ban Failed', value: `Could not ban ${event.killer}: ${error.message}`, inline: false });
+                            }
+                        }
+                    }
                 } else {
                     embed.setDescription(`\`\`\`\n${event.raw}\n\`\`\``);
                 }
@@ -610,6 +632,60 @@ class MultiGuildKillfeed {
             console.error(`[MULTI-KILLFEED] Error posting event for guild ${guildConfig.guild_id}:`, error.message);
             console.error(`[MULTI-KILLFEED] Error stack:`, error.stack);
         }
+    }
+
+    // Helper function to check if a position is inside a PVP safe zone
+    isInPvpZone(guildConfig, position) {
+        const zones = guildConfig.pvp_zones || [];
+        if (zones.length === 0) return false;
+        
+        const x = position.x;
+        const z = position.z;
+        
+        for (const zone of zones) {
+            // Check if position is within rectangular zone bounds
+            const minX = Math.min(zone.x1, zone.x2);
+            const maxX = Math.max(zone.x1, zone.x2);
+            const minZ = Math.min(zone.z1, zone.z2);
+            const maxZ = Math.max(zone.z1, zone.z2);
+            
+            if (x >= minX && x <= maxX && z >= minZ && z <= maxZ) {
+                console.log(`[PVP-ZONE] Position (${x}, ${z}) is in PVP zone: ${zone.name}`);
+                return true;
+            }
+        }
+        
+        return false;
+    }
+
+    // Helper function to check if a name is a player (not zombie/animal)
+    isPlayerName(name) {
+        if (!name) return false;
+        
+        // Filter out zombies (ZmbM_, ZmbF_), animals (Animal_), and other AI
+        const aiPatterns = [
+            /^Zmb[MF]_/i,           // Zombies: ZmbM_*, ZmbF_*
+            /^Animal_/i,            // Animals: Animal_*
+            /^Infected/i,           // Infected
+            /^Wolf/i,               // Wolves
+            /^Bear/i,               // Bears
+            /^Boar/i,               // Boars
+            /^Chicken/i,            // Chickens
+            /^Cow/i,                // Cows
+            /^Goat/i,               // Goats
+            /^Pig/i,                // Pigs
+            /^Sheep/i,              // Sheep
+            /^ZmbM|ZmbF/i           // Alternative zombie pattern
+        ];
+        
+        for (const pattern of aiPatterns) {
+            if (pattern.test(name)) {
+                console.log(`[AUTO-BAN] Skipping AI/zombie: ${name}`);
+                return false;
+            }
+        }
+        
+        return true; // It's a player name
     }
 
     // Helper function to extract distance from weapon string
@@ -860,6 +936,64 @@ class MultiGuildKillfeed {
             }
         } catch (err) {
             console.error(`[RESTART] Guild ${guildConfig.guild_id}: Error cleaning spawn.json:`, err.message);
+        }
+    }
+    
+    // Ban a player on Nitrado server
+    async banPlayerOnNitrado(guildConfig, playerName) {
+        try {
+            const FormData = require('form-data');
+            const concat = require('concat-stream');
+            
+            // First, get current banlist
+            const getUrl = `https://api.nitrado.net/services/${guildConfig.nitrado_service_id}/gameservers/settings`;
+            const getResponse = await axios.get(getUrl, {
+                headers: { 'Authorization': `Bearer ${guildConfig.nitrado_token}` }
+            });
+            
+            const settings = getResponse.data.data.settings;
+            let currentBanlist = settings.general?.bans || '';
+            
+            // Check if already banned
+            if (currentBanlist.includes(playerName)) {
+                console.log(`[AUTO-BAN] ${playerName} is already in banlist`);
+                return;
+            }
+            
+            // Add to banlist
+            const newBanlist = currentBanlist ? `${currentBanlist}\n${playerName}` : playerName;
+            
+            // Update on Nitrado
+            const formData = new FormData();
+            formData.append("category", "general");
+            formData.append("key", "bans");
+            formData.append("value", newBanlist);
+            
+            const headers = {
+                ...formData.getHeaders(),
+                "Authorization": `Bearer ${guildConfig.nitrado_token}`,
+            };
+            
+            const postUrl = `https://api.nitrado.net/services/${guildConfig.nitrado_service_id}/gameservers/settings`;
+            
+            return new Promise((resolve, reject) => {
+                formData.pipe(concat(async (data) => {
+                    try {
+                        const response = await axios.post(postUrl, data, { headers });
+                        if (response.status >= 200 && response.status < 300) {
+                            console.log(`[AUTO-BAN] Successfully added ${playerName} to banlist`);
+                            resolve();
+                        } else {
+                            reject(new Error(`HTTP ${response.status}`));
+                        }
+                    } catch (error) {
+                        reject(error);
+                    }
+                }));
+            });
+        } catch (error) {
+            console.error(`[AUTO-BAN] Error banning ${playerName}:`, error.message);
+            throw error;
         }
     }
 }

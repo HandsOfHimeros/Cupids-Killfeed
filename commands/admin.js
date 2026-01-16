@@ -173,6 +173,50 @@ module.exports = {
                                 )
                         )
                 )
+                .addSubcommand(subcommand =>
+                    subcommand
+                        .setName('autoban')
+                        .setDescription('Toggle auto-ban on PVP kills (for PVE servers)')
+                        .addStringOption(option =>
+                            option.setName('state')
+                                .setDescription('Turn auto-ban on or off')
+                                .setRequired(true)
+                                .addChoices(
+                                    { name: 'On (PVE Mode)', value: 'on' },
+                                    { name: 'Off (PVP Mode)', value: 'off' }
+                                )
+                        )
+                )
+                .addSubcommand(subcommand =>
+                    subcommand
+                        .setName('pvpzone')
+                        .setDescription('Add a PVP safe zone (kills here won\'t trigger auto-ban)')
+                        .addStringOption(option =>
+                            option.setName('action')
+                                .setDescription('Add or remove a PVP zone')
+                                .setRequired(true)
+                                .addChoices(
+                                    { name: 'Add Zone', value: 'add' },
+                                    { name: 'Remove Zone', value: 'remove' },
+                                    { name: 'List Zones', value: 'list' }
+                                )
+                        )
+                        .addStringOption(option =>
+                            option.setName('name')
+                                .setDescription('Zone name (e.g., "Devil\'s Castle")')
+                                .setRequired(false)
+                        )
+                        .addStringOption(option =>
+                            option.setName('corner1')
+                                .setDescription('First corner from iZurvive (e.g., "058 094" or just "58 94")')
+                                .setRequired(false)
+                        )
+                        .addStringOption(option =>
+                            option.setName('corner2')
+                                .setDescription('Second corner from iZurvive (e.g., "062 098" or just "62 98")')
+                                .setRequired(false)
+                        )
+                )
         ),
 
     async execute(interaction) {
@@ -205,6 +249,12 @@ module.exports = {
                 break;
             case "deathloc":
                 await handleDeathlocCommand(interaction);
+                break;
+            case "autoban":
+                await handleAutobanCommand(interaction);
+                break;
+            case "pvpzone":
+                await handlePvpZoneCommand(interaction);
                 break;
             default:
                 break;
@@ -474,6 +524,154 @@ async function handleDeathlocCommand(interaction) {
     } catch (error) {
         console.error('Error updating death location setting:', error);
         await interaction.reply({ content: 'Failed to update death location setting.', ephemeral: true });
+    }
+}
+
+async function handleAutobanCommand(interaction) {
+    const guildId = interaction.guildId;
+    
+    // Check if guild has a configuration in database
+    const guildConfig = await db.getGuildConfig(guildId);
+    if (!guildConfig) {
+        return interaction.reply({ content: 'This server is not configured. Please run `/admin killfeed setup` first.', ephemeral: true });
+    }
+    
+    const choice = interaction.options.getString('state');
+    const autoBan = choice === "on";
+    
+    try {
+        // Update database
+        await db.query(
+            'UPDATE guild_configs SET auto_ban_on_kill = $1 WHERE guild_id = $2',
+            [autoBan, guildId]
+        );
+        
+        const mode = autoBan ? "**PVE MODE** - Players will be auto-banned for killing other players" : "**PVP MODE** - Players can kill without being banned";
+        await interaction.reply(`Auto-Ban ${autoBan ? "Enabled" : "Disabled"}!\n${mode}`);
+    } catch (error) {
+        console.error('Error updating auto-ban setting:', error);
+        await interaction.reply({ content: 'Failed to update auto-ban setting.', ephemeral: true });
+    }
+}
+
+async function handlePvpZoneCommand(interaction) {
+    const guildId = interaction.guildId;
+    
+    // Check if guild has a configuration in database
+    const guildConfig = await db.getGuildConfig(guildId);
+    if (!guildConfig) {
+        return interaction.reply({ content: 'This server is not configured. Please run `/admin killfeed setup` first.', ephemeral: true });
+    }
+    
+    const action = interaction.options.getString('action');
+    
+    try {
+        if (action === 'list') {
+            const zones = guildConfig.pvp_zones || [];
+            if (zones.length === 0) {
+                return interaction.reply('No PVP zones configured. Kills anywhere will trigger auto-ban (if enabled).');
+            }
+            
+            // Get map name for iZurvive links
+            const mapName = guildConfig.map_name || 'chernarusplus';
+            let mapPath = '';
+            if (mapName === 'enoch') mapPath = 'livonia/';
+            else if (mapName === 'sakhal') mapPath = 'sakhal/';
+            
+            let zoneList = '**PVP Safe Zones** (kills here won\'t trigger auto-ban):\n\n';
+            zones.forEach((zone, idx) => {
+                // Calculate center point for easy viewing
+                const centerX = Math.round((zone.x1 + zone.x2) / 2);
+                const centerZ = Math.round((zone.z1 + zone.z2) / 2);
+                
+                // Convert to iZurvive format (divide by 100)
+                const izX1 = Math.floor(zone.x1 / 100);
+                const izZ1 = Math.floor(zone.z1 / 100);
+                const izX2 = Math.floor(zone.x2 / 100);
+                const izZ2 = Math.floor(zone.z2 / 100);
+                
+                zoneList += `**${idx + 1}. ${zone.name}**\n`;
+                zoneList += `   📍 [View on Map](https://www.izurvive.com/${mapPath}#location=${centerX};${centerZ})\n`;
+                zoneList += `   iZurvive: (${izX1}, ${izZ1}) to (${izX2}, ${izZ2})\n`;
+                zoneList += `   Corner 1: [${zone.x1}, ${zone.z1}](https://www.izurvive.com/${mapPath}#location=${zone.x1};${zone.z1})\n`;
+                zoneList += `   Corner 2: [${zone.x2}, ${zone.z2}](https://www.izurvive.com/${mapPath}#location=${zone.x2};${zone.z2})\n\n`;
+            });
+            
+            return interaction.reply(zoneList);
+        }
+        
+        if (action === 'add') {
+            const name = interaction.options.getString('name');
+            const corner1 = interaction.options.getString('corner1');
+            const corner2 = interaction.options.getString('corner2');
+            
+            if (!name || !corner1 || !corner2) {
+                return interaction.reply({ 
+                    content: 'To add a zone, provide:\n• **name**: Zone name\n• **corner1**: First corner (e.g., "058 094")\n• **corner2**: Second corner (e.g., "062 098")\n\nJust copy coordinates from iZurvive!', 
+                    ephemeral: true 
+                });
+            }
+            
+            // Parse coordinates - supports "058 094", "11700.08 / 12652.43", "58,94", etc
+            const parseCoords = (str) => {
+                // Extract all numbers (including decimals)
+                const nums = str.match(/[\d.]+/g);
+                if (!nums || nums.length !== 2) return null;
+                let x = parseFloat(nums[0]);
+                let z = parseFloat(nums[1]);
+                // Convert to game coords (multiply by 100 if iZurvive format)
+                if (x < 1000) x *= 100;
+                if (z < 1000) z *= 100;
+                return { x, z };
+            };
+            
+            const c1 = parseCoords(corner1);
+            const c2 = parseCoords(corner2);
+            
+            if (!c1 || !c2) {
+                return interaction.reply({ 
+                    content: '❌ Invalid coordinates. Use format like "058 094" or "58 94"', 
+                    ephemeral: true 
+                });
+            }
+            
+            const x1 = c1.x, z1 = c1.z, x2 = c2.x, z2 = c2.z;
+            
+            const zones = guildConfig.pvp_zones || [];
+            zones.push({ name, x1, z1, x2, z2 });
+            
+            await db.query(
+                'UPDATE guild_configs SET pvp_zones = $1 WHERE guild_id = $2',
+                [JSON.stringify(zones), guildId]
+            );
+            
+            return interaction.reply(`✅ Added PVP zone: **${name}**\niZurvive: (${Math.floor(x1/100)}, ${Math.floor(z1/100)}) to (${Math.floor(x2/100)}, ${Math.floor(z2/100)})\nGame coords: (${x1}, ${z1}) to (${x2}, ${z2})\nKills in this zone will NOT trigger auto-ban.`);
+        }
+        
+        if (action === 'remove') {
+            const name = interaction.options.getString('name');
+            if (!name) {
+                return interaction.reply({ content: 'Provide the zone name to remove.', ephemeral: true });
+            }
+            
+            let zones = guildConfig.pvp_zones || [];
+            const originalLength = zones.length;
+            zones = zones.filter(z => z.name !== name);
+            
+            if (zones.length === originalLength) {
+                return interaction.reply({ content: `Zone "${name}" not found.`, ephemeral: true });
+            }
+            
+            await db.query(
+                'UPDATE guild_configs SET pvp_zones = $1 WHERE guild_id = $2',
+                [JSON.stringify(zones), guildId]
+            );
+            
+            return interaction.reply(`✅ Removed PVP zone: **${name}**`);
+        }
+    } catch (error) {
+        console.error('Error managing PVP zones:', error);
+        await interaction.reply({ content: 'Failed to manage PVP zones.', ephemeral: true });
     }
 }
 
