@@ -3,7 +3,12 @@ const { REST } = require('@discordjs/rest');
 const { Routes } = require('discord-api-types/v10');
 const fs = require('fs');
 const path = require('path');
-const { CLIENTID, GUILDID, TOKEN } = require('./config.json');
+require('dotenv').config();
+
+// Support both config.json (local) and environment variables (Heroku)
+const configFile = fs.existsSync('./config.json') ? require('./config.json') : {};
+const CLIENTID = process.env.CLIENTID || configFile.CLIENTID;
+const TOKEN = process.env.TOKEN || configFile.TOKEN;
 
 const commands = [];
 const commandsPath = path.join(__dirname, 'commands');
