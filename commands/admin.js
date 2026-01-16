@@ -148,7 +148,15 @@ module.exports = {
 
     async execute(interaction) {
         const subCommand = interaction.options.getSubcommand();
-        config = ini.parse(fs.readFileSync('./config.ini', 'utf-8'));
+        
+        // Reload config.ini if it exists (for local dev), otherwise keep using defaults from top
+        try {
+            if (fs.existsSync('./config.ini')) {
+                config = ini.parse(fs.readFileSync('./config.ini', 'utf-8'));
+            }
+        } catch (err) {
+            // Keep using default config set at top of file
+        }
 
         switch (subCommand) {
             case "clear":
