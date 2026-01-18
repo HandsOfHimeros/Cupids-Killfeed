@@ -90,8 +90,7 @@ function generateTemplate(className) {
         pos: [0, 0, 0],
         ypr: [0, 0, 0],
         scale: 1,
-        enableCEPersistency: 0,
-        attachments: []
+        enableCEPersistency: 0
     };
 }
 

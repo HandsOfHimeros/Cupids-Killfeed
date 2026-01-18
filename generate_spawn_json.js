@@ -75,7 +75,7 @@ shopItems.forEach(item => {
          item.class.includes('Aug') || 
          item.class.includes('FAMAS') || 
          item.class.includes('M16'))) {
-        template.attachments = [];
+        // Note: DayZ JSON spawn format does not support attachments field
     }
     
     spawnTemplates[item.class] = template;

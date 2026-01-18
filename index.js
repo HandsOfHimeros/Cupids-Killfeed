@@ -438,14 +438,13 @@ async function addCupidSpawnEntry(spawnEntry, guildId) {
         console.log(`[SPAWN] Item grid position: row ${row}, col ${col} => [${itemX}, ${itemY}, ${itemZ}] (offset: ${itemYOffset})`);
         
         // Step 6: Create spawn object for item on table (no quantity - each purchase creates individual items)
+        // Note: DayZ's JSON spawn format does NOT support attachments field - attachments must be spawned separately
         const spawnObject = {
             name: spawnEntry.class,
             pos: [itemX, itemY, itemZ],
             ypr: template.ypr || [0, 0, 0],
             scale: template.scale || 1,
             enableCEPersistency: template.enableCEPersistency || 0,
-            // Only include attachments if array has items (empty arrays cause spawn failures for non-weapon items)
-            ...(template.attachments && template.attachments.length > 0 && { attachments: template.attachments }),
             customString: JSON.stringify({
                 userId: spawnEntry.userId,
                 dayzPlayerName: spawnEntry.dayzPlayerName,
