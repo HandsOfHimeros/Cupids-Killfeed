@@ -216,12 +216,15 @@ class MultiGuildKillfeed {
             if (line.includes('killed by')) {
                 // Try to parse details for formatted output
                 let victim, killer, weapon, position;
+                let isPlayerKill = false; // Flag to track if this is a player-vs-player kill
+                
                 let killMatch = line.match(/Player \"(.+?)\"\(id=[^)]*\s+pos=<([^,]+),\s*([^,]+),\s*([^>]+)>\)\s+killed by Player \"(.+?)\"\(id=[^)]*\) with (.+)$/);
                 if (killMatch) {
                     victim = killMatch[1];
                     position = { x: parseFloat(killMatch[2]), y: parseFloat(killMatch[3]), z: parseFloat(killMatch[4]) };
                     killer = killMatch[5];
                     weapon = killMatch[6];
+                    isPlayerKill = true; // This is a player-vs-player kill
                 } else {
                     // Try without position
                     killMatch = line.match(/Player \"(.+?)\"\(id=[^)]*\) killed by Player \"(.+?)\"\(id=[^)]*\) with (.+)$/);
@@ -229,21 +232,24 @@ class MultiGuildKillfeed {
                         victim = killMatch[1];
                         killer = killMatch[2];
                         weapon = killMatch[3];
+                        isPlayerKill = true; // This is a player-vs-player kill
                     } else {
-                        // Try zombie/AI format with position
+                        // Try zombie/AI/environmental format with position (e.g., grenades, zombies, fall damage)
                         killMatch = line.match(/(?:Player )?\"(.+?)\"(?:\s*\(DEAD\))?\s*\(id=[^)]*\s+pos=<([^,]+),\s*([^,]+),\s*([^>]+)>\)\s+killed by (.+)$/);
                         if (killMatch) {
                             victim = killMatch[1];
                             position = { x: parseFloat(killMatch[2]), y: parseFloat(killMatch[3]), z: parseFloat(killMatch[4]) };
                             killer = killMatch[5];
                             weapon = 'Unknown';
+                            isPlayerKill = false; // Not a player kill (grenade, zombie, environment, etc.)
                         } else {
-                            // Try zombie/AI format without position
+                            // Try zombie/AI/environmental format without position
                             killMatch = line.match(/(?:Player )?\"(.+?)\"(?:\s*\(DEAD\))?\s*\(id=[^)]*\)\s+killed by (.+)$/);
                             if (killMatch) {
                                 victim = killMatch[1];
                                 killer = killMatch[2];
                                 weapon = 'Unknown';
+                                isPlayerKill = false; // Not a player kill (grenade, zombie, environment, etc.)
                             }
                         }
                     }
@@ -256,6 +262,7 @@ class MultiGuildKillfeed {
                     killer: killer,
                     weapon: weapon,
                     position: position,
+                    isPlayerKill: isPlayerKill, // Add flag to event
                     raw: line 
                 });
             } else if (line.includes('hit by') || line.includes('Struck by')) {
@@ -489,9 +496,9 @@ class MultiGuildKillfeed {
                         embed.addFields({ name: '📍 Location', value: mapUrl || `\`${Math.round(event.position.x)}, ${Math.round(event.position.z)}\``, inline: false });
                     }
                     
-                    // Auto-ban killer if enabled (PVE mode) - but only for player kills, not zombies/animals
-                    // Also check if kill happened outside PVP zones and is not suicide
-                    if (guildConfig.auto_ban_on_kill && event.killer && this.isPlayerName(event.killer)) {
+                    // Auto-ban killer if enabled (PVE mode) - but only for player-vs-player kills
+                    // Skip grenades, zombies, environmental deaths, and suicides
+                    if (guildConfig.auto_ban_on_kill && event.isPlayerKill && event.killer && event.victim) {
                         // Skip if suicide (killer = victim)
                         if (event.killer === event.victim) {
                             console.log(`[AUTO-BAN] ${event.killer} committed suicide, no ban`);
@@ -516,8 +523,8 @@ class MultiGuildKillfeed {
                         }
                     }
                     
-                    // Check for safe zone violations on PVP servers
-                    if (guildConfig.auto_ban_in_safe_zones && event.killer && event.victim && this.isPlayerName(event.killer)) {
+                    // Check for safe zone violations on PVP servers - only for player-vs-player kills
+                    if (guildConfig.auto_ban_in_safe_zones && event.isPlayerKill && event.killer && event.victim) {
                         // Skip if suicide (killer = victim)
                         if (event.killer === event.victim) {
                             console.log(`[SAFE-ZONE] ${event.killer} committed suicide, no violation`);
