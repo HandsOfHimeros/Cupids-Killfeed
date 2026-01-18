@@ -546,6 +546,11 @@ class MultiGuildKillfeed {
                             }
                         }
                     }
+                    
+                    // Check base proximity alerts
+                    if (event.position) {
+                        await this.checkBaseProximityAlerts(guildConfig, event);
+                    }
                 } else {
                     embed.setDescription(`\`\`\`\n${event.raw}\n\`\`\``);
                 }
@@ -1054,6 +1059,117 @@ class MultiGuildKillfeed {
             console.error(`[AUTO-BAN] Error banning ${playerName}:`, error.message);
             throw error;
         }
+    }
+    
+    // Check if anyone came near a player's base and send DM alert
+    async checkBaseProximityAlerts(guildConfig, event) {
+        try {
+            // Get all active base alerts for this guild and server
+            const baseAlerts = await db.query(
+                'SELECT ba.id, ba.discord_user_id, ba.base_x, ba.base_y, ba.alert_radius FROM base_alerts ba WHERE ba.guild_id = $1 AND ba.server_name = $2 AND ba.is_active = true',
+                [guildConfig.guild_id, guildConfig.map_name]
+            );
+            
+            if (baseAlerts.rows.length === 0) return;
+            
+            // Check each player in the event (victim and killer if available)
+            const playersToCheck = [];
+            if (event.victim && event.position) {
+                playersToCheck.push({ name: event.victim, position: event.position, eventType: 'death' });
+            }
+            // For kills, also check killer position if it's a player kill
+            // (Note: we don't have killer position in logs, only victim position)
+            
+            for (const player of playersToCheck) {
+                for (const baseAlert of baseAlerts.rows) {
+                    // Calculate distance from event position to base
+                    const distance = this.calculateDistance2D(
+                        player.position.x,
+                        player.position.z,
+                        baseAlert.base_x,
+                        baseAlert.base_y
+                    );
+                    
+                    if (distance <= baseAlert.alert_radius) {
+                        // Check if player is whitelisted
+                        const whitelistCheck = await db.query(
+                            'SELECT id FROM base_alert_whitelist WHERE base_alert_id = $1 AND whitelisted_player_name = $2',
+                            [baseAlert.id, player.name]
+                        );
+                        
+                        if (whitelistCheck.rows.length > 0) {
+                            console.log(`[BASE-ALERT] ${player.name} is whitelisted, no alert`);
+                            continue;
+                        }
+                        
+                        // Send DM to base owner
+                        await this.sendBaseProximityDM(baseAlert.discord_user_id, guildConfig, player, distance, event);
+                        
+                        // Log to history
+                        await db.query(
+                            'INSERT INTO base_alert_history (base_alert_id, detected_player_name, distance, event_type) VALUES ($1, $2, $3, $4)',
+                            [baseAlert.id, player.name, distance, event.type]
+                        );
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('[BASE-ALERT] Error checking proximity:', error);
+        }
+    }
+    
+    async sendBaseProximityDM(discordUserId, guildConfig, player, distance, event) {
+        try {
+            const user = await this.bot.users.fetch(discordUserId);
+            if (!user) {
+                console.log(`[BASE-ALERT] Could not find user ${discordUserId}`);
+                return;
+            }
+            
+            const mapNames = {
+                'chernarusplus': 'Chernarus',
+                'enoch': 'Livonia',
+                'sakhal': 'Sakhal'
+            };
+            const mapName = mapNames[guildConfig.map_name] || guildConfig.map_name;
+            
+            // Get iZurvive URL
+            const mapPaths = {
+                'chernarusplus': '',
+                'enoch': 'livonia/',
+                'sakhal': 'sakhal/'
+            };
+            const mapUrl = this.getMapUrl(guildConfig.map_name, player.position);
+            
+            const embed = new MessageEmbed()
+                .setColor('#FF0000')
+                .setTitle('🚨 BASE PROXIMITY ALERT')
+                .setDescription(
+                    `**${player.name}** was detected **${Math.round(distance)}m** from your base!\n\n` +
+                    `**Server:** ${mapName}\n` +
+                    `**Event:** ${event.type}\n` +
+                    `**Time:** ${event.time}\n` +
+                    `**Coordinates:** (${Math.round(player.position.x)}, ${Math.round(player.position.z)})`
+                )
+                .setTimestamp();
+            
+            if (mapUrl) {
+                embed.setDescription(
+                    embed.description + `\n\n[View on iZurvive](${mapUrl})`
+                );
+            }
+            
+            await user.send({ embeds: [embed] });
+            console.log(`[BASE-ALERT] Sent alert to ${discordUserId} for ${player.name} (${Math.round(distance)}m)`);
+        } catch (error) {
+            console.error(`[BASE-ALERT] Error sending DM to ${discordUserId}:`, error.message);
+        }
+    }
+    
+    calculateDistance2D(x1, z1, x2, z2) {
+        const dx = x2 - x1;
+        const dz = z2 - z1;
+        return Math.sqrt(dx * dx + dz * dz);
     }
 }
 
