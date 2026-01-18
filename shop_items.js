@@ -149,8 +149,8 @@ module.exports = [
   { name: 'AK Wood Handguard', class: 'AK_WoodHndgrd', averagePrice: 65, description: 'Wooden AK handguard' },
   
   // Lights & Lasers
-  { name: 'Weapon Flashlight', class: 'UniversalLight', averagePrice: 120, description: 'Tactical light' },
-  { name: 'Pistol Light', class: 'TLRLight', averagePrice: 100, description: 'Pistol flashlight' },
+  { name: 'Weapon Flashlight', class: 'TLRLight', averagePrice: 120, description: 'Tactical light' },
+  { name: 'Pistol Light', class: 'PistolLight', averagePrice: 100, description: 'Pistol flashlight' },
   
   // Bayonets & Compensators
   { name: 'AK Bayonet', class: 'AK_Bayonet', averagePrice: 60, description: 'AK blade attachment' },
