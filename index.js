@@ -444,7 +444,8 @@ async function addCupidSpawnEntry(spawnEntry, guildId) {
             ypr: template.ypr || [0, 0, 0],
             scale: template.scale || 1,
             enableCEPersistency: template.enableCEPersistency || 0,
-            ...(template.attachments && { attachments: template.attachments }),
+            // Only include attachments if array has items (empty arrays cause spawn failures for non-weapon items)
+            ...(template.attachments && template.attachments.length > 0 && { attachments: template.attachments }),
             customString: JSON.stringify({
                 userId: spawnEntry.userId,
                 dayzPlayerName: spawnEntry.dayzPlayerName,

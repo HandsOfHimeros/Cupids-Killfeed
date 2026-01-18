@@ -23,8 +23,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "M4A1_Black": {
       "name": "M4A1_Black",
@@ -39,8 +38,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "M4A1_Green": {
       "name": "M4A1_Green",
@@ -55,8 +53,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "M16A2": {
       "name": "M16A2",
@@ -71,8 +68,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "AK101": {
       "name": "AK101",
@@ -87,8 +83,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "AK101_Black": {
       "name": "AK101_Black",
@@ -103,8 +98,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "AK101_Green": {
       "name": "AK101_Green",
@@ -119,8 +113,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "AK74": {
       "name": "AK74",
@@ -135,8 +128,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "AK74_Black": {
       "name": "AK74_Black",
@@ -151,8 +143,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "AK74_Green": {
       "name": "AK74_Green",
@@ -167,8 +158,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "AKM": {
       "name": "AKM",
@@ -183,8 +173,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "AKS74U": {
       "name": "AKS74U",
@@ -199,8 +188,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "AKS74U_Black": {
       "name": "AKS74U_Black",
@@ -215,8 +203,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "AKS74U_Green": {
       "name": "AKS74U_Green",
@@ -231,8 +218,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Aug": {
       "name": "Aug",
@@ -247,8 +233,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "FAMAS": {
       "name": "FAMAS",
@@ -263,8 +248,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "FAL": {
       "name": "FAL",
@@ -279,8 +263,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Mosin9130": {
       "name": "Mosin9130",
@@ -295,8 +278,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Mosin9130_Black": {
       "name": "Mosin9130_Black",
@@ -311,8 +293,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Mosin9130_Camo": {
       "name": "Mosin9130_Camo",
@@ -327,8 +308,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Mosin9130_Green": {
       "name": "Mosin9130_Green",
@@ -343,8 +323,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "SVD": {
       "name": "SVD",
@@ -359,8 +338,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "SVD_Wooden": {
       "name": "SVD_Wooden",
@@ -375,8 +353,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "VSS": {
       "name": "VSS",
@@ -391,8 +368,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Winchester70": {
       "name": "Winchester70",
@@ -407,8 +383,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "CZ527": {
       "name": "CZ527",
@@ -423,8 +398,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "CZ550": {
       "name": "CZ550",
@@ -439,8 +413,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Scout": {
       "name": "Scout",
@@ -455,8 +428,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Scout_Chernarus": {
       "name": "Scout_Chernarus",
@@ -471,8 +443,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Scout_Livonia": {
       "name": "Scout_Livonia",
@@ -487,8 +458,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "SSG82": {
       "name": "SSG82",
@@ -503,8 +473,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "SKS": {
       "name": "SKS",
@@ -519,8 +488,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Repeater": {
       "name": "Repeater",
@@ -535,8 +503,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Ruger1022": {
       "name": "Ruger1022",
@@ -551,8 +518,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Izh18": {
       "name": "Izh18",
@@ -567,8 +533,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Mp133Shotgun": {
       "name": "Mp133Shotgun",
@@ -583,8 +548,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Izh18Shotgun": {
       "name": "Izh18Shotgun",
@@ -599,8 +563,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Izh43Shotgun": {
       "name": "Izh43Shotgun",
@@ -615,8 +578,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Saiga": {
       "name": "Saiga",
@@ -631,8 +593,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "UMP45": {
       "name": "UMP45",
@@ -647,8 +608,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "MP5K": {
       "name": "MP5K",
@@ -663,8 +623,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "PP19": {
       "name": "PP19",
@@ -679,8 +638,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "PM73Rak": {
       "name": "PM73Rak",
@@ -695,8 +653,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "CZ61": {
       "name": "CZ61",
@@ -711,8 +668,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Deagle": {
       "name": "Deagle",
@@ -727,8 +683,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Deagle_Gold": {
       "name": "Deagle_Gold",
@@ -743,8 +698,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "FNX45": {
       "name": "FNX45",
@@ -759,8 +713,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Glock19": {
       "name": "Glock19",
@@ -775,8 +728,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "CZ75": {
       "name": "CZ75",
@@ -791,8 +743,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "P1": {
       "name": "P1",
@@ -807,8 +758,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "MakarovIJ70": {
       "name": "MakarovIJ70",
@@ -823,8 +773,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "MKII": {
       "name": "MKII",
@@ -839,8 +788,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Ammo_556x45": {
       "name": "Ammo_556x45",
@@ -3051,8 +2999,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "GorkaEJacket_Winter": {
       "name": "GorkaEJacket_Winter",
@@ -3067,8 +3014,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "USMCJacket_Desert": {
       "name": "USMCJacket_Desert",
@@ -3083,8 +3029,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "USMCJacket_Woodland": {
       "name": "USMCJacket_Woodland",
@@ -3099,8 +3044,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "M65Jacket_Black": {
       "name": "M65Jacket_Black",
@@ -3115,8 +3059,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "M65Jacket_Olive": {
       "name": "M65Jacket_Olive",
@@ -3131,8 +3074,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "M65Jacket_Tan": {
       "name": "M65Jacket_Tan",
@@ -3147,8 +3089,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "LeatherJacket_Black": {
       "name": "LeatherJacket_Black",
@@ -3163,8 +3104,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "LeatherJacket_Brown": {
       "name": "LeatherJacket_Brown",
@@ -3179,8 +3119,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "LeatherJacket_Natural": {
       "name": "LeatherJacket_Natural",
@@ -3195,8 +3134,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "BomberJacket_Black": {
       "name": "BomberJacket_Black",
@@ -3211,8 +3149,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "BomberJacket_Olive": {
       "name": "BomberJacket_Olive",
@@ -3227,8 +3164,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "BomberJacket_Brown": {
       "name": "BomberJacket_Brown",
@@ -3243,8 +3179,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "RidersJacket_Black": {
       "name": "RidersJacket_Black",
@@ -3259,8 +3194,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "HuntingJacket_Autumn": {
       "name": "HuntingJacket_Autumn",
@@ -3275,8 +3209,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "HuntingJacket_Brown": {
       "name": "HuntingJacket_Brown",
@@ -3291,8 +3224,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "HuntingJacket_Spring": {
       "name": "HuntingJacket_Spring",
@@ -3307,8 +3239,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "HuntingJacket_Winter": {
       "name": "HuntingJacket_Winter",
@@ -3323,8 +3254,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "HikingJacket_Black": {
       "name": "HikingJacket_Black",
@@ -3339,8 +3269,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "HikingJacket_Green": {
       "name": "HikingJacket_Green",
@@ -3355,8 +3284,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "HikingJacket_Red": {
       "name": "HikingJacket_Red",
@@ -3371,8 +3299,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "DownJacket_Blue": {
       "name": "DownJacket_Blue",
@@ -3387,8 +3314,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "DownJacket_Orange": {
       "name": "DownJacket_Orange",
@@ -3403,8 +3329,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "DownJacket_Green": {
       "name": "DownJacket_Green",
@@ -3419,8 +3344,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "FirefighterJacket_Black": {
       "name": "FirefighterJacket_Black",
@@ -3435,8 +3359,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "FirefighterJacket_Beige": {
       "name": "FirefighterJacket_Beige",
@@ -3451,8 +3374,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "ParamedicJacket_Blue": {
       "name": "ParamedicJacket_Blue",
@@ -3467,8 +3389,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "ParamedicJacket_Green": {
       "name": "ParamedicJacket_Green",
@@ -3483,8 +3404,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "PoliceJacket": {
       "name": "PoliceJacket",
@@ -3499,8 +3419,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "QuiltedJacket_Black": {
       "name": "QuiltedJacket_Black",
@@ -3515,8 +3434,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "QuiltedJacket_Grey": {
       "name": "QuiltedJacket_Grey",
@@ -3531,8 +3449,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "QuiltedJacket_Orange": {
       "name": "QuiltedJacket_Orange",
@@ -3547,8 +3464,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "TrackSuitJacket_Black": {
       "name": "TrackSuitJacket_Black",
@@ -3563,8 +3479,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "TrackSuitJacket_Blue": {
       "name": "TrackSuitJacket_Blue",
@@ -3579,8 +3494,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "NBCJacketGray": {
       "name": "NBCJacketGray",
@@ -3595,8 +3509,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "NBCJacketWhite": {
       "name": "NBCJacketWhite",
@@ -3611,8 +3524,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "NBCJacketYellow": {
       "name": "NBCJacketYellow",
@@ -3627,8 +3539,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "NBCPantsGray": {
       "name": "NBCPantsGray",
@@ -3643,8 +3554,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "NBCPantsWhite": {
       "name": "NBCPantsWhite",
@@ -3659,8 +3569,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "NBCBootsGray": {
       "name": "NBCBootsGray",
@@ -3675,8 +3584,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "NBCBootsWhite": {
       "name": "NBCBootsWhite",
@@ -3691,8 +3599,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "NBCBootsYellow": {
       "name": "NBCBootsYellow",
@@ -3707,8 +3614,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "NBCGlovesGray": {
       "name": "NBCGlovesGray",
@@ -3723,8 +3629,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "NBCGlovesYellow": {
       "name": "NBCGlovesYellow",
@@ -3739,8 +3644,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "NBCHoodGray": {
       "name": "NBCHoodGray",
@@ -3755,8 +3659,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "NBCHoodWhite": {
       "name": "NBCHoodWhite",
@@ -3771,8 +3674,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "NBCHoodYellow": {
       "name": "NBCHoodYellow",
@@ -3787,8 +3689,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "MediumTent": {
       "name": "MediumTent",
@@ -3803,8 +3704,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "LargeTent": {
       "name": "LargeTent",
@@ -3819,8 +3719,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "CarTent": {
       "name": "CarTent",
@@ -3835,8 +3734,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Barrel_Blue": {
       "name": "Barrel_Blue",
@@ -3851,8 +3749,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Barrel_Green": {
       "name": "Barrel_Green",
@@ -3867,8 +3764,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Barrel_Red": {
       "name": "Barrel_Red",
@@ -3883,8 +3779,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Barrel_Yellow": {
       "name": "Barrel_Yellow",
@@ -3899,8 +3794,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "SeaChest": {
       "name": "SeaChest",
@@ -3915,8 +3809,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "WoodenCrate": {
       "name": "WoodenCrate",
@@ -3931,8 +3824,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "ProtectorCase": {
       "name": "ProtectorCase",
@@ -3947,8 +3839,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "AugShort": {
       "name": "AugShort",
@@ -3963,8 +3854,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "ASVAL": {
       "name": "ASVAL",
@@ -3979,8 +3869,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "B95": {
       "name": "B95",
@@ -3995,8 +3884,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Blaze95": {
       "name": "Blaze95",
@@ -4011,8 +3899,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "M70Tundra": {
       "name": "M70Tundra",
@@ -4027,8 +3914,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "SV98": {
       "name": "SV98",
@@ -4043,8 +3929,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Longhorn": {
       "name": "Longhorn",
@@ -4059,8 +3944,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "BK133Shotgun": {
       "name": "BK133Shotgun",
@@ -4075,8 +3959,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "M1014": {
       "name": "M1014",
@@ -4091,8 +3974,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Colt1911": {
       "name": "Colt1911",
@@ -4107,8 +3989,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Engraved1911": {
       "name": "Engraved1911",
@@ -4123,8 +4004,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Revolver_357": {
       "name": "Revolver_357",
@@ -4139,8 +4019,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Derringer_Black": {
       "name": "Derringer_Black",
@@ -4155,8 +4034,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Derringer_Grey": {
       "name": "Derringer_Grey",
@@ -4171,8 +4049,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Derringer_Pink": {
       "name": "Derringer_Pink",
@@ -4187,8 +4064,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "BaseballBat": {
       "name": "BaseballBat",
@@ -4203,8 +4079,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "BarbedBaseballBat": {
       "name": "BarbedBaseballBat",
@@ -4219,8 +4094,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Crowbar": {
       "name": "Crowbar",
@@ -4235,8 +4109,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "FirefighterAxe": {
       "name": "FirefighterAxe",
@@ -4251,8 +4124,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "WoodAxe": {
       "name": "WoodAxe",
@@ -4267,8 +4139,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Hatchet": {
       "name": "Hatchet",
@@ -4283,8 +4154,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Pickaxe": {
       "name": "Pickaxe",
@@ -4299,8 +4169,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "SledgeHammer": {
       "name": "SledgeHammer",
@@ -4315,8 +4184,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Machete": {
       "name": "Machete",
@@ -4331,8 +4199,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Cleaver": {
       "name": "Cleaver",
@@ -4347,8 +4214,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "KitchenKnife": {
       "name": "KitchenKnife",
@@ -4363,8 +4229,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "CombatKnife": {
       "name": "CombatKnife",
@@ -4379,8 +4244,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "HuntingKnife": {
       "name": "HuntingKnife",
@@ -4395,8 +4259,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Kukri": {
       "name": "Kukri",
@@ -4411,8 +4274,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "OrientalSword": {
       "name": "OrientalSword",
@@ -4427,8 +4289,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Pitchfork": {
       "name": "Pitchfork",
@@ -4443,8 +4304,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Shovel": {
       "name": "Shovel",
@@ -4459,8 +4319,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "FieldShovel": {
       "name": "FieldShovel",
@@ -4475,8 +4334,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "PipeWrench": {
       "name": "PipeWrench",
@@ -4491,8 +4349,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "LugWrench": {
       "name": "LugWrench",
@@ -4507,8 +4364,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "M4_CQBBttstck_Green": {
       "name": "M4_CQBBttstck_Green",
@@ -4523,8 +4379,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "M4_MPBttstck_Green": {
       "name": "M4_MPBttstck_Green",
@@ -4539,8 +4394,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "M4_OEBttstck_Green": {
       "name": "M4_OEBttstck_Green",
@@ -4555,8 +4409,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "M4_MPHndgrd_Green": {
       "name": "M4_MPHndgrd_Green",
@@ -4571,8 +4424,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "AmmoBox_308Win_20Rnd": {
       "name": "AmmoBox_308Win_20Rnd",
@@ -4587,8 +4439,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "AmmoBox_308WinTracer_20Rnd": {
       "name": "AmmoBox_308WinTracer_20Rnd",
@@ -4603,8 +4454,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "AmmoBox_556x45_20Rnd": {
       "name": "AmmoBox_556x45_20Rnd",
@@ -4619,8 +4469,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "AmmoBox_556x45Tracer_20Rnd": {
       "name": "AmmoBox_556x45Tracer_20Rnd",
@@ -4635,8 +4484,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "AmmoBox_762x39_20Rnd": {
       "name": "AmmoBox_762x39_20Rnd",
@@ -4651,8 +4499,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "AmmoBox_762x39Tracer_20Rnd": {
       "name": "AmmoBox_762x39Tracer_20Rnd",
@@ -4667,8 +4514,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "AmmoBox_545x39_20Rnd": {
       "name": "AmmoBox_545x39_20Rnd",
@@ -4683,8 +4529,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "AmmoBox_545x39Tracer_20Rnd": {
       "name": "AmmoBox_545x39Tracer_20Rnd",
@@ -4699,8 +4544,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "AmmoBox_762x54_20Rnd": {
       "name": "AmmoBox_762x54_20Rnd",
@@ -4715,8 +4559,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "AmmoBox_762x54Tracer_20Rnd": {
       "name": "AmmoBox_762x54Tracer_20Rnd",
@@ -4731,8 +4574,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "AmmoBox_9x19_25rnd": {
       "name": "AmmoBox_9x19_25rnd",
@@ -4747,8 +4589,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "AmmoBox_45ACP_25rnd": {
       "name": "AmmoBox_45ACP_25rnd",
@@ -4763,8 +4604,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "AmmoBox_380_35rnd": {
       "name": "AmmoBox_380_35rnd",
@@ -4779,8 +4619,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "AmmoBox_357_20Rnd": {
       "name": "AmmoBox_357_20Rnd",
@@ -4795,8 +4634,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "AmmoBox_9x18_25rnd": {
       "name": "AmmoBox_9x18_25rnd",
@@ -4811,8 +4649,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "AmmoBox_00buck_10rnd": {
       "name": "AmmoBox_00buck_10rnd",
@@ -4827,8 +4664,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "AmmoBox_12gaSlug_10Rnd": {
       "name": "AmmoBox_12gaSlug_10Rnd",
@@ -4843,8 +4679,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "AmmoBox_12gaRubberSlug_10Rnd": {
       "name": "AmmoBox_12gaRubberSlug_10Rnd",
@@ -4859,8 +4694,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "AmmoBox_22_50Rnd": {
       "name": "AmmoBox_22_50Rnd",
@@ -4875,8 +4709,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "BloodBagIV": {
       "name": "BloodBagIV",
@@ -4891,8 +4724,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "BloodTestKit": {
       "name": "BloodTestKit",
@@ -4907,8 +4739,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "VitaminBottle": {
       "name": "VitaminBottle",
@@ -4923,8 +4754,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "CharcoalTablets": {
       "name": "CharcoalTablets",
@@ -4939,8 +4769,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "PainkillerTablets": {
       "name": "PainkillerTablets",
@@ -4955,8 +4784,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "WoodSplint": {
       "name": "WoodSplint",
@@ -4971,8 +4799,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "DisinfectantSpray": {
       "name": "DisinfectantSpray",
@@ -4987,8 +4814,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "DisinfectantAlcohol": {
       "name": "DisinfectantAlcohol",
@@ -5003,8 +4829,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "IodineTincture": {
       "name": "IodineTincture",
@@ -5019,8 +4844,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "SewingKit": {
       "name": "SewingKit",
@@ -5035,8 +4859,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "BloodBagEmpty": {
       "name": "BloodBagEmpty",
@@ -5051,8 +4874,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "SalineBag": {
       "name": "SalineBag",
@@ -5067,8 +4889,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "BakedBeansCan": {
       "name": "BakedBeansCan",
@@ -5083,8 +4904,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "PeachesCan": {
       "name": "PeachesCan",
@@ -5099,8 +4919,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "TacticalBaconCan": {
       "name": "TacticalBaconCan",
@@ -5115,8 +4934,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "SpaghettiCan": {
       "name": "SpaghettiCan",
@@ -5131,8 +4949,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Sardines": {
       "name": "Sardines",
@@ -5147,8 +4964,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "TunaCan": {
       "name": "TunaCan",
@@ -5163,8 +4979,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Pate": {
       "name": "Pate",
@@ -5179,8 +4994,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "UnknownFoodCan": {
       "name": "UnknownFoodCan",
@@ -5195,8 +5009,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Rice": {
       "name": "Rice",
@@ -5211,8 +5024,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Zagorky": {
       "name": "Zagorky",
@@ -5227,8 +5039,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "PowderedMilk": {
       "name": "PowderedMilk",
@@ -5243,8 +5054,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "BoxCerealCrunchin": {
       "name": "BoxCerealCrunchin",
@@ -5259,8 +5069,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "WaterBottle": {
       "name": "WaterBottle",
@@ -5275,8 +5084,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "SodaCan_Pipsi": {
       "name": "SodaCan_Pipsi",
@@ -5291,8 +5099,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "SodaCan_Spite": {
       "name": "SodaCan_Spite",
@@ -5307,8 +5114,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "SodaCan_Kvass": {
       "name": "SodaCan_Kvass",
@@ -5323,8 +5129,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "SodaCan_Cola": {
       "name": "SodaCan_Cola",
@@ -5339,8 +5144,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "SodaCan_Fronta": {
       "name": "SodaCan_Fronta",
@@ -5355,8 +5159,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Apple": {
       "name": "Apple",
@@ -5371,8 +5174,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Pear": {
       "name": "Pear",
@@ -5387,8 +5189,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Plum": {
       "name": "Plum",
@@ -5403,8 +5204,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Tomato": {
       "name": "Tomato",
@@ -5419,8 +5219,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Potato": {
       "name": "Potato",
@@ -5435,8 +5234,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Pumpkin": {
       "name": "Pumpkin",
@@ -5451,8 +5249,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Zucchini": {
       "name": "Zucchini",
@@ -5467,8 +5264,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "GreenBellPepper": {
       "name": "GreenBellPepper",
@@ -5483,8 +5279,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "DuctTape": {
       "name": "DuctTape",
@@ -5499,8 +5294,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "EpoxyPutty": {
       "name": "EpoxyPutty",
@@ -5515,8 +5309,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "LeatherSewingKit": {
       "name": "LeatherSewingKit",
@@ -5531,8 +5324,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "WeaponCleaningKit": {
       "name": "WeaponCleaningKit",
@@ -5547,8 +5339,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "SharpeningStone": {
       "name": "SharpeningStone",
@@ -5563,8 +5354,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Whetstone": {
       "name": "Whetstone",
@@ -5579,8 +5369,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Hammer": {
       "name": "Hammer",
@@ -5595,8 +5384,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "HandSaw": {
       "name": "HandSaw",
@@ -5611,8 +5399,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Hacksaw": {
       "name": "Hacksaw",
@@ -5627,8 +5414,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Screwdriver": {
       "name": "Screwdriver",
@@ -5643,8 +5429,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Pliers": {
       "name": "Pliers",
@@ -5659,8 +5444,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Rope": {
       "name": "Rope",
@@ -5675,8 +5459,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "UKAssVest_Black": {
       "name": "UKAssVest_Black",
@@ -5691,8 +5474,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "SmershVest": {
       "name": "SmershVest",
@@ -5707,8 +5489,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "PoliceVest": {
       "name": "PoliceVest",
@@ -5723,8 +5504,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "PressVest_Blue": {
       "name": "PressVest_Blue",
@@ -5739,8 +5519,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "HighCapacityVest_Black": {
       "name": "HighCapacityVest_Black",
@@ -5755,8 +5534,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Mich2001Helmet": {
       "name": "Mich2001Helmet",
@@ -5771,8 +5549,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "TacticalGoggles": {
       "name": "TacticalGoggles",
@@ -5787,8 +5564,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "AssaultHelmet_Black": {
       "name": "AssaultHelmet_Black",
@@ -5803,8 +5579,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "TTsKOJacket_Camo": {
       "name": "TTsKOJacket_Camo",
@@ -5819,8 +5594,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "GorkaEJacket_Summer": {
       "name": "GorkaEJacket_Summer",
@@ -5835,8 +5609,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "BDUJacket": {
       "name": "BDUJacket",
@@ -5851,8 +5624,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "TTSKOPants": {
       "name": "TTSKOPants",
@@ -5867,8 +5639,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "GorkaPants_Summer": {
       "name": "GorkaPants_Summer",
@@ -5883,8 +5654,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "USMCPants_Desert": {
       "name": "USMCPants_Desert",
@@ -5899,8 +5669,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "BDUPants": {
       "name": "BDUPants",
@@ -5915,8 +5684,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "CargoPants_Beige": {
       "name": "CargoPants_Beige",
@@ -5931,8 +5699,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "CombatBoots_Black": {
       "name": "CombatBoots_Black",
@@ -5947,8 +5714,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "CombatBoots_Brown": {
       "name": "CombatBoots_Brown",
@@ -5963,8 +5729,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "MilitaryBoots_Black": {
       "name": "MilitaryBoots_Black",
@@ -5979,8 +5744,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "JungleBoots_Beige": {
       "name": "JungleBoots_Beige",
@@ -5995,8 +5759,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "TTSKOBoots": {
       "name": "TTSKOBoots",
@@ -6011,8 +5774,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "TacticalGloves_Green": {
       "name": "TacticalGloves_Green",
@@ -6027,8 +5789,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "LeatherGloves_Natural": {
       "name": "LeatherGloves_Natural",
@@ -6043,8 +5804,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "GasMask": {
       "name": "GasMask",
@@ -6059,8 +5819,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "GP5GasMask": {
       "name": "GP5GasMask",
@@ -6075,8 +5834,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Balaclava3Holes_Black": {
       "name": "Balaclava3Holes_Black",
@@ -6091,8 +5849,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "AviatorGlasses": {
       "name": "AviatorGlasses",
@@ -6107,8 +5864,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "SportGlasses_Blue": {
       "name": "SportGlasses_Blue",
@@ -6123,8 +5879,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "GhillieSuit_Tan": {
       "name": "GhillieSuit_Tan",
@@ -6139,8 +5894,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "GhillieSuit_Woodland": {
       "name": "GhillieSuit_Woodland",
@@ -6155,8 +5909,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "GhillieSuit_Mossy": {
       "name": "GhillieSuit_Mossy",
@@ -6171,8 +5924,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "GhillieHood_Tan": {
       "name": "GhillieHood_Tan",
@@ -6187,8 +5939,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "GhillieHood_Woodland": {
       "name": "GhillieHood_Woodland",
@@ -6203,8 +5954,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "GhillieHood_Mossy": {
       "name": "GhillieHood_Mossy",
@@ -6219,8 +5969,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "GhillieBushrag_Tan": {
       "name": "GhillieBushrag_Tan",
@@ -6235,8 +5984,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "GhillieBushrag_Woodland": {
       "name": "GhillieBushrag_Woodland",
@@ -6251,8 +5999,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "GhillieBushrag_Mossy": {
       "name": "GhillieBushrag_Mossy",
@@ -6267,8 +6014,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "AliceBag_Black": {
       "name": "AliceBag_Black",
@@ -6283,8 +6029,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "AliceBag_Camo": {
       "name": "AliceBag_Camo",
@@ -6299,8 +6044,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "AliceBag_Green": {
       "name": "AliceBag_Green",
@@ -6315,8 +6059,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "AssaultBag_Ttsko": {
       "name": "AssaultBag_Ttsko",
@@ -6331,8 +6074,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "MountainBag_Blue": {
       "name": "MountainBag_Blue",
@@ -6347,8 +6089,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "MountainBag_Green": {
       "name": "MountainBag_Green",
@@ -6363,8 +6104,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "TaloonBag_Blue": {
       "name": "TaloonBag_Blue",
@@ -6379,8 +6119,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "TaloonBag_Green": {
       "name": "TaloonBag_Green",
@@ -6395,8 +6134,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "DryBag_Black": {
       "name": "DryBag_Black",
@@ -6411,8 +6149,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "DryBag_Yellow": {
       "name": "DryBag_Yellow",
@@ -6427,8 +6164,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "ChildBag_Blue": {
       "name": "ChildBag_Blue",
@@ -6443,8 +6179,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "NailBox": {
       "name": "NailBox",
@@ -6459,8 +6194,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Nails": {
       "name": "Nails",
@@ -6475,8 +6209,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "WoodenPlank": {
       "name": "WoodenPlank",
@@ -6491,8 +6224,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "MetalPlate": {
       "name": "MetalPlate",
@@ -6507,8 +6239,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "MetalWire": {
       "name": "MetalWire",
@@ -6523,8 +6254,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "BarbedWire": {
       "name": "BarbedWire",
@@ -6539,8 +6269,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "FenceKit": {
       "name": "FenceKit",
@@ -6555,8 +6284,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "WatchtowerKit": {
       "name": "WatchtowerKit",
@@ -6571,8 +6299,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "CombinationLock": {
       "name": "CombinationLock",
@@ -6587,8 +6314,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "CombinationLock4": {
       "name": "CombinationLock4",
@@ -6603,8 +6329,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "CamoNet": {
       "name": "CamoNet",
@@ -6619,8 +6344,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Tarp": {
       "name": "Tarp",
@@ -6635,8 +6359,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "CivSedanWheel": {
       "name": "CivSedanWheel",
@@ -6651,8 +6374,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Sedan_02_Wheel": {
       "name": "Sedan_02_Wheel",
@@ -6667,8 +6389,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "HatchbackWheel": {
       "name": "HatchbackWheel",
@@ -6683,8 +6404,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Hatchback_02_Wheel": {
       "name": "Hatchback_02_Wheel",
@@ -6699,8 +6419,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Offroad_02_Wheel": {
       "name": "Offroad_02_Wheel",
@@ -6715,8 +6434,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Truck_01_Wheel": {
       "name": "Truck_01_Wheel",
@@ -6731,8 +6449,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "TruckBattery": {
       "name": "TruckBattery",
@@ -6747,8 +6464,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "GlowPlug": {
       "name": "GlowPlug",
@@ -6763,8 +6479,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "HeadlightH7": {
       "name": "HeadlightH7",
@@ -6779,8 +6494,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "M67Grenade": {
       "name": "M67Grenade",
@@ -6795,8 +6509,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "RGD5Grenade": {
       "name": "RGD5Grenade",
@@ -6811,8 +6524,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "FlashGrenade": {
       "name": "FlashGrenade",
@@ -6827,8 +6539,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "SmokeGrenadeWhite": {
       "name": "SmokeGrenadeWhite",
@@ -6843,8 +6554,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "SmokeGrenadeRed": {
       "name": "SmokeGrenadeRed",
@@ -6859,8 +6569,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "SmokeGrenadeGreen": {
       "name": "SmokeGrenadeGreen",
@@ -6875,8 +6584,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Landmine": {
       "name": "Landmine",
@@ -6891,8 +6599,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Claymore_Mine": {
       "name": "Claymore_Mine",
@@ -6907,8 +6614,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "TripwireTrap": {
       "name": "TripwireTrap",
@@ -6923,8 +6629,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "PersonalRadio": {
       "name": "PersonalRadio",
@@ -6939,8 +6644,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "BaseRadio": {
       "name": "BaseRadio",
@@ -6955,8 +6659,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Megaphone": {
       "name": "Megaphone",
@@ -6971,8 +6674,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Headtorch_Grey": {
       "name": "Headtorch_Grey",
@@ -6987,8 +6689,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Battery9V": {
       "name": "Battery9V",
@@ -7003,8 +6704,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Chemlight_Blue": {
       "name": "Chemlight_Blue",
@@ -7019,8 +6719,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Chemlight_Green": {
       "name": "Chemlight_Green",
@@ -7035,8 +6734,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Chemlight_Red": {
       "name": "Chemlight_Red",
@@ -7051,8 +6749,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Chemlight_Yellow": {
       "name": "Chemlight_Yellow",
@@ -7067,8 +6764,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Roadflare": {
       "name": "Roadflare",
@@ -7083,8 +6779,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Ammo_FlareRed": {
       "name": "Ammo_FlareRed",
@@ -7099,8 +6794,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Ammo_FlareGreen": {
       "name": "Ammo_FlareGreen",
@@ -7115,8 +6809,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     },
     "Ammo_FlareBlue": {
       "name": "Ammo_FlareBlue",
@@ -7131,8 +6824,7 @@
         0
       ],
       "scale": 1,
-      "enableCEPersistency": 0,
-      "attachments": []
+      "enableCEPersistency": 0
     }
   },
   "defaultSpawnTemplate": {
