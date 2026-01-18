@@ -79,7 +79,7 @@ class MultiGuildKillfeed {
         if (!logData) return;
         
         // Parse and update player locations from log
-        await this.parseAndUpdateLocations(guildId, logData);
+        await this.parseAndUpdateLocations(guildId, guildConfig, logData);
         
         // Check for server restart and trigger cleanup if needed
         await this.checkRestartWindow(guildConfig, state, logData);
@@ -669,9 +669,77 @@ class MultiGuildKillfeed {
             console.log(`[MULTI-KILLFEED] Sending embed to channel ${channelId}...`);
             await channel.send({ embeds: [embed] });
             console.log(`[MULTI-KILLFEED] Successfully posted ${event.type} event to guild ${guildConfig.guild_id}`);
+            
+            // Track player stats for K/D tracking
+            await this.recordPlayerStats(guildConfig.guild_id, event);
+            
         } catch (error) {
             console.error(`[MULTI-KILLFEED] Error posting event for guild ${guildConfig.guild_id}:`, error.message);
             console.error(`[MULTI-KILLFEED] Error stack:`, error.stack);
+        }
+    }
+    
+    // Record player stats for K/D tracking
+    async recordPlayerStats(guildId, event) {
+        try {
+            if (event.type === 'kill' && event.victim && event.killer) {
+                const db = require('./database.js');
+                
+                // Increment killer's kills (if it's a player kill)
+                if (event.isPlayerKill && event.killer !== event.victim) {
+                    await db.query(`
+                        INSERT INTO player_stats (guild_id, player_name, kills, deaths)
+                        VALUES ($1, $2, 1, 0)
+                        ON CONFLICT (guild_id, player_name)
+                        DO UPDATE SET 
+                            kills = player_stats.kills + 1,
+                            last_updated = CURRENT_TIMESTAMP
+                    `, [guildId, event.killer]);
+                    console.log(`[STATS] Recorded kill for ${event.killer}`);
+                }
+                
+                // Increment victim's deaths
+                let deathType = 'environmental_deaths'; // default
+                
+                if (event.isPlayerKill && event.killer !== event.victim) {
+                    // Death by another player
+                    deathType = 'player_deaths';
+                } else if (event.killer && event.killer.toLowerCase().includes('zmb')) {
+                    // Death by zombie
+                    deathType = 'zombie_deaths';
+                } else if (event.killer === event.victim || (event.weapon && event.weapon.toLowerCase().includes('suicide'))) {
+                    // Suicide
+                    deathType = 'suicide_deaths';
+                }
+                
+                // Update victim stats
+                await db.query(`
+                    INSERT INTO player_stats (guild_id, player_name, kills, deaths, ${deathType})
+                    VALUES ($1, $2, 0, 1, 1)
+                    ON CONFLICT (guild_id, player_name)
+                    DO UPDATE SET 
+                        deaths = player_stats.deaths + 1,
+                        ${deathType} = player_stats.${deathType} + 1,
+                        last_updated = CURRENT_TIMESTAMP
+                `, [guildId, event.victim]);
+                console.log(`[STATS] Recorded ${deathType} for ${event.victim}`);
+                
+            } else if (event.type === 'suicide' && event.player) {
+                // Suicide event
+                const db = require('./database.js');
+                await db.query(`
+                    INSERT INTO player_stats (guild_id, player_name, kills, deaths, suicide_deaths)
+                    VALUES ($1, $2, 0, 1, 1)
+                    ON CONFLICT (guild_id, player_name)
+                    DO UPDATE SET 
+                        deaths = player_stats.deaths + 1,
+                        suicide_deaths = player_stats.suicide_deaths + 1,
+                        last_updated = CURRENT_TIMESTAMP
+                `, [guildId, event.player]);
+                console.log(`[STATS] Recorded suicide for ${event.player}`);
+            }
+        } catch (error) {
+            console.error(`[STATS] Error recording player stats:`, error.message);
         }
     }
 
@@ -841,7 +909,7 @@ class MultiGuildKillfeed {
         console.log('[MULTI-KILLFEED] Stopped multi-guild killfeed monitoring');
     }
 
-    async parseAndUpdateLocations(guildId, logData) {
+    async parseAndUpdateLocations(guildId, guildConfig, logData) {
         try {
             const logString = typeof logData === 'string' ? logData : String(logData);
             const lines = logString.split(/\r?\n/);
@@ -852,6 +920,10 @@ class MultiGuildKillfeed {
                 const locInfo = this.parsePlayerLocation(line);
                 if (locInfo) {
                     await db.setPlayerLocation(guildId, locInfo.name, locInfo.position.x, locInfo.position.y, locInfo.position.z);
+                    
+                    // Check base proximity alerts for this player location
+                    await this.checkBaseProximityForPlayer(guildConfig, locInfo);
+                    
                     // Also update distance tracking for active sessions
                     const distance = await db.updatePlayerDistance(guildId, locInfo.name, locInfo.position.x, locInfo.position.y, locInfo.position.z);
                     if (distance === null) {
@@ -1115,6 +1187,103 @@ class MultiGuildKillfeed {
             }
         } catch (error) {
             console.error('[BASE-ALERT] Error checking proximity:', error);
+        }
+    }
+    
+    // Check if a player's current position is near any bases (for live tracking)
+    async checkBaseProximityForPlayer(guildConfig, playerInfo) {
+        try {
+            // Get all active base alerts for this guild and server
+            const baseAlerts = await db.query(
+                'SELECT ba.id, ba.discord_user_id, ba.base_x, ba.base_y, ba.alert_radius FROM base_alerts ba WHERE ba.guild_id = $1 AND ba.server_name = $2 AND ba.is_active = true',
+                [guildConfig.guild_id, guildConfig.map_name]
+            );
+            
+            if (baseAlerts.rows.length === 0) return;
+            
+            for (const baseAlert of baseAlerts.rows) {
+                // Calculate distance from player position to base
+                const distance = this.calculateDistance2D(
+                    playerInfo.position.x,
+                    playerInfo.position.z,
+                    baseAlert.base_x,
+                    baseAlert.base_y
+                );
+                
+                if (distance <= baseAlert.alert_radius) {
+                    // Check if player is whitelisted
+                    const whitelistCheck = await db.query(
+                        'SELECT id FROM base_alert_whitelist WHERE base_alert_id = $1 AND whitelisted_player_name = $2',
+                        [baseAlert.id, playerInfo.name]
+                    );
+                    
+                    if (whitelistCheck.rows.length > 0) {
+                        continue; // Skip whitelisted players
+                    }
+                    
+                    // Check if we recently alerted for this player at this base (within last 5 minutes to avoid spam)
+                    const recentAlert = await db.query(
+                        'SELECT id FROM base_alert_history WHERE base_alert_id = $1 AND detected_player_name = $2 AND detected_at > NOW() - INTERVAL \'5 minutes\' ORDER BY detected_at DESC LIMIT 1',
+                        [baseAlert.id, playerInfo.name]
+                    );
+                    
+                    if (recentAlert.rows.length > 0) {
+                        continue; // Already alerted recently
+                    }
+                    
+                    // Send DM to base owner
+                    await this.sendPlayerProximityDM(baseAlert.discord_user_id, guildConfig, playerInfo, distance);
+                    
+                    // Log to history
+                    await db.query(
+                        'INSERT INTO base_alert_history (base_alert_id, detected_player_name, distance, event_type) VALUES ($1, $2, $3, $4)',
+                        [baseAlert.id, playerInfo.name, distance, 'player_proximity']
+                    );
+                }
+            }
+        } catch (error) {
+            console.error('[BASE-ALERT] Error checking player proximity:', error);
+        }
+    }
+    
+    async sendPlayerProximityDM(discordUserId, guildConfig, playerInfo, distance) {
+        try {
+            const user = await this.bot.users.fetch(discordUserId);
+            if (!user) {
+                console.log(`[BASE-ALERT] Could not find user ${discordUserId}`);
+                return;
+            }
+            
+            const mapNames = {
+                'chernarusplus': 'Chernarus',
+                'enoch': 'Livonia',
+                'sakhal': 'Sakhal'
+            };
+            const mapName = mapNames[guildConfig.map_name] || guildConfig.map_name;
+            
+            const mapUrl = this.getMapUrl(guildConfig.map_name, playerInfo.position);
+            
+            const embed = new MessageEmbed()
+                .setColor('#FFA500')
+                .setTitle('🚨 BASE PROXIMITY ALERT')
+                .setDescription(
+                    `**${playerInfo.name}** detected **${Math.round(distance)}m** from your base!\n\n` +
+                    `**Server:** ${mapName}\n` +
+                    `**Time:** ${playerInfo.timestamp}\n` +
+                    `**Coordinates:** (${Math.round(playerInfo.position.x)}, ${Math.round(playerInfo.position.z)})`
+                )
+                .setTimestamp();
+            
+            if (mapUrl) {
+                embed.setDescription(
+                    embed.description + `\n\n[View on iZurvive](${mapUrl})`
+                );
+            }
+            
+            await user.send({ embeds: [embed] });
+            console.log(`[BASE-ALERT] Sent proximity alert to ${discordUserId} for ${playerInfo.name} (${Math.round(distance)}m)`);
+        } catch (error) {
+            console.error(`[BASE-ALERT] Error sending proximity DM to ${discordUserId}:`, error.message);
         }
     }
     

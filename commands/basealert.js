@@ -1,11 +1,28 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageEmbed, MessageActionRow, MessageButton } = require('discord.js');
 const db = require('../database');
+const fs = require('fs');
+const path = require('path');
 
 // Price constants
 const PURCHASE_PRICE = 100000;
 const RELOCATE_PRICE = 20000;
 const ALERT_RADIUS = 50;
+
+// Helper to get user's DayZ character name from economy system
+function getDayZName(userId) {
+    try {
+        const DAYZ_NAMES_FILE = path.join(__dirname, '../dayz_names.json');
+        if (!fs.existsSync(DAYZ_NAMES_FILE)) {
+            return null;
+        }
+        const names = JSON.parse(fs.readFileSync(DAYZ_NAMES_FILE, 'utf8'));
+        return names[userId] || null;
+    } catch (err) {
+        console.error('[BASEALERT] Error reading DayZ names:', err);
+        return null;
+    }
+}
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -31,18 +48,18 @@ module.exports = {
                             { name: 'Sakhal', value: 'sakhal' }
                         )
                 )
-                .addIntegerOption(option =>
+                .addNumberOption(option =>
                     option
                         .setName('x')
-                        .setDescription('X coordinate from iZurvive')
+                        .setDescription('X coordinate from iZurvive (e.g. 6900.87)')
                         .setRequired(true)
                         .setMinValue(0)
                         .setMaxValue(15360)
                 )
-                .addIntegerOption(option =>
+                .addNumberOption(option =>
                     option
                         .setName('y')
-                        .setDescription('Y coordinate from iZurvive')
+                        .setDescription('Y coordinate from iZurvive (e.g. 11430.08)')
                         .setRequired(true)
                         .setMinValue(0)
                         .setMaxValue(15360)
@@ -102,6 +119,9 @@ module.exports = {
         ),
 
     async execute(interaction) {
+        // Defer reply immediately to prevent timeout
+        await interaction.deferReply({ ephemeral: true });
+        
         const subcommand = interaction.options.getSubcommand();
         const guildId = interaction.guild.id;
         const userId = interaction.user.id;
@@ -120,18 +140,12 @@ module.exports = {
             }
         } catch (error) {
             console.error('Base alert command error:', error);
-            if (!interaction.replied && !interaction.deferred) {
-                await interaction.reply({ content: '❌ An error occurred!', ephemeral: true });
-            } else {
-                await interaction.editReply('❌ An error occurred!');
-            }
+            await interaction.editReply('❌ An error occurred!');
         }
     }
 };
 
 async function handlePurchase(interaction, guildId, userId) {
-    await interaction.deferReply({ ephemeral: true });
-
     // Check if they already own it
     const existing = await db.query(
         'SELECT COUNT(*) as count FROM base_alerts WHERE guild_id = $1 AND discord_user_id = $2',
@@ -142,24 +156,27 @@ async function handlePurchase(interaction, guildId, userId) {
         return interaction.editReply('❌ You already own the base alert feature!');
     }
 
-    // Check balance
-    const balanceResult = await db.query(
-        'SELECT balance FROM economy WHERE guild_id = $1 AND user_id = $2',
-        [guildId, userId]
-    );
+    // Check balance using same method as economy/shop commands
+    const currentBalance = await db.getBalance(guildId, userId);
 
-    if (!balanceResult.rows[0] || balanceResult.rows[0].balance < PURCHASE_PRICE) {
+    if (currentBalance < PURCHASE_PRICE) {
         return interaction.editReply(
             `❌ Insufficient funds! You need ${PURCHASE_PRICE.toLocaleString()} coins.\n` +
-            `Your balance: ${balanceResult.rows[0]?.balance?.toLocaleString() || 0} coins`
+            `Your balance: ${currentBalance.toLocaleString()} coins`
         );
     }
 
-    // Deduct payment
-    await db.query(
-        'UPDATE economy SET balance = balance - $1 WHERE guild_id = $2 AND user_id = $3',
-        [PURCHASE_PRICE, guildId, userId]
-    );
+    // Deduct payment using same method as economy/shop commands
+    await db.addBalance(guildId, userId, -PURCHASE_PRICE);
+
+    // Auto-whitelist user's DayZ character if they have set their name
+    const userDayZName = getDayZName(userId);
+    let autoWhitelistNote = '';
+    
+    if (userDayZName) {
+        autoWhitelistNote = `\n\n✅ **Auto-whitelisted:** Your character "${userDayZName}" has been automatically whitelisted to prevent self-alerts.`;
+        console.log(`[BASEALERT] Auto-whitelisted ${userDayZName} for user ${userId} in guild ${guildId}`);
+    }
 
     const embed = new MessageEmbed()
         .setColor('#00FF00')
@@ -174,7 +191,7 @@ async function handlePurchase(interaction, guildId, userId) {
             `**Next Steps:**\n` +
             `1. Use \`/basealert setbase\` to set your first base location (free!)\n` +
             `2. Use \`/basealert whitelist add\` to add trusted players\n` +
-            `3. Use \`/basealert status\` to view your settings`
+            `3. Use \`/basealert status\` to view your settings${autoWhitelistNote}`
         )
         .setFooter({ text: `Spent ${PURCHASE_PRICE.toLocaleString()} coins` });
 
@@ -182,11 +199,9 @@ async function handlePurchase(interaction, guildId, userId) {
 }
 
 async function handleSetBase(interaction, guildId, userId) {
-    await interaction.deferReply({ ephemeral: true });
-
     const server = interaction.options.getString('server');
-    const x = interaction.options.getInteger('x');
-    const y = interaction.options.getInteger('y');
+    const x = interaction.options.getNumber('x');
+    const y = interaction.options.getNumber('y');
 
     // Check if they own the feature (have at least one base alert)
     const ownedCheck = await db.query(
@@ -213,23 +228,17 @@ async function handleSetBase(interaction, guildId, userId) {
 
     // If relocating, charge fee
     if (isRelocating) {
-        const balanceResult = await db.query(
-            'SELECT balance FROM economy WHERE guild_id = $1 AND user_id = $2',
-            [guildId, userId]
-        );
+        const currentBalance = await db.getBalance(guildId, userId);
 
-        if (!balanceResult.rows[0] || balanceResult.rows[0].balance < RELOCATE_PRICE) {
+        if (currentBalance < RELOCATE_PRICE) {
             return interaction.editReply(
-                `❌ Insufficient funds to relocate! You need ${RELOCATE_PRICE.toLocaleString()} coins.\n` +
-                `Your balance: ${balanceResult.rows[0]?.balance?.toLocaleString() || 0} coins`
+                `❌ Insufficient funds! Relocating a base costs ${RELOCATE_PRICE.toLocaleString()} coins.\n` +
+                `Your balance: ${currentBalance.toLocaleString()} coins`
             );
         }
 
-        // Deduct relocation fee
-        await db.query(
-            'UPDATE economy SET balance = balance - $1 WHERE guild_id = $2 AND user_id = $3',
-            [RELOCATE_PRICE, guildId, userId]
-        );
+        // Deduct relocation fee using same method as economy/shop commands
+        await db.addBalance(guildId, userId, -RELOCATE_PRICE);
     }
 
     // Get map display name
@@ -249,16 +258,39 @@ async function handleSetBase(interaction, guildId, userId) {
     const izurviveUrl = `https://www.izurvive.com/${mapPaths[server]}#location=${x};${y}`;
 
     // Upsert base location
+    let baseAlertId;
     if (isRelocating) {
         await db.query(
             'UPDATE base_alerts SET base_x = $1, base_y = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $3',
             [x, y, existingBase.rows[0].id]
         );
+        baseAlertId = existingBase.rows[0].id;
     } else {
-        await db.query(
-            'INSERT INTO base_alerts (guild_id, server_name, discord_user_id, base_x, base_y, alert_radius, is_active) VALUES ($1, $2, $3, $4, $5, $6, true)',
+        const insertResult = await db.query(
+            'INSERT INTO base_alerts (guild_id, server_name, discord_user_id, base_x, base_y, alert_radius, is_active) VALUES ($1, $2, $3, $4, $5, $6, true) RETURNING id',
             [guildId, server, userId, x, y, ALERT_RADIUS]
         );
+        baseAlertId = insertResult.rows[0].id;
+        
+        // Auto-whitelist user's DayZ character on first base setup
+        const userDayZName = getDayZName(userId);
+        if (userDayZName) {
+            try {
+                await db.query(
+                    'INSERT INTO base_alert_whitelist (base_alert_id, whitelisted_player_name) VALUES ($1, $2)',
+                    [baseAlertId, userDayZName]
+                );
+                console.log(`[BASEALERT] Auto-whitelisted ${userDayZName} for base ${baseAlertId}`);
+            } catch (err) {
+                console.error('[BASEALERT] Error auto-whitelisting:', err);
+            }
+        }
+    }
+
+    let whitelistNote = '';
+    const userDayZName = getDayZName(userId);
+    if (!isRelocating && userDayZName) {
+        whitelistNote = `\n\n✅ **Auto-whitelisted:** Your character "${userDayZName}" to prevent self-alerts.`;
     }
 
     const embed = new MessageEmbed()
@@ -269,7 +301,7 @@ async function handleSetBase(interaction, guildId, userId) {
             `**Coordinates:** (${x}, ${y})\n` +
             `**Alert Radius:** ${ALERT_RADIUS}m\n\n` +
             `You will receive DM alerts when players come within ${ALERT_RADIUS}m of this location.\n\n` +
-            `[View on iZurvive](${izurviveUrl})`
+            `[View on iZurvive](${izurviveUrl})${whitelistNote}`
         );
 
     if (isRelocating) {
@@ -282,8 +314,6 @@ async function handleSetBase(interaction, guildId, userId) {
 }
 
 async function handleWhitelist(interaction, guildId, userId) {
-    await interaction.deferReply({ ephemeral: true });
-
     const action = interaction.options.getString('action');
     const server = interaction.options.getString('server');
     const playerName = interaction.options.getString('playername');
@@ -384,8 +414,6 @@ async function handleWhitelistList(interaction, guildId, userId) {
 }
 
 async function handleToggle(interaction, guildId, userId) {
-    await interaction.deferReply({ ephemeral: true });
-
     const server = interaction.options.getString('server');
 
     const baseResult = await db.query(
@@ -418,8 +446,6 @@ async function handleToggle(interaction, guildId, userId) {
 }
 
 async function handleStatus(interaction, guildId, userId) {
-    await interaction.deferReply({ ephemeral: true });
-
     const basesResult = await db.query(
         'SELECT server_name, base_x, base_y, alert_radius, is_active FROM base_alerts WHERE guild_id = $1 AND discord_user_id = $2 ORDER BY server_name',
         [guildId, userId]

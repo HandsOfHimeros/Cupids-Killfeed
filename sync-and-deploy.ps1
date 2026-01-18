@@ -118,9 +118,25 @@ switch ($choice.ToLower()) {
         
         # Check for migrations
         $needsMigration = $false
+        $migrations = @()
+        
+        # Check for K/D tracking migration
+        if (Test-Path "add_player_stats.js") {
+            $migrations += "add_player_stats.js"
+        }
+        
+        # Check for older migrations (if not already run)
         if (Test-Path "add_auto_ban_column.js") {
-            Write-Host "`n📋 Database migration needed!" -ForegroundColor Yellow
-            Write-Host "   Run migrations on Heroku? (y/n)" -ForegroundColor Cyan
+            $migrations += "add_auto_ban_column.js"
+        }
+        if (Test-Path "add_pvp_zones_column.js") {
+            $migrations += "add_pvp_zones_column.js"
+        }
+        
+        if ($migrations.Count -gt 0) {
+            Write-Host "`n📋 Database migrations needed:" -ForegroundColor Yellow
+            $migrations | ForEach-Object { Write-Host "   - $_" -ForegroundColor Cyan }
+            Write-Host "`nRun migrations on Heroku? (y/n)" -ForegroundColor Cyan
             $runMigrate = Read-Host
             if ($runMigrate -eq 'y') {
                 $needsMigration = $true
@@ -136,8 +152,10 @@ switch ($choice.ToLower()) {
             # Run migrations if needed
             if ($needsMigration) {
                 Write-Host "`n🔄 Running database migrations..." -ForegroundColor Yellow
-                heroku run "node add_auto_ban_column.js" -a cupidskillfeed
-                heroku run "node add_pvp_zones_column.js" -a cupidskillfeed
+                foreach ($migration in $migrations) {
+                    Write-Host "   Running $migration..." -ForegroundColor Cyan
+                    heroku run "node $migration" -a cupidskillfeed
+                }
                 Write-Host "✅ Migrations complete" -ForegroundColor Green
             }
             

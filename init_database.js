@@ -49,6 +49,19 @@ async function initDatabase() {
         console.log('Created dayz_names table');
 
         await client.query(`
+            CREATE TABLE IF NOT EXISTS economy (
+                id SERIAL PRIMARY KEY,
+                guild_id VARCHAR(20) NOT NULL,
+                user_id VARCHAR(20) NOT NULL,
+                balance BIGINT DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(guild_id, user_id)
+            );
+        `);
+        console.log('Created economy table');
+
+        await client.query(`
             CREATE TABLE IF NOT EXISTS player_locations (
                 player_name VARCHAR(255) PRIMARY KEY,
                 x FLOAT,

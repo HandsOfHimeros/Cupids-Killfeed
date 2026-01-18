@@ -248,6 +248,22 @@ module.exports = {
                                 .setRequired(false)
                         )
                 )
+                .addSubcommand(subcommand =>
+                    subcommand
+                        .setName('raiding')
+                        .setDescription('Manage raid weekends (enable/disable base damage)')
+                        .addStringOption(option =>
+                            option.setName('action')
+                                .setDescription('Choose action')
+                                .setRequired(true)
+                                .addChoices(
+                                    { name: 'Enable Raiding NOW', value: 'enable' },
+                                    { name: 'Disable Raiding NOW', value: 'disable' },
+                                    { name: 'Setup Automatic Schedule', value: 'schedule' },
+                                    { name: 'View Status', value: 'status' }
+                                )
+                        )
+                )
         ),
 
     async execute(interaction) {
@@ -289,6 +305,9 @@ module.exports = {
                 break;
             case "safezone":
                 await handleSafeZoneCommand(interaction);
+                break;
+            case "raiding":
+                await handleRaidingCommand(interaction);
                 break;
             default:
                 break;
@@ -841,6 +860,411 @@ async function handleSafeZoneCommand(interaction) {
     } catch (error) {
         console.error('Error managing safe zones:', error);
         await interaction.reply({ content: 'Failed to manage safe zones.', ephemeral: true });
+    }
+}
+
+async function handleRaidingCommand(interaction) {
+    const guildId = interaction.guildId;
+    const action = interaction.options.getString('action');
+    
+    // Check if guild has a configuration in database
+    const guildConfig = await db.getGuildConfig(guildId);
+    if (!guildConfig) {
+        return interaction.reply({ content: 'This server is not configured. Please run `/admin killfeed setup` first.', ephemeral: true });
+    }
+    
+    switch (action) {
+        case 'enable':
+            await handleRaidToggle(interaction, guildConfig, true);
+            break;
+        case 'disable':
+            await handleRaidToggle(interaction, guildConfig, false);
+            break;
+        case 'schedule':
+            await handleRaidScheduleModal(interaction, guildConfig);
+            break;
+        case 'status':
+            await handleRaidStatus(interaction, guildConfig);
+            break;
+    }
+}
+
+async function handleRaidToggle(interaction, guildConfig, enableRaiding) {
+    const guildId = interaction.guildId;
+    const axios = require('axios');
+    const { Client: FTPClient } = require('basic-ftp');
+    const path = require('path');
+    
+    await interaction.deferReply();
+    
+    try {
+        console.log(`[RAIDING] ${enableRaiding ? 'Enabling' : 'Disabling'} raiding for guild ${guildId}`);
+        
+        const GAMEPLAY_FILE_PATH = `/games/${guildConfig.nitrado_instance}/ftproot/dayzps_missions/dayzOffline.${guildConfig.map_name}/cfggameplay.json`;
+        const GAMEPLAY_FTP_PATH = `/dayzps_missions/dayzOffline.${guildConfig.map_name}/cfggameplay.json`;
+        const BASE_URL = 'https://api.nitrado.net/services';
+        
+        // Download cfggameplay.json as TEXT (preserve formatting)
+        console.log('[RAIDING] Downloading cfggameplay.json...');
+        const downloadUrl = `${BASE_URL}/${guildConfig.nitrado_service_id}/gameservers/file_server/download?file=${encodeURIComponent(GAMEPLAY_FILE_PATH)}`;
+        const downloadResp = await axios.get(downloadUrl, {
+            headers: { 'Authorization': `Bearer ${guildConfig.nitrado_token}` }
+        });
+        
+        const fileUrl = downloadResp.data.data.token.url;
+        const fileResp = await axios.get(fileUrl, { responseType: 'text' });
+        let fileContent = fileResp.data;
+        
+        console.log('[RAIDING] File downloaded, modifying settings...');
+        
+        // Toggle raid settings
+        // If enabling raids: set both to false (damage is ENABLED)
+        // If disabling raids: set both to true (damage is DISABLED)
+        const disableValue = enableRaiding ? 'false' : 'true';
+        
+        // Replace disableBaseDamage
+        fileContent = fileContent.replace(
+            /"disableBaseDamage"\s*:\s*(true|false)/g,
+            `"disableBaseDamage": ${disableValue}`
+        );
+        
+        // Replace disableContainerDamage
+        fileContent = fileContent.replace(
+            /"disableContainerDamage"\s*:\s*(true|false)/g,
+            `"disableContainerDamage": ${disableValue}`
+        );
+        
+        console.log(`[RAIDING] Set disableBaseDamage and disableContainerDamage to ${disableValue}`);
+        
+        // Get FTP credentials
+        console.log('[RAIDING] Getting FTP credentials...');
+        const infoUrl = `${BASE_URL}/${guildConfig.nitrado_service_id}/gameservers`;
+        const infoResp = await axios.get(infoUrl, {
+            headers: { 'Authorization': `Bearer ${guildConfig.nitrado_token}` }
+        });
+        
+        const ftpCreds = infoResp.data.data.gameserver.credentials.ftp;
+        const ftpHost = ftpCreds.hostname;
+        const ftpUser = ftpCreds.username;
+        const ftpPass = ftpCreds.password;
+        const ftpPort = ftpCreds.port || 21;
+        
+        // Upload via FTP
+        const client = new FTPClient();
+        client.ftp.verbose = false;
+        
+        try {
+            await client.access({
+                host: ftpHost,
+                user: ftpUser,
+                password: ftpPass,
+                port: ftpPort,
+                secure: false
+            });
+            
+            console.log('[RAIDING] Connected to FTP');
+            
+            // Write to temp file and upload
+            const gameplayTmpPath = path.join(__dirname, '..', 'logs', `cfggameplay_raid_${Date.now()}.json`);
+            fs.writeFileSync(gameplayTmpPath, fileContent, 'utf8');
+            
+            console.log('[RAIDING] Uploading modified file...');
+            await client.uploadFrom(gameplayTmpPath, GAMEPLAY_FTP_PATH);
+            fs.unlinkSync(gameplayTmpPath);
+            
+            console.log('[RAIDING] ✅ Successfully updated cfggameplay.json!');
+            
+            // Update database
+            await db.query(
+                'UPDATE guild_configs SET raid_currently_active = $1 WHERE guild_id = $2',
+                [enableRaiding, guildId]
+            );
+            
+            // Send announcement to general channel
+            await sendRaidAnnouncement(interaction.guild, guildConfig, enableRaiding);
+            
+            const embed = new MessageEmbed()
+                .setColor(enableRaiding ? '#ff5555' : '#55ff55')
+                .setTitle(enableRaiding ? '⚔️ Raiding ENABLED' : '🛡️ Raiding DISABLED')
+                .setDescription(
+                    enableRaiding
+                        ? '**Raid Weekend is now ACTIVE!**\n\n' +
+                          '✅ Base damage: **ENABLED**\n' +
+                          '✅ Container damage: **ENABLED**\n\n' +
+                          'Players can now raid bases and damage storage containers.\n\n' +
+                          '⚠️ **Server restart required** for changes to take effect!'
+                        : '**Raid Weekend has ENDED!**\n\n' +
+                          '❌ Base damage: **DISABLED**\n' +
+                          '❌ Container damage: **DISABLED**\n\n' +
+                          'Bases and containers are now protected.\n\n' +
+                          '⚠️ **Server restart required** for changes to take effect!'
+                )
+                .setFooter({ text: 'Settings updated in cfggameplay.json' });
+            
+            await interaction.editReply({ embeds: [embed] });
+        } finally {
+            client.close();
+        }
+    } catch (error) {
+        console.error('[RAIDING] Error:', error);
+        await interaction.editReply({
+            content: `❌ Failed to update raid settings: ${error.message}`,
+            ephemeral: true
+        });
+    }
+}
+
+async function handleRaidScheduleModal(interaction, guildConfig) {
+    const { Modal, TextInputComponent, MessageActionRow } = require('discord.js');
+    
+    const modal = new Modal()
+        .setCustomId('raid_schedule_modal')
+        .setTitle('Setup Automatic Raid Weekend');
+    
+    const startDayInput = new TextInputComponent()
+        .setCustomId('start_day')
+        .setLabel('Start Day (0=Sun, 1=Mon... 6=Sat)')
+        .setStyle('SHORT')
+        .setPlaceholder('5 (for Friday)')
+        .setRequired(true)
+        .setMaxLength(1);
+    
+    const startTimeInput = new TextInputComponent()
+        .setCustomId('start_time')
+        .setLabel('Start Time (24-hour format: HH:MM)')
+        .setStyle('SHORT')
+        .setPlaceholder('18:00')
+        .setRequired(true)
+        .setMaxLength(5);
+    
+    const endDayInput = new TextInputComponent()
+        .setCustomId('end_day')
+        .setLabel('End Day (0=Sun, 1=Mon... 6=Sat)')
+        .setStyle('SHORT')
+        .setPlaceholder('1 (for Monday)')
+        .setRequired(true)
+        .setMaxLength(1);
+    
+    const endTimeInput = new TextInputComponent()
+        .setCustomId('end_time')
+        .setLabel('End Time (24-hour format: HH:MM)')
+        .setStyle('SHORT')
+        .setPlaceholder('06:00')
+        .setRequired(true)
+        .setMaxLength(5);
+    
+    const timezoneInput = new TextInputComponent()
+        .setCustomId('timezone')
+        .setLabel('Timezone (e.g., America/New_York)')
+        .setStyle('SHORT')
+        .setPlaceholder('America/New_York')
+        .setRequired(true)
+        .setMaxLength(50);
+    
+    modal.addComponents(
+        new MessageActionRow().addComponents(startDayInput),
+        new MessageActionRow().addComponents(startTimeInput),
+        new MessageActionRow().addComponents(endDayInput),
+        new MessageActionRow().addComponents(endTimeInput),
+        new MessageActionRow().addComponents(timezoneInput)
+    );
+    
+    await interaction.showModal(modal);
+}
+
+async function handleRaidStatus(interaction, guildConfig) {
+    await interaction.deferReply();
+    
+    const isActive = guildConfig.raid_currently_active || false;
+    const scheduleEnabled = guildConfig.raid_schedule_enabled || false;
+    
+    const embed = new MessageEmbed()
+        .setColor(isActive ? '#ff5555' : '#55ff55')
+        .setTitle('⚔️ Raid Weekend Status');
+    
+    // Current status
+    embed.addField(
+        '🔴 Current Status',
+        isActive ? '**RAIDING ENABLED** - Bases can be damaged!' : '**RAIDING DISABLED** - Bases are protected',
+        false
+    );
+    
+    // Countdown
+    if (scheduleEnabled && guildConfig.raid_start_day !== null) {
+        const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        const countdown = calculateRaidCountdown(guildConfig);
+        
+        if (countdown) {
+            embed.addField(
+                isActive ? '⏰ Raid Weekend Ends In' : '⏰ Next Raid Weekend Starts In',
+                countdown,
+                false
+            );
+        }
+        
+        // Schedule info
+        embed.addField(
+            '📅 Automatic Schedule',
+            `**Enabled:** Yes\n` +
+            `**Start:** ${dayNames[guildConfig.raid_start_day]} at ${guildConfig.raid_start_time}\n` +
+            `**End:** ${dayNames[guildConfig.raid_end_day]} at ${guildConfig.raid_end_time}\n` +
+            `**Timezone:** ${guildConfig.raid_timezone}`,
+            false
+        );
+    } else {
+        embed.addField(
+            '📅 Automatic Schedule',
+            '**Enabled:** No\n\nUse `/admin killfeed raiding schedule` to set up automatic raid weekends!',
+            false
+        );
+    }
+    
+    // Next restart info
+    if (guildConfig.restart_hours) {
+        const nextRestart = getNextRestartTime(guildConfig.restart_hours);
+        embed.addField('🔄 Next Server Restart', nextRestart, false);
+    }
+    
+    embed.setFooter({ text: 'Changes require server restart to take effect' });
+    
+    await interaction.editReply({ embeds: [embed] });
+}
+
+function calculateRaidCountdown(guildConfig) {
+    try {
+        const isActive = guildConfig.raid_currently_active;
+        const targetDay = isActive ? guildConfig.raid_end_day : guildConfig.raid_start_day;
+        const targetTime = isActive ? guildConfig.raid_end_time : guildConfig.raid_start_time;
+        const timezone = guildConfig.raid_timezone || 'America/New_York';
+        
+        // Get current time in the guild's timezone
+        const now = new Date().toLocaleString('en-US', { timeZone: timezone });
+        const currentDate = new Date(now);
+        const currentDay = currentDate.getDay();
+        const currentHours = currentDate.getHours();
+        const currentMinutes = currentDate.getMinutes();
+        
+        // Parse target time
+        const [targetHours, targetMinutes] = targetTime.split(':').map(Number);
+        
+        // Calculate days until target
+        let daysUntil = targetDay - currentDay;
+        if (daysUntil < 0) daysUntil += 7;
+        if (daysUntil === 0) {
+            // Same day - check if time has passed
+            const currentTotalMinutes = currentHours * 60 + currentMinutes;
+            const targetTotalMinutes = targetHours * 60 + targetMinutes;
+            if (currentTotalMinutes >= targetTotalMinutes) {
+                daysUntil = 7; // Next week
+            }
+        }
+        
+        // Create target date
+        const targetDate = new Date(currentDate);
+        targetDate.setDate(targetDate.getDate() + daysUntil);
+        targetDate.setHours(targetHours, targetMinutes, 0, 0);
+        
+        // Calculate difference
+        const diff = targetDate - currentDate;
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        
+        return `**${days} days, ${hours} hours, ${minutes} minutes**`;
+    } catch (error) {
+        console.error('[RAID COUNTDOWN] Error:', error);
+        return 'Unable to calculate';
+    }
+}
+
+function getNextRestartTime(restartHours) {
+    try {
+        const now = new Date();
+        const currentHour = now.getHours();
+        const hours = restartHours.split(',').map(Number).sort((a, b) => a - b);
+        
+        // Find next restart hour
+        let nextHour = hours.find(h => h > currentHour);
+        if (!nextHour) nextHour = hours[0]; // Wrap to tomorrow
+        
+        const nextRestart = new Date(now);
+        if (nextHour < currentHour) {
+            nextRestart.setDate(nextRestart.getDate() + 1);
+        }
+        nextRestart.setHours(nextHour, 0, 0, 0);
+        
+        const diff = nextRestart - now;
+        const hours_until = Math.floor(diff / (1000 * 60 * 60));
+        const minutes_until = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        
+        return `In **${hours_until} hours, ${minutes_until} minutes** (at ${String(nextHour).padStart(2, '0')}:00)`;
+    } catch (error) {
+        console.error('[RESTART TIME] Error:', error);
+        return 'Unknown';
+    }
+}
+
+async function sendRaidAnnouncement(guild, guildConfig, enabled) {
+    try {
+        // Find general channel or killfeed channel
+        let announcementChannel = guild.channels.cache.find(
+            ch => ch.name.includes('general') || ch.name.includes('General')
+        );
+        
+        if (!announcementChannel && guildConfig.killfeed_channel_id) {
+            announcementChannel = guild.channels.cache.get(guildConfig.killfeed_channel_id);
+        }
+        
+        if (!announcementChannel) {
+            console.log('[RAID ANNOUNCEMENT] No suitable channel found');
+            return;
+        }
+        
+        const countdown = guildConfig.raid_schedule_enabled
+            ? calculateRaidCountdown({ ...guildConfig, raid_currently_active: enabled })
+            : null;
+        
+        const nextRestart = guildConfig.restart_hours
+            ? getNextRestartTime(guildConfig.restart_hours)
+            : 'Unknown';
+        
+        const embed = new MessageEmbed()
+            .setColor(enabled ? '#ff5555' : '#55ff55')
+            .setTitle(enabled ? '⚔️ **RAID WEEKEND IS NOW ACTIVE!** ⚔️' : '🛡️ **RAID WEEKEND HAS ENDED!** 🛡️')
+            .setDescription(
+                enabled
+                    ? '**Raiding is ENABLED** - Bases and containers can be damaged!'
+                    : '**Raiding is DISABLED** - Bases and containers are protected!'
+            );
+        
+        if (countdown) {
+            embed.addField(
+                enabled ? '⏰ Raid Weekend Ends In' : '⏰ Next Raid Weekend Starts In',
+                countdown,
+                false
+            );
+        }
+        
+        embed.addField(
+            '🔴 Status',
+            enabled ? '**ACTIVE - PVP RAIDING ALLOWED**' : '**PROTECTED - NO RAIDING**',
+            false
+        );
+        
+        embed.addField(
+            '⚠️ Server Restart Required',
+            `Changes will take effect after the next restart.\n${nextRestart}`,
+            false
+        );
+        
+        await announcementChannel.send({
+            content: '@everyone',
+            embeds: [embed]
+        });
+        
+        console.log('[RAID ANNOUNCEMENT] Sent announcement to', announcementChannel.name);
+    } catch (error) {
+        console.error('[RAID ANNOUNCEMENT] Error:', error);
     }
 }
 

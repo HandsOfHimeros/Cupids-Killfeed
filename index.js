@@ -746,6 +746,154 @@ for (const file of commandFiles) {
     }
 }
 
+async function handleRaidScheduleSubmit(interaction) {
+    try {
+        const { MessageEmbed } = require('discord.js');
+        const guildId = interaction.guildId;
+        
+        // Get values from modal
+        const startDay = parseInt(interaction.fields.getTextInputValue('start_day'));
+        const startTime = interaction.fields.getTextInputValue('start_time').trim();
+        const endDay = parseInt(interaction.fields.getTextInputValue('end_day'));
+        const endTime = interaction.fields.getTextInputValue('end_time').trim();
+        const timezone = interaction.fields.getTextInputValue('timezone').trim();
+        
+        // Validate inputs
+        if (startDay < 0 || startDay > 6 || endDay < 0 || endDay > 6) {
+            return interaction.reply({
+                content: '❌ Invalid day! Days must be between 0 (Sunday) and 6 (Saturday).',
+                ephemeral: true
+            });
+        }
+        
+        const timeRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
+        if (!timeRegex.test(startTime) || !timeRegex.test(endTime)) {
+            return interaction.reply({
+                content: '❌ Invalid time format! Use HH:MM format (e.g., 18:00).',
+                ephemeral: true
+            });
+        }
+        
+        await interaction.deferReply();
+        
+        // Update database
+        await db.query(`
+            UPDATE guild_configs 
+            SET raid_schedule_enabled = $1,
+                raid_start_day = $2,
+                raid_start_time = $3,
+                raid_end_day = $4,
+                raid_end_time = $5,
+                raid_timezone = $6
+            WHERE guild_id = $7
+        `, [true, startDay, startTime, endDay, endTime, timezone, guildId]);
+        
+        console.log(`[RAID SCHEDULE] Configured for guild ${guildId}:`, {
+            startDay, startTime, endDay, endTime, timezone
+        });
+        
+        const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        
+        const embed = new MessageEmbed()
+            .setColor('#00ff00')
+            .setTitle('✅ Automatic Raid Weekend Scheduled!')
+            .setDescription('Your automatic raid weekend schedule has been configured!')
+            .addField('📅 Start', `${dayNames[startDay]} at ${startTime}`, true)
+            .addField('📅 End', `${dayNames[endDay]} at ${endTime}`, true)
+            .addField('🌍 Timezone', timezone, false)
+            .addField(
+                '⚙️ How It Works',
+                '• The bot will automatically enable raiding at the start time\n' +
+                '• Raiding will be disabled at the end time\n' +
+                '• An @everyone announcement will be posted each time\n' +
+                '• Checked every 5 minutes\n' +
+                '• Server restart required for changes to take effect',
+                false
+            )
+            .setFooter({ text: 'Use /admin killfeed raiding status to view current schedule' });
+        
+        await interaction.editReply({ embeds: [embed] });
+    } catch (error) {
+        console.error('[RAID SCHEDULE SUBMIT] Error:', error);
+        await interaction.reply({
+            content: `❌ Failed to save schedule: ${error.message}`,
+            ephemeral: true
+        }).catch(() => {});
+    }
+}
+
+async function handleTraderOpenSubmit(interaction) {
+    try {
+        const { MessageEmbed } = require('discord.js');
+        const guildId = interaction.guildId;
+        const userId = interaction.user.id;
+        
+        // Get values from modal
+        const location = interaction.fields.getTextInputValue('location').trim();
+        const hours = interaction.fields.getTextInputValue('hours').trim();
+        
+        // Validate location format (should be like "6900.87 / 11430.08")
+        const locationRegex = /^\d+\.?\d*\s*\/\s*\d+\.?\d*$/;
+        if (!locationRegex.test(location)) {
+            return interaction.reply({
+                content: '❌ Invalid location format! Use iZurvive coordinates like: `6900.87 / 11430.08`',
+                ephemeral: true
+            });
+        }
+        
+        await interaction.deferReply({ ephemeral: true });
+        
+        // Insert into database
+        await db.query(`
+            INSERT INTO active_traders (guild_id, user_id, location, hours_open)
+            VALUES ($1, $2, $3, $4)
+            ON CONFLICT (guild_id, user_id) 
+            DO UPDATE SET location = $3, hours_open = $4, opened_at = CURRENT_TIMESTAMP
+        `, [guildId, userId, location, hours]);
+        
+        console.log(`[TRADER] ${interaction.user.tag} opened trader at ${location}`);
+        
+        // Send @everyone announcement to general channel
+        const generalChannel = interaction.guild.channels.cache.find(
+            channel => channel.name.toLowerCase().includes('general') && channel.type === 'GUILD_TEXT'
+        );
+        
+        if (generalChannel) {
+            const announceEmbed = new MessageEmbed()
+                .setColor('#00ff00')
+                .setTitle('🛒 TRADER NOW OPEN!')
+                .setDescription(`**${interaction.user.username}** has opened their trader!`)
+                .addFields(
+                    { name: '📍 Location', value: location, inline: true },
+                    { name: '⏰ Hours', value: hours, inline: true }
+                )
+                .setFooter({ text: 'Use /admin killfeed trader to see all active traders!' })
+                .setTimestamp();
+            
+            await generalChannel.send({ content: '@everyone', embeds: [announceEmbed] });
+        }
+        
+        const confirmEmbed = new MessageEmbed()
+            .setColor('#00ff00')
+            .setTitle('✅ Trader Opened Successfully!')
+            .setDescription('Your trader is now active and an announcement has been sent!')
+            .addFields(
+                { name: '📍 Location', value: location, inline: true },
+                { name: '⏰ Hours', value: hours, inline: true }
+            )
+            .setFooter({ text: 'Use /admin killfeed trader → Close Trader when done' });
+        
+        await interaction.editReply({ embeds: [confirmEmbed] });
+        
+    } catch (error) {
+        console.error('[TRADER OPEN SUBMIT] Error:', error);
+        await interaction.reply({
+            content: `❌ Failed to open trader: ${error.message}`,
+            ephemeral: true
+        }).catch(() => {});
+    }
+}
+
 bot.on('interactionCreate', async interaction => {
     console.log('[INTERACTION] Received:', interaction.type, interaction.commandName || interaction.customId);
     
@@ -756,6 +904,10 @@ bot.on('interactionCreate', async interaction => {
             if (adminCommand && adminCommand.handleSetupModalSubmit) {
                 await adminCommand.handleSetupModalSubmit(interaction);
             }
+        } else if (interaction.customId === 'raid_schedule_modal') {
+            await handleRaidScheduleSubmit(interaction);
+        } else if (interaction.customId === 'trader_open_modal') {
+            await handleTraderOpenSubmit(interaction);
         }
         return;
     }
@@ -973,7 +1125,260 @@ bot.on('ready', async () => {
             }
         }, 5000); // Wait 5 seconds after bot is ready
     }
+    
+    // RAID WEEKEND SCHEDULER: Check every 5 minutes for automatic raid schedule triggers
+    setInterval(async () => {
+        try {
+            const guilds = await db.getAllGuildConfigs();
+            
+            for (const guildConfig of guilds) {
+                // Only process guilds with automatic scheduling enabled
+                if (!guildConfig.raid_schedule_enabled) continue;
+                
+                // Skip if missing schedule data
+                if (guildConfig.raid_start_day === null || !guildConfig.raid_start_time ||
+                    guildConfig.raid_end_day === null || !guildConfig.raid_end_time) {
+                    continue;
+                }
+                
+                const timezone = guildConfig.raid_timezone || 'America/New_York';
+                
+                try {
+                    // Get current time in guild's timezone
+                    const now = new Date().toLocaleString('en-US', { timeZone: timezone });
+                    const currentDate = new Date(now);
+                    const currentDay = currentDate.getDay();
+                    const currentHours = String(currentDate.getHours()).padStart(2, '0');
+                    const currentMinutes = String(currentDate.getMinutes()).padStart(2, '0');
+                    const currentTime = `${currentHours}:${currentMinutes}`;
+                    
+                    const isCurrentlyActive = guildConfig.raid_currently_active || false;
+                    
+                    // Check if it's time to START raiding
+                    if (currentDay === guildConfig.raid_start_day && currentTime === guildConfig.raid_start_time) {
+                        if (!isCurrentlyActive) {
+                            console.log(`[RAID SCHEDULER] Triggering raid START for guild ${guildConfig.guild_id}`);
+                            await automaticRaidToggle(bot, guildConfig, true);
+                        }
+                    }
+                    
+                    // Check if it's time to END raiding
+                    if (currentDay === guildConfig.raid_end_day && currentTime === guildConfig.raid_end_time) {
+                        if (isCurrentlyActive) {
+                            console.log(`[RAID SCHEDULER] Triggering raid END for guild ${guildConfig.guild_id}`);
+                            await automaticRaidToggle(bot, guildConfig, false);
+                        }
+                    }
+                } catch (error) {
+                    console.error(`[RAID SCHEDULER] Error processing guild ${guildConfig.guild_id}:`, error);
+                }
+            }
+        } catch (error) {
+            console.error('[RAID SCHEDULER] Fatal error:', error);
+        }
+    }, 5 * 60 * 1000); // Every 5 minutes
+    
+    console.log('[RAID SCHEDULER] Automatic raid weekend scheduler started (5-minute interval)');
 });
+
+async function automaticRaidToggle(bot, guildConfig, enableRaiding) {
+    const axios = require('axios');
+    const { Client: FTPClient } = require('basic-ftp');
+    const path = require('path');
+    const { MessageEmbed } = require('discord.js');
+    
+    try {
+        console.log(`[AUTO RAID] ${enableRaiding ? 'Enabling' : 'Disabling'} raiding for guild ${guildConfig.guild_id}`);
+        
+        const GAMEPLAY_FILE_PATH = `/games/${guildConfig.nitrado_instance}/ftproot/dayzps_missions/dayzOffline.${guildConfig.map_name}/cfggameplay.json`;
+        const GAMEPLAY_FTP_PATH = `/dayzps_missions/dayzOffline.${guildConfig.map_name}/cfggameplay.json`;
+        const BASE_URL = 'https://api.nitrado.net/services';
+        
+        // Download cfggameplay.json
+        console.log('[AUTO RAID] Downloading cfggameplay.json...');
+        const downloadUrl = `${BASE_URL}/${guildConfig.nitrado_service_id}/gameservers/file_server/download?file=${encodeURIComponent(GAMEPLAY_FILE_PATH)}`;
+        const downloadResp = await axios.get(downloadUrl, {
+            headers: { 'Authorization': `Bearer ${guildConfig.nitrado_token}` }
+        });
+        
+        const fileUrl = downloadResp.data.data.token.url;
+        const fileResp = await axios.get(fileUrl, { responseType: 'text' });
+        let fileContent = fileResp.data;
+        
+        // Toggle raid settings (false = raiding enabled, true = raiding disabled)
+        const disableValue = enableRaiding ? 'false' : 'true';
+        
+        fileContent = fileContent.replace(
+            /"disableBaseDamage"\s*:\s*(true|false)/g,
+            `"disableBaseDamage": ${disableValue}`
+        );
+        
+        fileContent = fileContent.replace(
+            /"disableContainerDamage"\s*:\s*(true|false)/g,
+            `"disableContainerDamage": ${disableValue}`
+        );
+        
+        console.log(`[AUTO RAID] Set damage flags to ${disableValue}`);
+        
+        // Get FTP credentials and upload
+        const infoUrl = `${BASE_URL}/${guildConfig.nitrado_service_id}/gameservers`;
+        const infoResp = await axios.get(infoUrl, {
+            headers: { 'Authorization': `Bearer ${guildConfig.nitrado_token}` }
+        });
+        
+        const ftpCreds = infoResp.data.data.gameserver.credentials.ftp;
+        const client = new FTPClient();
+        client.ftp.verbose = false;
+        
+        try {
+            await client.access({
+                host: ftpCreds.hostname,
+                user: ftpCreds.username,
+                password: ftpCreds.password,
+                port: ftpCreds.port || 21,
+                secure: false
+            });
+            
+            // Upload modified file
+            const gameplayTmpPath = path.join(__dirname, 'logs', `cfggameplay_auto_raid_${Date.now()}.json`);
+            fs.writeFileSync(gameplayTmpPath, fileContent, 'utf8');
+            
+            await client.uploadFrom(gameplayTmpPath, GAMEPLAY_FTP_PATH);
+            fs.unlinkSync(gameplayTmpPath);
+            
+            console.log('[AUTO RAID] ✅ Successfully updated cfggameplay.json!');
+            
+            // Update database
+            await db.query(
+                'UPDATE guild_configs SET raid_currently_active = $1 WHERE guild_id = $2',
+                [enableRaiding, guildConfig.guild_id]
+            );
+            
+            // Send announcement to guild
+            const guild = await bot.guilds.fetch(guildConfig.guild_id);
+            
+            // Find general channel or killfeed channel
+            let announcementChannel = guild.channels.cache.find(
+                ch => ch.name.includes('general') || ch.name.includes('General')
+            );
+            
+            if (!announcementChannel && guildConfig.killfeed_channel_id) {
+                announcementChannel = guild.channels.cache.get(guildConfig.killfeed_channel_id);
+            }
+            
+            if (announcementChannel) {
+                // Calculate countdown to opposite state
+                const updatedConfig = { ...guildConfig, raid_currently_active: enableRaiding };
+                const countdown = calculateRaidCountdown(updatedConfig);
+                const nextRestart = guildConfig.restart_hours ? getNextRestartTime(guildConfig.restart_hours) : 'Unknown';
+                
+                const embed = new MessageEmbed()
+                    .setColor(enableRaiding ? '#ff5555' : '#55ff55')
+                    .setTitle(enableRaiding ? '⚔️ **RAID WEEKEND IS NOW ACTIVE!** ⚔️' : '🛡️ **RAID WEEKEND HAS ENDED!** 🛡️')
+                    .setDescription(
+                        enableRaiding
+                            ? '**Raiding is ENABLED** - Bases and containers can be damaged!'
+                            : '**Raiding is DISABLED** - Bases and containers are protected!'
+                    )
+                    .addField(
+                        enableRaiding ? '⏰ Raid Weekend Ends In' : '⏰ Next Raid Weekend Starts In',
+                        countdown || 'See schedule with /admin killfeed raiding status',
+                        false
+                    )
+                    .addField(
+                        '🔴 Status',
+                        enableRaiding ? '**ACTIVE - PVP RAIDING ALLOWED**' : '**PROTECTED - NO RAIDING**',
+                        false
+                    )
+                    .addField(
+                        '⚠️ Server Restart Required',
+                        `Changes will take effect after the next restart.\n${nextRestart}`,
+                        false
+                    )
+                    .setFooter({ text: 'Automatic schedule triggered' })
+                    .setTimestamp();
+                
+                await announcementChannel.send({
+                    content: '@everyone',
+                    embeds: [embed]
+                });
+                
+                console.log(`[AUTO RAID] Announcement sent to ${announcementChannel.name}`);
+            }
+        } finally {
+            client.close();
+        }
+    } catch (error) {
+        console.error('[AUTO RAID] Error:', error);
+    }
+}
+
+function calculateRaidCountdown(guildConfig) {
+    try {
+        const isActive = guildConfig.raid_currently_active;
+        const targetDay = isActive ? guildConfig.raid_end_day : guildConfig.raid_start_day;
+        const targetTime = isActive ? guildConfig.raid_end_time : guildConfig.raid_start_time;
+        const timezone = guildConfig.raid_timezone || 'America/New_York';
+        
+        const now = new Date().toLocaleString('en-US', { timeZone: timezone });
+        const currentDate = new Date(now);
+        const currentDay = currentDate.getDay();
+        const currentHours = currentDate.getHours();
+        const currentMinutes = currentDate.getMinutes();
+        
+        const [targetHours, targetMinutes] = targetTime.split(':').map(Number);
+        
+        let daysUntil = targetDay - currentDay;
+        if (daysUntil < 0) daysUntil += 7;
+        if (daysUntil === 0) {
+            const currentTotalMinutes = currentHours * 60 + currentMinutes;
+            const targetTotalMinutes = targetHours * 60 + targetMinutes;
+            if (currentTotalMinutes >= targetTotalMinutes) {
+                daysUntil = 7;
+            }
+        }
+        
+        const targetDate = new Date(currentDate);
+        targetDate.setDate(targetDate.getDate() + daysUntil);
+        targetDate.setHours(targetHours, targetMinutes, 0, 0);
+        
+        const diff = targetDate - currentDate;
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        
+        return `**${days} days, ${hours} hours, ${minutes} minutes**`;
+    } catch (error) {
+        console.error('[RAID COUNTDOWN] Error:', error);
+        return null;
+    }
+}
+
+function getNextRestartTime(restartHours) {
+    try {
+        const now = new Date();
+        const currentHour = now.getHours();
+        const hours = restartHours.split(',').map(Number).sort((a, b) => a - b);
+        
+        let nextHour = hours.find(h => h > currentHour);
+        if (!nextHour) nextHour = hours[0];
+        
+        const nextRestart = new Date(now);
+        if (nextHour < currentHour) {
+            nextRestart.setDate(nextRestart.getDate() + 1);
+        }
+        nextRestart.setHours(nextHour, 0, 0, 0);
+        
+        const diff = nextRestart - now;
+        const hours_until = Math.floor(diff / (1000 * 60 * 60));
+        const minutes_until = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        
+        return `In **${hours_until} hours, ${minutes_until} minutes** (at ${String(nextHour).padStart(2, '0')}:00)`;
+    } catch (error) {
+        console.error('[RESTART TIME] Error:', error);
+        return 'Unknown';
+    }
+}
 
 bot.on('error', err => {
     console.log(err);
