@@ -302,7 +302,6 @@ module.exports = [
   { name: 'Epoxy Putty', class: 'EpoxyPutty', averagePrice: 150, description: 'Advanced repairs' },
   { name: 'Leather Sewing Kit', class: 'LeatherSewingKit', averagePrice: 110, description: 'Repairs leather' },
   { name: 'Weapon Cleaning Kit', class: 'WeaponCleaningKit', averagePrice: 130, description: 'Cleans weapons' },
-  { name: 'Sharpening Stone', class: 'SharpeningStone', averagePrice: 80, description: 'Sharpens blades' },
   { name: 'Whetstone', class: 'Whetstone', averagePrice: 70, description: 'Blade sharpener' },
   { name: 'Hammer', class: 'Hammer', averagePrice: 60, description: 'Crafting tool' },
   { name: 'Hand Saw', class: 'HandSaw', averagePrice: 90, description: 'Sawing tool' },
