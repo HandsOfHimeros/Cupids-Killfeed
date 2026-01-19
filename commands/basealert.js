@@ -7,7 +7,7 @@ const path = require('path');
 // Price constants
 const PURCHASE_PRICE = 20000;
 const RELOCATE_PRICE = 10000;
-const ALERT_RADIUS = 50;
+const ALERT_RADIUS = 200;
 
 // Helper to get user's DayZ character name from economy system
 function getDayZName(userId) {
