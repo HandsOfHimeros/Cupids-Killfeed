@@ -169,6 +169,13 @@ async function handlePurchase(interaction, guildId, userId) {
     // Deduct payment using same method as economy/shop commands
     await db.addBalance(guildId, userId, -PURCHASE_PRICE);
 
+    // Create a placeholder entry to mark ownership (user will set actual base with /basealert setbase)
+    // Use a NULL/0 coordinate to indicate not yet set up
+    await db.query(
+        'INSERT INTO base_alerts (guild_id, server_name, discord_user_id, base_x, base_y, alert_radius, is_active) VALUES ($1, $2, $3, $4, $5, $6, false)',
+        [guildId, 'chernarusplus', userId, 0, 0, ALERT_RADIUS]
+    );
+
     // Auto-whitelist user's DayZ character if they have set their name
     const userDayZName = getDayZName(userId);
     let autoWhitelistNote = '';
@@ -220,13 +227,19 @@ async function handleSetBase(interaction, guildId, userId) {
 
     // Check if they already have a base on this server
     const existingBase = await db.query(
-        'SELECT id FROM base_alerts WHERE guild_id = $1 AND discord_user_id = $2 AND server_name = $3',
+        'SELECT id, base_x, base_y FROM base_alerts WHERE guild_id = $1 AND discord_user_id = $2 AND server_name = $3',
         [guildId, userId, server]
     );
 
-    const isRelocating = existingBase.rows.length > 0;
+    // Check if there's a placeholder entry (base_x = 0 and base_y = 0)
+    const hasPlaceholder = await db.query(
+        'SELECT id FROM base_alerts WHERE guild_id = $1 AND discord_user_id = $2 AND base_x = 0 AND base_y = 0',
+        [guildId, userId]
+    );
 
-    // If relocating, charge fee
+    const isRelocating = existingBase.rows.length > 0 && !(existingBase.rows[0].base_x === 0 && existingBase.rows[0].base_y === 0);
+
+    // If relocating (not a placeholder), charge fee
     if (isRelocating) {
         const currentBalance = await db.getBalance(guildId, userId);
 
@@ -259,25 +272,36 @@ async function handleSetBase(interaction, guildId, userId) {
 
     // Upsert base location
     let baseAlertId;
-    if (isRelocating) {
+    if (existingBase.rows.length > 0) {
+        // Update existing base (either placeholder or relocating)
         await db.query(
-            'UPDATE base_alerts SET base_x = $1, base_y = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $3',
-            [x, y, existingBase.rows[0].id]
+            'UPDATE base_alerts SET base_x = $1, base_y = $2, server_name = $3, is_active = true, updated_at = CURRENT_TIMESTAMP WHERE id = $4',
+            [x, y, server, existingBase.rows[0].id]
         );
         baseAlertId = existingBase.rows[0].id;
+    } else if (hasPlaceholder.rows.length > 0) {
+        // Update placeholder entry with actual server and coordinates
+        await db.query(
+            'UPDATE base_alerts SET base_x = $1, base_y = $2, server_name = $3, is_active = true, updated_at = CURRENT_TIMESTAMP WHERE id = $4',
+            [x, y, server, hasPlaceholder.rows[0].id]
+        );
+        baseAlertId = hasPlaceholder.rows[0].id;
     } else {
+        // Create new base entry
         const insertResult = await db.query(
             'INSERT INTO base_alerts (guild_id, server_name, discord_user_id, base_x, base_y, alert_radius, is_active) VALUES ($1, $2, $3, $4, $5, $6, true) RETURNING id',
             [guildId, server, userId, x, y, ALERT_RADIUS]
         );
         baseAlertId = insertResult.rows[0].id;
-        
-        // Auto-whitelist user's DayZ character on first base setup
+    }
+    
+    // Auto-whitelist user's DayZ character on first base setup (if not relocating)
+    if (!isRelocating) {
         const userDayZName = getDayZName(userId);
         if (userDayZName) {
             try {
                 await db.query(
-                    'INSERT INTO base_alert_whitelist (base_alert_id, whitelisted_player_name) VALUES ($1, $2)',
+                    'INSERT INTO base_alert_whitelist (base_alert_id, whitelisted_player_name) VALUES ($1, $2) ON CONFLICT DO NOTHING',
                     [baseAlertId, userDayZName]
                 );
                 console.log(`[BASEALERT] Auto-whitelisted ${userDayZName} for base ${baseAlertId}`);
