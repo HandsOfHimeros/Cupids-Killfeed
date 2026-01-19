@@ -2767,6 +2767,12 @@ module.exports = {
                     ], ephemeral: true
                 });
             } else {
+                // Store coordinates for teleport system
+                const teleportCommand = interaction.client.commands.get('admin')?.teleportModule || require('./teleport.js');
+                if (teleportCommand && teleportCommand.storeCoordinates) {
+                    teleportCommand.storeCoordinates(userId, location.x, location.y, location.z);
+                }
+
                 await interaction.reply({
                     embeds: [
                         new MessageEmbed()
@@ -4684,11 +4690,16 @@ module.exports = {
             if (!success) {
                 // Failed the challenge
                 await db.updateCampaignProgress(guildId, userId, campaignId, chapterNum, false);
+                
+                // Record cooldown on failure too (so players can't spam retries)
+                await db.addCooldown(guildId, userId, 'campaign', Date.now());
+                await db.cleanOldCooldowns(guildId, userId, 'campaign', COOLDOWN_WINDOW);
+                
                 await interaction.editReply({
                     embeds: [new MessageEmbed()
                         .setColor('#ff0000')
                         .setTitle('💀 Failure!')
-                        .setDescription('Thy quest hath ended in tragedy!\n\nThy choice was too risky. The adventure is over.\n\n_Use `/campaign` to try again from the beginning._')],
+                        .setDescription('Thy quest hath ended in tragedy!\n\nThy choice was too risky. The adventure is over.\n\n⏳ _Thou must wait 6 hours before thy next campaign._')],
                     components: []
                 });
                 return;
