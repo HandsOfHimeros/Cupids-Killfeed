@@ -1651,8 +1651,15 @@ module.exports = {
                                 }
                                 
                                 const itemList = Array.from(shoppingCart.entries())
-                                    .map(([idx, qty]) => `${qty}x ${shopItems[idx].name}`)
-                                    .join(', ');
+                                    .map(([idx, qty]) => {
+                                        const item = shopItems[idx];
+                                        if (!item) {
+                                            console.error(`[SHOP] Item at index ${idx} not found in shopItems`);
+                                            return `${qty}x Unknown Item (index: ${idx})`;
+                                        }
+                                        return `${qty}x ${item.name}`;
+                                    })
+                                    .join('\n');
                                 
                                 shoppingCart.clear();
                                 
