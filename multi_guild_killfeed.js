@@ -218,7 +218,7 @@ class MultiGuildKillfeed {
                 let victim, killer, weapon, position;
                 let isPlayerKill = false; // Flag to track if this is a player-vs-player kill
                 
-                let killMatch = line.match(/Player \"(.+?)\"\(id=[^)]*\s+pos=<([^,]+),\s*([^,]+),\s*([^>]+)>\)\s+killed by Player \"(.+?)\"\(id=[^)]*\) with (.+)$/);
+                let killMatch = line.match(/Player \"(.+?)\"(?:\s*\(DEAD\))?\s*\(id=[^)]*\s+pos=<([^,]+),\s*([^,]+),\s*([^>]+)>\)\s+killed by Player \"(.+?)\"(?:\s*\(DEAD\))?\s*\(id=[^)]*\) with (.+)$/);
                 if (killMatch) {
                     victim = killMatch[1];
                     position = { x: parseFloat(killMatch[2]), y: parseFloat(killMatch[3]), z: parseFloat(killMatch[4]) };
@@ -226,8 +226,8 @@ class MultiGuildKillfeed {
                     weapon = killMatch[6];
                     isPlayerKill = true; // This is a player-vs-player kill
                 } else {
-                    // Try without position
-                    killMatch = line.match(/Player \"(.+?)\"\(id=[^)]*\) killed by Player \"(.+?)\"\(id=[^)]*\) with (.+)$/);
+                    // Try without position - also support (DEAD) marker
+                    killMatch = line.match(/Player \"(.+?)\"(?:\s*\(DEAD\))?\s*\(id=[^)]*\) killed by Player \"(.+?)\"(?:\s*\(DEAD\))?\s*\(id=[^)]*\) with (.+)$/);
                     if (killMatch) {
                         victim = killMatch[1];
                         killer = killMatch[2];
