@@ -1633,18 +1633,6 @@ module.exports = {
                                 for (const [itemIdx, qty] of shoppingCart.entries()) {
                                     const item = shopItems[itemIdx];
                                     
-                                    // Log purchase to history for debugging
-                                    const purchaseId = await db.logPurchase(
-                                        guildId,
-                                        userId,
-                                        dayzName,
-                                        item.name,
-                                        item.class,
-                                        qty,
-                                        item.averagePrice * qty,
-                                        Date.now().toString()
-                                    );
-                                    
                                     // Create separate spawn entry for each item
                                     for (let i = 0; i < qty; i++) {
                                         const spawnEntry = {
@@ -1653,14 +1641,11 @@ module.exports = {
                                             item: item.name,
                                             class: item.class,
                                             timestamp: Date.now(),
-                                            restart_id: Date.now().toString(),
-                                            purchaseId: purchaseId  // Link to purchase history
+                                            restart_id: Date.now().toString()
                                         };
                                         
-                                        // Spawn without waiting
                                         addCupidSpawnEntry(spawnEntry, guildId).catch(error => {
                                             console.error(`[SHOP] Error spawning ${item.name}:`, error.message);
-                                            db.updatePurchaseSpawnAttempt(purchaseId, true, false, error.message, null);
                                         });
                                     }
                                     
@@ -1678,30 +1663,7 @@ module.exports = {
                                     })
                                     .join('\n');
                                 
-                                // Get player's current position to show spawn location
-                                const playerPos = await db.getPlayerPosition(guildId, dayzName);
-                                let locationInfo = '\n\n**Items will spawn on a table near your current location!**\nIf no table exists within 5m, a new one will be created.';
-                                
-                                if (playerPos) {
-                                    const x = Math.round(playerPos.x * 10) / 10;
-                                    const y = Math.round(playerPos.y * 10) / 10;
-                                    const z = Math.round(playerPos.z * 10) / 10;
-                                    locationInfo = `\n\n📍 **Spawn Location:** Near [${x}, ${y}, ${z}]\nItems will spawn on a table close to this position.\nIf no table exists within 5m, a new one will be created.`;
-                                } else {
-                                    locationInfo += '\n\n⚠️ Your location is not currently tracked. Make sure you\'re in-game!';
-                                }
-                                
-                                shoppingCart.clear();
-                                
-                                await i.editReply({
-                                    embeds: [
-                                        new MessageEmbed()
-                                            .setColor('#00ff00')
-                                            .setTitle('✅ Purchase Complete!')
-                                            .setDescription(`You purchased:\n${itemList}\n\nTotal: $${totalCost}\nNew balance: $${bal - totalCost}${locationInfo}`)
-                                    ],
-                                    components: [
-                                        new MessageActionRow()
+
                                             .addComponents(
                                                 new MessageButton()
                                                     .setCustomId('back_to_categories')
