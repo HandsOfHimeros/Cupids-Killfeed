@@ -1633,6 +1633,18 @@ module.exports = {
                                 for (const [itemIdx, qty] of shoppingCart.entries()) {
                                     const item = shopItems[itemIdx];
                                     
+                                    // Log purchase to history for debugging
+                                    const purchaseId = await db.logPurchase(
+                                        guildId,
+                                        userId,
+                                        dayzName,
+                                        item.name,
+                                        item.class,
+                                        qty,
+                                        item.averagePrice * qty,
+                                        Date.now().toString()
+                                    );
+                                    
                                     // Create separate spawn entry for each item
                                     for (let i = 0; i < qty; i++) {
                                         const spawnEntry = {
@@ -1641,10 +1653,19 @@ module.exports = {
                                             item: item.name,
                                             class: item.class,
                                             timestamp: Date.now(),
-                                            restart_id: Date.now().toString()
+                                            restart_id: Date.now().toString(),
+                                            purchaseId: purchaseId  // Link to purchase history
                                         };
                                         
-                                        await addCupidSpawnEntry(spawnEntry, guildId);
+                                        try {
+                                            await addCupidSpawnEntry(spawnEntry, guildId);
+                                            // Mark as attempted
+                                            await db.updatePurchaseSpawnAttempt(purchaseId, true, null, null, null);
+                                        } catch (error) {
+                                            console.error(`[SHOP] Error spawning ${item.name}:`, error.message);
+                                            // Log the error
+                                            await db.updatePurchaseSpawnAttempt(purchaseId, true, false, error.message, null);
+                                        }
                                     }
                                     
                                     console.log(`[SHOP] Added ${qty}x ${item.name} for ${dayzName}`);

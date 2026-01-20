@@ -450,12 +450,28 @@ async function addCupidSpawnEntry(spawnEntry, guildId) {
                 dayzPlayerName: spawnEntry.dayzPlayerName,
                 item: spawnEntry.item,
                 timestamp: spawnEntry.timestamp,
-                restart_id: spawnEntry.restart_id
+                restart_id: spawnEntry.restart_id,
+                purchaseId: spawnEntry.purchaseId || null
             })
         };
         
         spawnJson.Objects.push(spawnObject);
         console.log(`[SPAWN] Added ${spawnEntry.class} to table at [${itemX.toFixed(2)}, ${itemY.toFixed(2)}, ${itemZ.toFixed(2)}], total objects: ${spawnJson.Objects.length}`);
+        
+        // Log coordinates to purchase history
+        if (spawnEntry.purchaseId) {
+            try {
+                await db.updatePurchaseSpawnAttempt(
+                    spawnEntry.purchaseId,
+                    true,
+                    true,
+                    null,
+                    `[${itemX.toFixed(2)}, ${itemY.toFixed(2)}, ${itemZ.toFixed(2)}]`
+                );
+            } catch (err) {
+                console.error('[SPAWN] Failed to update purchase history:', err.message);
+            }
+        }
         
         // Update item count in table's customString
         try {

@@ -1,8 +1,9 @@
+require('dotenv').config();
 const db = require('./database.js');
 
 async function checkColumns() {
     try {
-        const result = await db.query("SELECT column_name FROM information_schema.columns WHERE table_name = 'guild_configs'");
+        const result = await db.query("SELECT column_name FROM information_schema.columns WHERE table_name = 'guild_configs' ORDER BY ordinal_position");
         console.log('Guild Configs Table Columns:');
         result.rows.forEach(row => console.log('-', row.column_name));
     } catch (error) {

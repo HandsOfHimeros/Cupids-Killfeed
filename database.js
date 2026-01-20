@@ -505,6 +505,53 @@ module.exports = {
         return result.rows;
     },
 
+    // Purchase History for debugging spawn issues
+    logPurchase: async (guildId, userId, dayzPlayerName, itemName, itemClass, quantity, totalCost, restartId) => {
+        const result = await pool.query(
+            `INSERT INTO purchase_history 
+             (guild_id, user_id, dayz_player_name, item_name, item_class, quantity, total_cost, purchase_timestamp, restart_id)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+             RETURNING id`,
+            [guildId, userId, dayzPlayerName, itemName, itemClass, quantity, totalCost, Date.now(), restartId]
+        );
+        return result.rows[0].id;
+    },
+    
+    updatePurchaseSpawnAttempt: async (purchaseId, attempted, success, error, coordinates) => {
+        await pool.query(
+            `UPDATE purchase_history 
+             SET spawn_attempted = $2, spawn_success = $3, spawn_error = $4, spawn_coordinates = $5
+             WHERE id = $1`,
+            [purchaseId, attempted, success, error, coordinates]
+        );
+    },
+    
+    getPurchaseHistory: async (guildId, userId = null, limit = 50) => {
+        if (userId) {
+            const result = await pool.query(
+                'SELECT * FROM purchase_history WHERE guild_id = $1 AND user_id = $2 ORDER BY purchase_timestamp DESC LIMIT $3',
+                [guildId, userId, limit]
+            );
+            return result.rows;
+        } else {
+            const result = await pool.query(
+                'SELECT * FROM purchase_history WHERE guild_id = $1 ORDER BY purchase_timestamp DESC LIMIT $2',
+                [guildId, limit]
+            );
+            return result.rows;
+        }
+    },
+    
+    getFailedSpawns: async (guildId, limit = 20) => {
+        const result = await pool.query(
+            `SELECT * FROM purchase_history 
+             WHERE guild_id = $1 AND (spawn_success = false OR spawn_error IS NOT NULL)
+             ORDER BY purchase_timestamp DESC LIMIT $2`,
+            [guildId, limit]
+        );
+        return result.rows;
+    },
+
     // Export pool for direct queries
     pool: pool
 };
