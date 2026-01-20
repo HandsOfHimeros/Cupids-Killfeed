@@ -1629,7 +1629,7 @@ module.exports = {
                                 // Get DayZ name
                                 const dayzName = await db.getDayZName(guildId, userId) || interaction.user.username;
                                 
-                                // Add all items to spawn
+                                // Add all items to spawn - MUST BE SEQUENTIAL to avoid race condition
                                 for (const [itemIdx, qty] of shoppingCart.entries()) {
                                     const item = shopItems[itemIdx];
                                     
@@ -1644,9 +1644,12 @@ module.exports = {
                                             restart_id: Date.now().toString()
                                         };
                                         
-                                        addCupidSpawnEntry(spawnEntry, guildId).catch(error => {
+                                        try {
+                                            await addCupidSpawnEntry(spawnEntry, guildId);
+                                            console.log(`[SHOP] Spawned ${item.name} (${i+1}/${qty})`);
+                                        } catch (error) {
                                             console.error(`[SHOP] Error spawning ${item.name}:`, error.message);
-                                        });
+                                        }
                                     }
                                     
                                     console.log(`[SHOP] Added ${qty}x ${item.name} for ${dayzName}`);
