@@ -1037,7 +1037,7 @@ module.exports = {
                 console.log('[SHOP] Passed channel check');
                 // --- SHOP COMMAND LOGIC ---
                 const shopItems = require('../shop_items.js');
-                const { addCupidSpawnEntry } = require('../index.js');
+                const { addCupidSpawnEntry, addCupidSpawnEntriesBatch } = require('../index.js');
                 
                 // Helper function to group items by category
                 function getCategorizedItems() {
@@ -1629,6 +1629,10 @@ module.exports = {
                                 // Get DayZ name
                                 const dayzName = await db.getDayZName(guildId, userId) || interaction.user.username;
                                 
+                                // Collect all spawn entries to batch process them
+                                const allSpawnEntries = [];
+                                const purchaseRecords = [];
+                                
                                 // Add all items to spawn
                                 for (const [itemIdx, qty] of shoppingCart.entries()) {
                                     const item = shopItems[itemIdx];
@@ -1645,30 +1649,41 @@ module.exports = {
                                         Date.now().toString()
                                     );
                                     
-                                    // Create separate spawn entry for each item
+                                    purchaseRecords.push({ purchaseId, itemName: item.name, qty });
+                                    
+                                    // Create spawn entries for each quantity
                                     for (let i = 0; i < qty; i++) {
-                                        const spawnEntry = {
+                                        allSpawnEntries.push({
                                             userId,
                                             dayzPlayerName: dayzName,
                                             item: item.name,
                                             class: item.class,
                                             timestamp: Date.now(),
                                             restart_id: Date.now().toString(),
-                                            purchaseId: purchaseId  // Link to purchase history
-                                        };
-                                        
-                                        try {
-                                            await addCupidSpawnEntry(spawnEntry, guildId);
-                                            // Mark as attempted
-                                            await db.updatePurchaseSpawnAttempt(purchaseId, true, null, null, null);
-                                        } catch (error) {
-                                            console.error(`[SHOP] Error spawning ${item.name}:`, error.message);
-                                            // Log the error
-                                            await db.updatePurchaseSpawnAttempt(purchaseId, true, false, error.message, null);
-                                        }
+                                            purchaseId: purchaseId
+                                        });
                                     }
                                     
-                                    console.log(`[SHOP] Added ${qty}x ${item.name} for ${dayzName}`);
+                                    console.log(`[SHOP] Queued ${qty}x ${item.name} for spawning`);
+                                }
+                                
+                                // Batch spawn all entries in a single FTP operation
+                                try {
+                                    console.log(`[SHOP] Batch spawning ${allSpawnEntries.length} items...`);
+                                    await addCupidSpawnEntriesBatch(allSpawnEntries, guildId);
+                                    console.log('[SHOP] Batch spawn successful');
+                                    
+                                    // Mark all purchases as attempted
+                                    for (const record of purchaseRecords) {
+                                        await db.updatePurchaseSpawnAttempt(record.purchaseId, true, null, null, null);
+                                    }
+                                } catch (error) {
+                                    console.error(`[SHOP] Batch spawn error:`, error.message);
+                                    
+                                    // Mark all purchases as failed
+                                    for (const record of purchaseRecords) {
+                                        await db.updatePurchaseSpawnAttempt(record.purchaseId, true, false, error.message, null);
+                                    }
                                 }
                                 
                                 const itemList = Array.from(shoppingCart.entries())
