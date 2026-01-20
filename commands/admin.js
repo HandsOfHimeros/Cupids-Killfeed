@@ -264,6 +264,11 @@ module.exports = {
                                 )
                         )
                 )
+                .addSubcommand(subcommand =>
+                    subcommand
+                        .setName('teleport')
+                        .setDescription('Manage teleport zones and routes')
+                )
         ),
 
     async execute(interaction) {
@@ -308,6 +313,10 @@ module.exports = {
                 break;
             case "raiding":
                 await handleRaidingCommand(interaction);
+                break;
+            case "teleport":
+                const teleportModule = require('./teleport.js');
+                await teleportModule.execute(interaction);
                 break;
             default:
                 break;

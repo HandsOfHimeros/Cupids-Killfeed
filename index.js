@@ -908,6 +908,39 @@ bot.on('interactionCreate', async interaction => {
             await handleRaidScheduleSubmit(interaction);
         } else if (interaction.customId === 'trader_open_modal') {
             await handleTraderOpenSubmit(interaction);
+        } else if (interaction.customId === 'zone_name_modal') {
+            const teleportCommand = require('./commands/teleport.js');
+            if (teleportCommand.handleZoneNameModal) {
+                await teleportCommand.handleZoneNameModal(interaction);
+            }
+        } else if (interaction.customId.startsWith('zone_coords_modal|')) {
+            const teleportCommand = require('./commands/teleport.js');
+            if (teleportCommand.handleZoneCoordsModal) {
+                await teleportCommand.handleZoneCoordsModal(interaction);
+            }
+        } else if (interaction.customId.startsWith('teleport_')) {
+            const teleportCommand = require('./commands/teleport.js');
+            if (teleportCommand.handleModalSubmit) {
+                await teleportCommand.handleModalSubmit(interaction);
+            }
+        }
+        return;
+    }
+    
+    // Handle select menu interactions for teleport
+    if (interaction.isSelectMenu() && interaction.customId.startsWith('teleport_')) {
+        const teleportCommand = require('./commands/teleport.js');
+        if (teleportCommand.handleSelectMenu) {
+            await teleportCommand.handleSelectMenu(interaction);
+        }
+        return;
+    }
+    
+    // Handle button interactions for teleport
+    if (interaction.isButton() && (interaction.customId.startsWith('manual_coords|') || interaction.customId.startsWith('manual_zone_coords|') || interaction.customId === 'cancel_route' || interaction.customId === 'cancel_zone')) {
+        const teleportCommand = require('./commands/teleport.js');
+        if (teleportCommand.handleButton) {
+            await teleportCommand.handleButton(interaction);
         }
         return;
     }
