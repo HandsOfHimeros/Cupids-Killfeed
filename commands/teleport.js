@@ -9,9 +9,7 @@ const axios = require('axios');
 const lastCoordinates = new Map();
 
 module.exports = {
-    data: new SlashCommandBuilder()
-        .setName('teleport')
-        .setDescription('Manage teleport zones and routes between locations'),
+    // No data export - this is only called as a subcommand from admin.js
     
     async execute(interaction) {
         // Check admin permission
