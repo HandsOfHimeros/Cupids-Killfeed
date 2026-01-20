@@ -552,7 +552,9 @@ class MultiGuildKillfeed {
                         await this.checkBaseProximityAlerts(guildConfig, event);
                     }
                 } else {
-                    embed.setDescription(`\`\`\`\n${event.raw}\n\`\`\``);
+                    // Skip unparseable kill events instead of showing raw log
+                    console.log(`[MULTI-KILLFEED] Skipping unparseable kill event: ${event.raw}`);
+                    return;
                 }
             } else if (event.type === 'hit') {
                 embed.setColor('#FF8C00') // Dark orange
@@ -562,7 +564,9 @@ class MultiGuildKillfeed {
                     embed.setDescription(`🩸 **${event.victim}**\n\`\`\`fix\nStruck by: ${event.source}\n\`\`\``);
                     embed.addFields({ name: '🕐 Time', value: `\`${event.time}\``, inline: true });
                 } else {
-                    embed.setDescription(`\`\`\`\n${event.raw}\n\`\`\``);
+                    // Skip unparseable hit events instead of showing raw log
+                    console.log(`[MULTI-KILLFEED] Skipping unparseable hit event: ${event.raw}`);
+                    return;
                 }
             } else if (event.type === 'connected') {
                 embed.setColor('#FFD700') // Gold
@@ -574,7 +578,9 @@ class MultiGuildKillfeed {
                     
                     console.log(`[DISTANCE] Player ${event.player} connected - session will be created on first position update`);
                 } else {
-                    embed.setDescription(`\`\`\`\n${event.raw}\n\`\`\``);
+                    // Skip unparseable connection events instead of showing raw log
+                    console.log(`[MULTI-KILLFEED] Skipping unparseable connection event: ${event.raw}`);
+                    return;
                 }
             } else if (event.type === 'disconnected') {
                 embed.setColor('#9370DB') // Medium purple
@@ -620,7 +626,9 @@ class MultiGuildKillfeed {
                     embed.setDescription(`\`\`\`diff\n- ${event.player}\n\`\`\`\n👋 **The traveler's journey has ended**${distanceInfo}`);
                     embed.addFields({ name: '🕐 Time', value: `\`${event.time}\``, inline: true });
                 } else {
-                    embed.setDescription(`\`\`\`\n${event.raw}\n\`\`\``);
+                    // Skip unparseable disconnection events instead of showing raw log
+                    console.log(`[MULTI-KILLFEED] Skipping unparseable disconnection event: ${event.raw}`);
+                    return;
                 }
             } else if (event.type === 'suicide') {
                 embed.setColor('#2F4F4F') // Dark slate gray
@@ -636,7 +644,9 @@ class MultiGuildKillfeed {
                         embed.addFields({ name: '📍 Location', value: mapUrl || `\`${Math.round(event.position.x)}, ${Math.round(event.position.z)}\``, inline: false });
                     }
                 } else {
-                    embed.setDescription(`\`\`\`\n${event.raw}\n\`\`\``);
+                    // Skip unparseable suicide events instead of showing raw log
+                    console.log(`[MULTI-KILLFEED] Skipping unparseable suicide event: ${event.raw}`);
+                    return;
                 }
             } else if (event.type === 'build') {
                 const actionEmoji = {
@@ -662,7 +672,9 @@ class MultiGuildKillfeed {
                     embed.setDescription(`🏗️ **${event.player}**\n\`\`\`yaml\n${actionText ? actionText.toUpperCase() : event.action.toUpperCase()}: ${event.item}\n\`\`\``);
                     embed.addFields({ name: '🕐 Time', value: `\`${event.time}\``, inline: true });
                 } else {
-                    embed.setDescription(`\`\`\`\n${event.raw}\n\`\`\``);
+                    // Skip unparseable build events instead of showing raw log
+                    console.log(`[MULTI-KILLFEED] Skipping unparseable build event: ${event.raw}`);
+                    return;
                 }
             }
             
