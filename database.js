@@ -552,6 +552,24 @@ module.exports = {
         return result.rows;
     },
 
+    // Get player's current position from tracking
+    getPlayerPosition: async (guildId, playerName) => {
+        const result = await pool.query(
+            `SELECT last_x, last_y, last_z 
+             FROM player_sessions 
+             WHERE guild_id = $1 AND LOWER(player_name) = LOWER($2) AND is_active = true`,
+            [guildId, playerName]
+        );
+        if (result.rows.length > 0) {
+            return {
+                x: result.rows[0].last_x,
+                y: result.rows[0].last_y,
+                z: result.rows[0].last_z
+            };
+        }
+        return null;
+    },
+
     // Export pool for direct queries
     pool: pool
 };
