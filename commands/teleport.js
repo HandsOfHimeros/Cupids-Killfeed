@@ -1,7 +1,8 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { Permissions, MessageActionRow, MessageSelectMenu, MessageButton, Modal, TextInputComponent } = require('discord.js');
 const db = require('../database.js');
-const config = require('../config.json');
+const fs = require('fs');
+const config = fs.existsSync('./config.json') ? require('../config.json') : {};
 const axios = require('axios');
 
 // Store last /imhere coordinates per user
