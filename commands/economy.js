@@ -1663,14 +1663,29 @@ module.exports = {
                                     })
                                     .join('\n');
                                 
+                                // Get player's current position to show spawn location
+                                const playerPos = await db.getPlayerPosition(guildId, dayzName);
+                                let locationInfo = '\n\n**Items will spawn on a table near your current location!**\nIf no table exists within 5m, a new one will be created.';
 
-                                            .addComponents(
-                                                new MessageButton()
-                                                    .setCustomId('back_to_categories')
-                                                    .setLabel('← Back to Shop')
-                                                    .setStyle('PRIMARY')
-                                            )
-                                    ]
+                                if (playerPos) {
+                                    const x = Math.round(playerPos.x * 10) / 10;
+                                    const y = Math.round(playerPos.y * 10) / 10;
+                                    const z = Math.round(playerPos.z * 10) / 10;
+                                    locationInfo = `\n\n📍 **Spawn Location:** Near [${x}, ${y}, ${z}]\nItems will spawn on a table close to this position.\nIf no table exists within 5m, a new one will be created.`;
+                                } else {
+                                    locationInfo += '\n\n⚠️ Your location is not currently tracked. Make sure you\'re in-game!';
+                                }
+
+                                shoppingCart.clear();
+
+                                await i.editReply({
+                                    embeds: [
+                                        new MessageEmbed()
+                                            .setColor('#00ff00')
+                                            .setTitle('✅ Purchase Complete!')
+                                            .setDescription(`You purchased:\n${itemList}\n\nTotal: $${totalCost}\nNew balance: $${bal - totalCost}${locationInfo}`)
+                                    ],
+                                    components: []
                                 });
                                 return;
                             }
