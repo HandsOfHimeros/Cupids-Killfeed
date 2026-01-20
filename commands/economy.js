@@ -2767,10 +2767,14 @@ module.exports = {
                     ], ephemeral: true
                 });
             } else {
-                // Store coordinates for teleport system
-                const teleportCommand = interaction.client.commands.get('admin')?.teleportModule || require('./teleport.js');
-                if (teleportCommand && teleportCommand.storeCoordinates) {
-                    teleportCommand.storeCoordinates(userId, location.x, location.y, location.z);
+                // Store coordinates for teleport system (if available)
+                try {
+                    const teleportCommand = interaction.client.commands.get('admin')?.teleportModule || require('./teleport.js');
+                    if (teleportCommand && teleportCommand.storeCoordinates) {
+                        teleportCommand.storeCoordinates(userId, location.x, location.y, location.z);
+                    }
+                } catch (error) {
+                    // Teleport module not available, that's okay
                 }
 
                 await interaction.reply({
