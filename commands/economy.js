@@ -1688,7 +1688,8 @@ module.exports = {
                                             .setTitle('✅ Purchase Complete!')
                                             .setDescription(`You purchased:\n${itemList}\n\nTotal: $${totalCost}\nNew balance: $${bal - totalCost}${locationInfo}`)
                                     ],
-                                    components: []
+                                    components: [],
+                                    ephemeral: true
                                 });
                                 return;
                             }
