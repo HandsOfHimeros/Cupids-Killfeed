@@ -274,7 +274,7 @@ class MultiGuildKillfeed {
                 // NEW FORMAT: "VictimName" Struck by: <Source>
                 // Check for "Struck by" first (covers both player and environmental hits)
                 if (line.includes('Struck by:')) {
-                    // Extract victim name (before "Struck by:")
+                    // Extract victim name (before "Struck by:") - MUST have victim before "Struck by:"
                     let victimMatch = line.match(/["']?([^"'\s]+)["']?\s*Struck by:/i);
                     if (victimMatch) {
                         victim = victimMatch[1];
@@ -284,8 +284,8 @@ class MultiGuildKillfeed {
                         if (playerHitMatch) {
                             source = `${playerHitMatch[1]} with ${playerHitMatch[2]} (${Math.round(parseFloat(playerHitMatch[3]))}m)`;
                         } else {
-                            // Environmental hit: Struck by: <Source> with <DamageType> OR just Struck by: <Source>
-                            let envMatch = line.match(/Struck by:\s*(.+?)(?:\s+with\s+(.+?))?$/i);
+                            // Environmental hit: Struck by: <Source> (NOT starting with "Player")
+                            let envMatch = line.match(/Struck by:\s*(?!Player\s)(.+?)(?:\s+with\s+(.+?))?$/i);
                             if (envMatch) {
                                 let envSource = envMatch[1].trim();
                                 let damageType = envMatch[2] ? envMatch[2].trim() : null;
@@ -293,6 +293,8 @@ class MultiGuildKillfeed {
                             }
                         }
                     }
+                    // If line starts with "Struck by:" without victim name before it, skip it
+                    // (malformed log line - victim name should always precede "Struck by:")
                 }
                 // Check for vehicle hit with TransportHit
                 else {
@@ -317,13 +319,16 @@ class MultiGuildKillfeed {
                     }
                 }
                 
-                events.push({ 
-                    type: 'hit', 
-                    time: time, 
-                    victim: victim,
-                    source: source,
-                    raw: line 
-                });
+                // Only add hit event if we successfully parsed the victim
+                if (victim) {
+                    events.push({ 
+                        type: 'hit', 
+                        time: time, 
+                        victim: victim,
+                        source: source,
+                        raw: line 
+                    });
+                }
             } else if (line.includes('is connected')) {
                 // Parse player name - try both quote types
                 let player;
@@ -331,12 +336,15 @@ class MultiGuildKillfeed {
                 if (!connectMatch) connectMatch = line.match(/Player '(.+?)'/);
                 if (connectMatch) player = connectMatch[1];
                 
-                events.push({
-                    type: 'connected',
-                    time: time,
-                    player: player,
-                    raw: line
-                });
+                // Only add connection event if we parsed the player name
+                if (player) {
+                    events.push({
+                        type: 'connected',
+                        time: time,
+                        player: player,
+                        raw: line
+                    });
+                }
             } else if (line.includes('has been disconnected')) {
                 // Parse player name - try both quote types
                 let player;
@@ -344,12 +352,15 @@ class MultiGuildKillfeed {
                 if (!disconnectMatch) disconnectMatch = line.match(/Player \"(.+?)\"/);
                 if (disconnectMatch) player = disconnectMatch[1];
                 
-                events.push({
-                    type: 'disconnected',
-                    time: time,
-                    player: player,
-                    raw: line
-                });
+                // Only add disconnection event if we parsed the player name
+                if (player) {
+                    events.push({
+                        type: 'disconnected',
+                        time: time,
+                        player: player,
+                        raw: line
+                    });
+                }
             } else if (line.includes('committed suicide')) {
                 // Parse player name and position
                 let player, position;
@@ -363,13 +374,16 @@ class MultiGuildKillfeed {
                     if (simpleMatch) player = simpleMatch[1];
                 }
                 
-                events.push({
-                    type: 'suicide',
-                    time: time,
-                    player: player,
-                    position: position,
-                    raw: line
-                });
+                // Only add suicide event if we parsed the player name
+                if (player) {
+                    events.push({
+                        type: 'suicide',
+                        time: time,
+                        player: player,
+                        position: position,
+                        raw: line
+                    });
+                }
             } else if (line.includes('placed') || line.includes('raised') || line.includes('dismantled') || line.includes('Built')) {
                 // Parse build event details (optional - for formatted output)
                 let player, action, item;
@@ -398,15 +412,17 @@ class MultiGuildKillfeed {
                     }
                 }
                 
-                // ALWAYS add event if keyword was found, parsing is just for formatting
-                events.push({
-                    type: 'build',
-                    time: time,
-                    player: player,
-                    action: action,
-                    item: item,
-                    raw: line
-                });
+                // Only add build event if we successfully parsed player name
+                if (player) {
+                    events.push({
+                        type: 'build',
+                        time: time,
+                        player: player,
+                        action: action,
+                        item: item,
+                        raw: line
+                    });
+                }
             }
         }
         
