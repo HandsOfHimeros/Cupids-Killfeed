@@ -62,6 +62,8 @@ class MultiGuildKillfeed {
         for (const guildConfig of guilds) {
             try {
                 await this.pollGuild(guildConfig);
+                // Yield to event loop after each guild to prevent blocking interactions
+                await new Promise(resolve => setImmediate(resolve));
             } catch (error) {
                 console.error(`[MULTI-KILLFEED] Error polling guild ${guildConfig.guild_id}:`, error.message);
             }
@@ -547,6 +549,11 @@ class MultiGuildKillfeed {
                         }
                     }
                     
+                    // Process bounty claims for player kills
+                    if (event.isPlayerKill && event.killer && event.victim && event.killer !== event.victim) {
+                        await this.processBountyClaim(guildConfig, event, embed, guild);
+                    }
+                    
                     // Check base proximity alerts
                     if (event.position) {
                         await this.checkBaseProximityAlerts(guildConfig, event);
@@ -927,6 +934,7 @@ class MultiGuildKillfeed {
             const lines = logString.split(/\r?\n/);
             let locationCount = 0;
             let distanceUpdateCount = 0;
+            let batchCount = 0;
             
             for (const line of lines) {
                 const locInfo = this.parsePlayerLocation(line);
@@ -946,6 +954,13 @@ class MultiGuildKillfeed {
                         distanceUpdateCount++;
                     }
                     locationCount++;
+                    batchCount++;
+                    
+                    // Yield to event loop every 10 location updates to prevent blocking interactions
+                    if (batchCount >= 10) {
+                        await new Promise(resolve => setImmediate(resolve));
+                        batchCount = 0;
+                    }
                 }
             }
             
@@ -1352,6 +1367,92 @@ class MultiGuildKillfeed {
         const dz = z2 - z1;
         return Math.sqrt(dx * dx + dz * dz);
     }
+    
+    // Process bounty claims when a player kills another player
+    async processBountyClaim(guildConfig, event, embed, guild) {
+        try {
+            // Check if bounties exist for the victim
+            const bounties = await db.getActiveBountiesForTarget(guildConfig.guild_id, event.victim);
+            if (!bounties || bounties.length === 0) {
+                return; // No bounties on this player
+            }
+            
+            // Check PVE server restrictions
+            if (guildConfig.auto_ban_on_kill) {
+                // PVE server - only award bounty if kill was in PVP zone
+                const inPvpZone = event.position && this.isInPvpZone(guildConfig, event.position);
+                if (!inPvpZone) {
+                    console.log(`[BOUNTY] Kill on PVE server outside PVP zone - no bounty claim`);
+                    return; // Killer will be banned anyway
+                }
+            }
+            
+            // Check safe zone restrictions on PVP servers
+            if (guildConfig.auto_ban_in_safe_zones) {
+                const inSafeZone = event.position && this.isInSafeZone(guildConfig, event.position);
+                if (inSafeZone) {
+                    console.log(`[BOUNTY] Kill in safe zone - no bounty claim`);
+                    return; // Killer will be banned anyway
+                }
+            }
+            
+            // Get killer's Discord user ID
+            const killerUserId = await db.getUserIdByDayZName(guildConfig.guild_id, event.killer);
+            
+            // Claim all bounties on this target
+            const claimResult = await db.claimBounties(
+                guildConfig.guild_id,
+                event.victim,
+                killerUserId,
+                event.killer
+            );
+            
+            if (!claimResult) {
+                console.log(`[BOUNTY] Failed to claim bounties for ${event.killer}`);
+                return;
+            }
+            
+            console.log(`[BOUNTY] ${event.killer} claimed ${claimResult.count} bounty(ies) worth $${claimResult.totalPaid.toLocaleString()}`);
+            
+            // Add bounty claim info to the killfeed embed
+            embed.setColor('#FFD700'); // Gold color for bounty claims
+            embed.addFields({
+                name: '💰 BOUNTY CLAIMED!',
+                value: `**${event.killer}** claimed **$${claimResult.totalPaid.toLocaleString()}** in bounties!` +
+                       (claimResult.count > 1 ? ` (${claimResult.count} bounties)` : ''),
+                inline: false
+            });
+            
+            // Send DM to killer if they have Discord linked
+            if (killerUserId) {
+                try {
+                    const killerUser = await guild.members.fetch(killerUserId);
+                    if (killerUser) {
+                        const dmEmbed = new EmbedBuilder()
+                            .setColor('#FFD700')
+                            .setTitle('🎯 BOUNTY CLAIMED!')
+                            .setDescription(`You claimed a bounty by killing **${event.victim}**!`)
+                            .addFields(
+                                { name: '💰 Reward', value: `$${claimResult.totalPaid.toLocaleString()}`, inline: true },
+                                { name: '🎯 Target', value: event.victim, inline: true },
+                                { name: '📊 Bounties Claimed', value: `${claimResult.count}`, inline: true }
+                            )
+                            .setFooter({ text: 'The money has been added to your balance!' })
+                            .setTimestamp();
+                        
+                        await killerUser.send({ embeds: [dmEmbed] });
+                        console.log(`[BOUNTY] Sent claim notification to ${killerUserId}`);
+                    }
+                } catch (dmError) {
+                    console.log(`[BOUNTY] Could not send DM to ${killerUserId}:`, dmError.message);
+                }
+            }
+            
+        } catch (error) {
+            console.error('[BOUNTY] Error processing bounty claim:', error);
+        }
+    }
 }
 
 module.exports = MultiGuildKillfeed;
+

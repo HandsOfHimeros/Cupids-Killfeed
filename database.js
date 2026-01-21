@@ -568,8 +568,177 @@ module.exports = {
             };
         }
         return null;
-    },
+    }
+};
 
+// Bounty operations
+async function createBounty(guildId, placerUserId, targetUserId, targetDayzName, amount, anonymous = false, expiresInDays = 7) {
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + expiresInDays);
+    
+    const result = await pool.query(`
+        INSERT INTO bounties (guild_id, placer_user_id, target_user_id, target_dayz_name, amount, anonymous, expires_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        RETURNING *
+    `, [guildId, placerUserId, targetUserId, targetDayzName, amount, anonymous, expiresAt]);
+    
+    return result.rows[0];
+}
+
+async function getActiveBountiesForTarget(guildId, targetDayzName) {
+    const result = await pool.query(`
+        SELECT * FROM bounties 
+        WHERE guild_id = $1 
+        AND LOWER(target_dayz_name) = LOWER($2) 
+        AND status = 'active'
+        ORDER BY created_at ASC
+    `, [guildId, targetDayzName]);
+    
+    return result.rows;
+}
+
+async function getAllActiveBounties(guildId) {
+    const result = await pool.query(`
+        SELECT 
+            target_dayz_name,
+            SUM(amount) as total_bounty,
+            COUNT(*) as bounty_count,
+            MIN(created_at) as oldest_bounty
+        FROM bounties 
+        WHERE guild_id = $1 AND status = 'active'
+        GROUP BY target_dayz_name
+        ORDER BY total_bounty DESC
+        LIMIT 20
+    `, [guildId]);
+    
+    return result.rows;
+}
+
+async function claimBounties(guildId, targetDayzName, killerUserId, killerDayzName) {
+    // Get all active bounties for this target
+    const bounties = await getActiveBountiesForTarget(guildId, targetDayzName);
+    if (bounties.length === 0) return null;
+    
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+        
+        let totalPaid = 0;
+        const claims = [];
+        
+        for (const bounty of bounties) {
+            // Mark bounty as claimed
+            await client.query(`
+                UPDATE bounties 
+                SET status = 'claimed' 
+                WHERE id = $1
+            `, [bounty.id]);
+            
+            // Record the claim
+            await client.query(`
+                INSERT INTO bounty_claims (bounty_id, killer_user_id, killer_dayz_name, amount_paid)
+                VALUES ($1, $2, $3, $4)
+            `, [bounty.id, killerUserId, killerDayzName, bounty.amount]);
+            
+            // Add bounty amount to killer's balance
+            if (killerUserId) {
+                await client.query(`
+                    INSERT INTO balances (guild_id, user_id, balance) 
+                    VALUES ($1, $2, $3) 
+                    ON CONFLICT (user_id, guild_id) DO UPDATE SET balance = balances.balance + $3
+                `, [guildId, killerUserId, bounty.amount]);
+            }
+            
+            totalPaid += bounty.amount;
+            claims.push({
+                bountyId: bounty.id,
+                amount: bounty.amount,
+                placerId: bounty.placer_user_id,
+                anonymous: bounty.anonymous
+            });
+        }
+        
+        await client.query('COMMIT');
+        
+        return {
+            totalPaid,
+            count: claims.length,
+            claims
+        };
+        
+    } catch (error) {
+        await client.query('ROLLBACK');
+        throw error;
+    } finally {
+        client.release();
+    }
+}
+
+async function cancelBounty(bountyId, userId) {
+    const result = await pool.query(`
+        UPDATE bounties 
+        SET status = 'cancelled' 
+        WHERE id = $1 AND placer_user_id = $2 AND status = 'active'
+        RETURNING *
+    `, [bountyId, userId]);
+    
+    return result.rows[0] || null;
+}
+
+async function getUserActiveBounties(guildId, userId) {
+    const result = await pool.query(`
+        SELECT * FROM bounties 
+        WHERE guild_id = $1 AND placer_user_id = $2 AND status = 'active'
+        ORDER BY created_at DESC
+    `, [guildId, userId]);
+    
+    return result.rows;
+}
+
+async function expireOldBounties() {
+    const result = await pool.query(`
+        UPDATE bounties 
+        SET status = 'expired' 
+        WHERE status = 'active' AND expires_at < NOW()
+        RETURNING id
+    `);
+    
+    return result.rowCount;
+}
+
+module.exports = {
+    query: (text, params) => pool.query(text, params),
+    getGuildConfig,
+    setGuildConfig,
+    setGuildChannels,
+    getAllGuildConfigs,
+    updateKillfeedState,
+    getBalance,
+    setBalance,
+    addBalance,
+    getLeaderboard,
+    getBank,
+    setBank,
+    addBank,
+    getCooldowns,
+    addCooldown,
+    cleanOldCooldowns,
+    getDayZName,
+    getUserIdByDayZName,
+    setDayZName,
+    getPlayerLocation,
+    setPlayerLocation,
+    startPlayerSession,
+    updatePlayerDistance,
+    endPlayerSession,
+    // Bounty functions
+    createBounty,
+    getActiveBountiesForTarget,
+    getAllActiveBounties,
+    claimBounties,
+    cancelBounty,
+    getUserActiveBounties,
+    expireOldBounties,
     // Export pool for direct queries
     pool: pool
 };
