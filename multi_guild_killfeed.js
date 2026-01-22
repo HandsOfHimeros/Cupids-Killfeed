@@ -1272,6 +1272,8 @@ class MultiGuildKillfeed {
                 [guildConfig.guild_id, guildConfig.map_name]
             );
             
+            console.log(`[BASE-ALERT] Checking ${playerInfo.name} at (${Math.round(playerInfo.position.x)}, ${Math.round(playerInfo.position.z)}) - Found ${baseAlerts.rows.length} base alerts for guild ${guildConfig.guild_id} / ${guildConfig.map_name}`);
+            
             if (baseAlerts.rows.length === 0) return;
             
             for (const baseAlert of baseAlerts.rows) {
@@ -1284,6 +1286,8 @@ class MultiGuildKillfeed {
                 );
                 
                 if (distance <= baseAlert.alert_radius) {
+                    console.log(`[BASE-ALERT] ${playerInfo.name} within ${Math.round(distance)}m of base ${baseAlert.id} (radius: ${baseAlert.alert_radius}m)`);
+                    
                     // Check if player is whitelisted
                     const whitelistCheck = await db.query(
                         'SELECT id FROM base_alert_whitelist WHERE base_alert_id = $1 AND whitelisted_player_name = $2',
@@ -1291,6 +1295,7 @@ class MultiGuildKillfeed {
                     );
                     
                     if (whitelistCheck.rows.length > 0) {
+                        console.log(`[BASE-ALERT] ${playerInfo.name} is whitelisted for base ${baseAlert.id}, skipping`);
                         continue; // Skip whitelisted players
                     }
                     
@@ -1301,8 +1306,11 @@ class MultiGuildKillfeed {
                     );
                     
                     if (recentAlert.rows.length > 0) {
+                        console.log(`[BASE-ALERT] Already alerted for ${playerInfo.name} at base ${baseAlert.id} within last 5 minutes, skipping`);
                         continue; // Already alerted recently
                     }
+                    
+                    console.log(`[BASE-ALERT] Sending alert to user ${baseAlert.discord_user_id} for ${playerInfo.name} at ${Math.round(distance)}m`);
                     
                     // Send DM to base owner
                     await this.sendPlayerProximityDM(baseAlert.discord_user_id, guildConfig, playerInfo, distance);
