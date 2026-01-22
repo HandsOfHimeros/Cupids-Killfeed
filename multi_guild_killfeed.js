@@ -1027,9 +1027,9 @@ class MultiGuildKillfeed {
                 name: match[2],
                 playerId: match[3],
                 position: {
-                    x: parseFloat(match[4]),
-                    y: parseFloat(match[5]),
-                    z: parseFloat(match[6])
+                    x: parseFloat(match[4]),  // X coordinate
+                    y: parseFloat(match[6]),  // Y coordinate (altitude) - 3rd value in DayZ logs
+                    z: parseFloat(match[5])   // Z coordinate (horizontal) - 2nd value in DayZ logs
                 }
             };
         }
