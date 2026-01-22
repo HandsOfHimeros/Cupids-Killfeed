@@ -590,17 +590,7 @@ class MultiGuildKillfeed {
                         await this.processBountyClaim(guildConfig, event, embed, guild);
                     }
                     
-                    // Check base proximity alerts
-                    if (event.position) {
-                        try {
-                            console.log(`[MULTI-KILLFEED] Checking base proximity for kill event in guild ${guildConfig.guild_id}`);
-                            await this.checkBaseProximityAlerts(guildConfig, event);
-                            console.log(`[MULTI-KILLFEED] Base proximity check complete`);
-                        } catch (baseAlertError) {
-                            console.error(`[MULTI-KILLFEED] Error in base proximity alerts (non-fatal): ${baseAlertError.message}`);
-                            // Don't let base alert errors prevent killfeed posting
-                        }
-                    }
+                    // Base alerts disabled for kill events - only trigger from live position tracking
                 } else {
                     // Skip unparseable kill events instead of showing raw log
                     console.log(`[MULTI-KILLFEED] Skipping unparseable kill event: ${event.raw}`);
@@ -1254,15 +1244,15 @@ class MultiGuildKillfeed {
                             continue;
                         }
                         
-                        // Check if we recently alerted for this player at this base (within last 5 minutes to avoid spam)
+                        // Check if we recently alerted for ANY activity at this base (within last 5 minutes to avoid spam)
                         const recentAlert = await db.query(
-                            'SELECT id FROM base_alert_history WHERE base_alert_id = $1 AND detected_player_name = $2 AND detected_at > NOW() - INTERVAL \'5 minutes\' ORDER BY detected_at DESC LIMIT 1',
-                            [baseAlert.id, player.name]
+                            'SELECT id FROM base_alert_history WHERE base_alert_id = $1 AND detected_at > NOW() - INTERVAL \'5 minutes\' ORDER BY detected_at DESC LIMIT 1',
+                            [baseAlert.id]
                         );
                         
                         if (recentAlert.rows.length > 0) {
-                            console.log(`[BASE-ALERT] Already alerted for ${player.name} at base ${baseAlert.id} within last 5 minutes, skipping`);
-                            continue; // Already alerted recently
+                            console.log(`[BASE-ALERT] Already alerted for base ${baseAlert.id} within last 5 minutes (${player.name} detected), skipping`);
+                            continue; // Already alerted recently for this location
                         }
                         
                         // Send DM to base owner
@@ -1326,15 +1316,15 @@ class MultiGuildKillfeed {
                         continue; // Skip whitelisted players
                     }
                     
-                    // Check if we recently alerted for this player at this base (within last 5 minutes to avoid spam)
+                    // Check if we recently alerted for ANY activity at this base (within last 5 minutes to avoid spam)
                     const recentAlert = await db.query(
-                        'SELECT id FROM base_alert_history WHERE base_alert_id = $1 AND detected_player_name = $2 AND detected_at > NOW() - INTERVAL \'5 minutes\' ORDER BY detected_at DESC LIMIT 1',
-                        [baseAlert.id, playerInfo.name]
+                        'SELECT id FROM base_alert_history WHERE base_alert_id = $1 AND detected_at > NOW() - INTERVAL \'5 minutes\' ORDER BY detected_at DESC LIMIT 1',
+                        [baseAlert.id]
                     );
                     
                     if (recentAlert.rows.length > 0) {
-                        console.log(`[BASE-ALERT] Already alerted for ${playerInfo.name} at base ${baseAlert.id} within last 5 minutes, skipping`);
-                        continue; // Already alerted recently
+                        console.log(`[BASE-ALERT] Already alerted for base ${baseAlert.id} within last 5 minutes (${playerInfo.name} detected), skipping`);
+                        continue; // Already alerted recently for this location
                     }
                     
                     console.log(`[BASE-ALERT] Sending alert to user ${baseAlert.discord_user_id} for ${playerInfo.name} at ${Math.round(distance)}m`);
