@@ -1254,6 +1254,17 @@ class MultiGuildKillfeed {
                             continue;
                         }
                         
+                        // Check if we recently alerted for this player at this base (within last 5 minutes to avoid spam)
+                        const recentAlert = await db.query(
+                            'SELECT id FROM base_alert_history WHERE base_alert_id = $1 AND detected_player_name = $2 AND detected_at > NOW() - INTERVAL \'5 minutes\' ORDER BY detected_at DESC LIMIT 1',
+                            [baseAlert.id, player.name]
+                        );
+                        
+                        if (recentAlert.rows.length > 0) {
+                            console.log(`[BASE-ALERT] Already alerted for ${player.name} at base ${baseAlert.id} within last 5 minutes, skipping`);
+                            continue; // Already alerted recently
+                        }
+                        
                         // Send DM to base owner
                         await this.sendBaseProximityDM(baseAlert.discord_user_id, guildConfig, player, distance, event);
                         
