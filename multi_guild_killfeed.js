@@ -1,7 +1,7 @@
 // Multi-Guild Killfeed System
 const axios = require('axios');
 const db = require('./database.js');
-const { MessageEmbed } = require('discord.js');
+const { EmbedBuilder } = require('discord.js');
 
 class MultiGuildKillfeed {
     constructor(bot) {
@@ -1336,7 +1336,7 @@ class MultiGuildKillfeed {
             
             const mapUrl = this.getMapUrl(guildConfig.map_name, playerInfo.position);
             
-            const embed = new MessageEmbed()
+            const embed = new EmbedBuilder()
                 .setColor('#FFA500')
                 .setTitle('🚨 BASE PROXIMITY ALERT')
                 .setDescription(
@@ -1383,7 +1383,7 @@ class MultiGuildKillfeed {
             };
             const mapUrl = this.getMapUrl(guildConfig.map_name, player.position);
             
-            const embed = new MessageEmbed()
+            const embed = new EmbedBuilder()
                 .setColor('#FF0000')
                 .setTitle('🚨 BASE PROXIMITY ALERT')
                 .setDescription(
