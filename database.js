@@ -568,7 +568,16 @@ module.exports = {
             };
         }
         return null;
-    }
+    },
+    
+    // Bounty functions
+    createBounty,
+    getActiveBountiesForTarget,
+    getAllActiveBounties,
+    claimBounties,
+    cancelBounty,
+    getUserActiveBounties,
+    expireOldBounties
 };
 
 // Bounty operations
@@ -705,41 +714,4 @@ async function expireOldBounties() {
     
     return result.rowCount;
 }
-
-module.exports = {
-    query: (text, params) => pool.query(text, params),
-    getGuildConfig,
-    setGuildConfig,
-    setGuildChannels,
-    getAllGuildConfigs,
-    updateKillfeedState,
-    getBalance,
-    setBalance,
-    addBalance,
-    getLeaderboard,
-    getBank,
-    setBank,
-    addBank,
-    getCooldowns,
-    addCooldown,
-    cleanOldCooldowns,
-    getDayZName,
-    getUserIdByDayZName,
-    setDayZName,
-    getPlayerLocation,
-    setPlayerLocation,
-    startPlayerSession,
-    updatePlayerDistance,
-    endPlayerSession,
-    // Bounty functions
-    createBounty,
-    getActiveBountiesForTarget,
-    getAllActiveBounties,
-    claimBounties,
-    cancelBounty,
-    getUserActiveBounties,
-    expireOldBounties,
-    // Export pool for direct queries
-    pool: pool
-};
 
