@@ -797,10 +797,20 @@ class MultiGuildKillfeed {
 
     // Helper function to check if a position is inside a PVP safe zone
     isInPvpZone(guildConfig, position) {
-        const zones = guildConfig.pvp_zones || [];
+        // Defensive: Parse zones if they're stored as JSON string (shouldn't happen with JSONB, but just in case)
+        let zones = guildConfig.pvp_zones || [];
+        if (typeof zones === 'string') {
+            try {
+                zones = JSON.parse(zones);
+            } catch (e) {
+                console.error(`[PVP-ZONE] Failed to parse pvp_zones:`, e.message);
+                zones = [];
+            }
+        }
+        
         console.log(`[PVP-ZONE] Checking position (${position.x}, ${position.z}) against ${zones.length} zones`);
         
-        if (zones.length === 0) {
+        if (!Array.isArray(zones) || zones.length === 0) {
             console.log(`[PVP-ZONE] No PVP zones configured`);
             return false;
         }
@@ -830,13 +840,30 @@ class MultiGuildKillfeed {
     }
 
     isInSafeZone(guildConfig, position) {
-        const zones = guildConfig.safe_zones || [];
-        if (zones.length === 0) return false;
+        // Defensive: Parse zones if they're stored as JSON string (shouldn't happen with JSONB, but just in case)
+        let zones = guildConfig.safe_zones || [];
+        if (typeof zones === 'string') {
+            try {
+                zones = JSON.parse(zones);
+            } catch (e) {
+                console.error(`[SAFE-ZONE] Failed to parse safe_zones:`, e.message);
+                zones = [];
+            }
+        }
+        
+        console.log(`[SAFE-ZONE] Checking position (${position.x}, ${position.z}) against ${zones.length} safe zones`);
+        
+        if (!Array.isArray(zones) || zones.length === 0) {
+            console.log(`[SAFE-ZONE] No safe zones configured`);
+            return false;
+        }
         
         const x = position.x;
         const z = position.z;
         
         for (const zone of zones) {
+            console.log(`[SAFE-ZONE] Checking zone "${zone.name}": X[${zone.x1} to ${zone.x2}], Z[${zone.z1} to ${zone.z2}]`);
+            
             // Check if position is within rectangular zone bounds
             const minX = Math.min(zone.x1, zone.x2);
             const maxX = Math.max(zone.x1, zone.x2);
@@ -844,11 +871,14 @@ class MultiGuildKillfeed {
             const maxZ = Math.max(zone.z1, zone.z2);
             
             if (x >= minX && x <= maxX && z >= minZ && z <= maxZ) {
-                console.log(`[SAFE-ZONE] Position (${x}, ${z}) is in safe zone: ${zone.name}`);
+                console.log(`[SAFE-ZONE] ✓ Position (${x}, ${z}) IS IN safe zone: ${zone.name}`);
                 return zone.name; // Return zone name for display
+            } else {
+                console.log(`[SAFE-ZONE] ✗ Position (${x}, ${z}) is NOT in zone "${zone.name}"`);
             }
         }
         
+        console.log(`[SAFE-ZONE] Position (${x}, ${z}) is NOT in any safe zone`);
         return false;
     }
 
