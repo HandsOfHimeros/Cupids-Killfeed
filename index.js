@@ -911,7 +911,32 @@ async function handleTraderOpenSubmit(interaction) {
 }
 
 bot.on('interactionCreate', async interaction => {
-    console.log('[INTERACTION] Received:', interaction.type, interaction.commandName || interaction.customId);
+    const startTime = Date.now();
+    console.log('[INTERACTION] Received:', interaction.type, interaction.commandName || interaction.customId, 'at', startTime);
+    
+    // PRIORITY: Handle commands FIRST to minimize processing delay
+    if (interaction.isCommand()) {
+        const command = bot.commands.get(interaction.commandName);
+        if (!command) return;
+
+        try {
+            console.log(`[INTERACTION] Executing command: ${interaction.commandName}`);
+            await command.execute(interaction);
+        } catch (error) {
+            console.error(error);
+            const content = 'There was an error while executing this command!';
+            try {
+                if (interaction.deferred || interaction.replied) {
+                    await interaction.editReply({ content });
+                } else {
+                    await interaction.reply({ content, ephemeral: true });
+                }
+            } catch (replyError) {
+                console.error('[INTERACTION] Could not send error message:', replyError.message);
+            }
+        }
+        return; // Exit early for commands
+    }
     
     // Handle modal submissions
     if (interaction.isModalSubmit()) {
@@ -1004,21 +1029,6 @@ bot.on('interactionCreate', async interaction => {
             console.error('[CAMPAIGN] Handler not found!');
         }
         return;
-    }
-    
-    if (!interaction.isCommand()) return;
-
-    const command = bot.commands.get(interaction.commandName);
-
-    if (!command) return;
-
-    try {
-        // If the command file exports a single execute, call it
-        // If it exports a multi-command handler (like economy.js), call its execute with the interaction
-        await command.execute(interaction);
-    } catch (error) {
-        console.error(error);
-        await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
     }
 });
 
