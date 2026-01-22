@@ -5,6 +5,14 @@ const fs = require('fs');
 const path = require('path');
 const { Client } = require('basic-ftp');
 
+function getPlatformPath(platform) {
+    if (!platform) return 'dayzps';
+    const plat = platform.toUpperCase();
+    if (plat === 'XBOX' || plat === 'XB') return 'dayzxb';
+    if (plat === 'PS4' || plat === 'PS5' || plat === 'PLAYSTATION') return 'dayzps';
+    return 'dayzstandalone';
+}
+
 async function fixCfggameplay() {
     const guildId = '1461070029175918662'; // Your test guild
     
@@ -14,8 +22,9 @@ async function fixCfggameplay() {
         process.exit(1);
     }
     
-    const GAMEPLAY_FILE_PATH = `/games/${guildConfig.nitrado_instance}/ftproot/dayzps_missions/dayzOffline.${guildConfig.map_name}/cfggameplay.json`;
-    const GAMEPLAY_FTP_PATH = `/dayzps_missions/dayzOffline.${guildConfig.map_name}/cfggameplay.json`;
+    const platformPath = getPlatformPath(guildConfig.platform);
+    const GAMEPLAY_FILE_PATH = `/games/${guildConfig.nitrado_instance}/ftproot/${platformPath}_missions/dayzOffline.${guildConfig.map_name}/cfggameplay.json`;
+    const GAMEPLAY_FTP_PATH = `/${platformPath}_missions/dayzOffline.${guildConfig.map_name}/cfggameplay.json`;
     const BASE_URL = 'https://api.nitrado.net/services';
     
     console.log('[FIX] Downloading cfggameplay.json...');
