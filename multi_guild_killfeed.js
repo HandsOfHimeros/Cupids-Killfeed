@@ -217,17 +217,28 @@ class MultiGuildKillfeed {
             
             if (line.includes('killed by')) {
                 // Try to parse details for formatted output
-                let victim, killer, weapon, position;
+                let victim, killer, weapon, position, killerPosition;
                 let isPlayerKill = false; // Flag to track if this is a player-vs-player kill
                 
-                let killMatch = line.match(/Player \"(.+?)\"(?:\s*\(DEAD\))?\s*\(id=[^)]*\s+pos=<([^,]+),\s*([^,]+),\s*([^>]+)>\)\s+killed by Player \"(.+?)\"(?:\s*\(DEAD\))?\s*\(id=[^)]*\) with (.+)$/);
+                // Try to match with BOTH victim and killer positions
+                let killMatch = line.match(/Player \"(.+?)\"(?:\s*\(DEAD\))?\s*\(id=[^)]*\s+pos=<([^,]+),\s*([^,]+),\s*([^>]+)>\)\s+killed by Player \"(.+?)\"(?:\s*\(DEAD\))?\s*\(id=[^)]*\s+pos=<([^,]+),\s*([^,]+),\s*([^>]+)>\)\s+with (.+?)(?:\s+from\s+[\d.]+\s+meters)?$/);
                 if (killMatch) {
                     victim = killMatch[1];
                     position = { x: parseFloat(killMatch[2]), y: parseFloat(killMatch[3]), z: parseFloat(killMatch[4]) };
                     killer = killMatch[5];
-                    weapon = killMatch[6];
-                    isPlayerKill = true; // This is a player-vs-player kill
+                    killerPosition = { x: parseFloat(killMatch[6]), y: parseFloat(killMatch[7]), z: parseFloat(killMatch[8]) };
+                    weapon = killMatch[9];
+                    isPlayerKill = true;
                 } else {
+                    // Try without killer position (older log format)
+                    killMatch = line.match(/Player \"(.+?)\"(?:\s*\(DEAD\))?\s*\(id=[^)]*\s+pos=<([^,]+),\s*([^,]+),\s*([^>]+)>\)\s+killed by Player \"(.+?)\"(?:\s*\(DEAD\))?\s*\(id=[^)]*\) with (.+)$/);
+                    if (killMatch) {
+                        victim = killMatch[1];
+                        position = { x: parseFloat(killMatch[2]), y: parseFloat(killMatch[3]), z: parseFloat(killMatch[4]) };
+                        killer = killMatch[5];
+                        weapon = killMatch[6];
+                        isPlayerKill = true;
+                    } else {
                     // Try without position - also support (DEAD) marker
                     killMatch = line.match(/Player \"(.+?)\"(?:\s*\(DEAD\))?\s*\(id=[^)]*\) killed by Player \"(.+?)\"(?:\s*\(DEAD\))?\s*\(id=[^)]*\) with (.+)$/);
                     if (killMatch) {
@@ -264,6 +275,7 @@ class MultiGuildKillfeed {
                     killer: killer,
                     weapon: weapon,
                     position: position,
+                    killerPosition: killerPosition, // Killer's position for PVP zone check
                     isPlayerKill: isPlayerKill, // Add flag to event
                     raw: line 
                 });
@@ -519,22 +531,29 @@ class MultiGuildKillfeed {
                     if (guildConfig.auto_ban_on_kill && event.isPlayerKill && event.killer && event.victim) {
                         // Skip if suicide (killer = victim)
                         if (event.killer === event.victim) {
-                            console.log(`[AUTO-BAN] ${event.killer} committed suicide, no ban`);
-                        } else {
-                            // Check if kill is in a PVP safe zone
-                            const inPvpZone = event.position && this.isInPvpZone(guildConfig, event.position);
+                            con{
+                            // Check KILLER's position to see if they were in a PVP zone
+                            const checkPosition = event.killerPosition || event.position; // Use killer position if available, fallback to victim
                             
-                            if (inPvpZone) {
-                                console.log(`[AUTO-BAN] Kill by ${event.killer} is in PVP zone, no ban`);
+                            if (!checkPosition) {
+                                console.log(`[AUTO-BAN] No position data for kill by ${event.killer}, skipping ban check`);
                             } else {
-                                console.log(`[AUTO-BAN] PVE mode enabled - attempting to ban player ${event.killer}`);
-                                try {
-                                    await this.banPlayerOnNitrado(guildConfig, event.killer);
-                                    embed.setColor('#FF0000'); // Bright red for PVE violation
-                                    embed.addFields({ name: '⚠️ PVE VIOLATION', value: `**${event.killer}** has been automatically banned for PVP on a PVE server!`, inline: false });
-                                    console.log(`[AUTO-BAN] Successfully banned ${event.killer}`);
-                                } catch (error) {
-                                    console.error(`[AUTO-BAN] Failed to ban ${event.killer}:`, error.message);
+                                const inPvpZone = this.isInPvpZone(guildConfig, checkPosition);
+                                const positionType = event.killerPosition ? "killer" : "victim";
+                                
+                                if (inPvpZone) {
+                                    console.log(`[AUTO-BAN] Kill at (${checkPosition.x}, ${checkPosition.z}) [${positionType} position] is IN PVP zone, no ban for ${event.killer}`);
+                                } else {
+                                    console.log(`[AUTO-BAN] Kill at (${checkPosition.x}, ${checkPosition.z}) [${positionType} position] is OUTSIDE PVP zones - banning ${event.killer}`);
+                                    try {
+                                        await this.banPlayerOnNitrado(guildConfig, event.killer);
+                                        embed.setColor('#FF0000'); // Bright red for PVE violation
+                                        embed.addFields({ name: '⚠️ PVE VIOLATION', value: `**${event.killer}** has been automatically banned for PVP outside designated zones!`, inline: false });
+                                        console.log(`[AUTO-BAN] Successfully banned ${event.killer}`);
+                                    } catch (error) {
+                                        console.error(`[AUTO-BAN] Failed to ban ${event.killer}:`, error.message);
+                                        embed.addFields({ name: '❌ Auto-Ban Failed', value: `Could not ban ${event.killer}: ${error.message}`, inline: false });
+                                    }
                                     embed.addFields({ name: '❌ Auto-Ban Failed', value: `Could not ban ${event.killer}: ${error.message}`, inline: false });
                                 }
                             }
@@ -781,12 +800,19 @@ class MultiGuildKillfeed {
     // Helper function to check if a position is inside a PVP safe zone
     isInPvpZone(guildConfig, position) {
         const zones = guildConfig.pvp_zones || [];
-        if (zones.length === 0) return false;
+        console.log(`[PVP-ZONE] Checking position (${position.x}, ${position.z}) against ${zones.length} zones`);
+        
+        if (zones.length === 0) {
+            console.log(`[PVP-ZONE] No PVP zones configured`);
+            return false;
+        }
         
         const x = position.x;
         const z = position.z;
         
         for (const zone of zones) {
+            console.log(`[PVP-ZONE] Checking zone "${zone.name}": X[${zone.x1} to ${zone.x2}], Z[${zone.z1} to ${zone.z2}]`);
+            
             // Check if position is within rectangular zone bounds
             const minX = Math.min(zone.x1, zone.x2);
             const maxX = Math.max(zone.x1, zone.x2);
@@ -794,11 +820,14 @@ class MultiGuildKillfeed {
             const maxZ = Math.max(zone.z1, zone.z2);
             
             if (x >= minX && x <= maxX && z >= minZ && z <= maxZ) {
-                console.log(`[PVP-ZONE] Position (${x}, ${z}) is in PVP zone: ${zone.name}`);
+                console.log(`[PVP-ZONE] ✓ Position (${x}, ${z}) IS IN PVP zone: ${zone.name}`);
                 return true;
+            } else {
+                console.log(`[PVP-ZONE] ✗ Position (${x}, ${z}) is NOT in zone "${zone.name}"`);
             }
         }
         
+        console.log(`[PVP-ZONE] Position (${x}, ${z}) is NOT in any PVP zone`);
         return false;
     }
 
