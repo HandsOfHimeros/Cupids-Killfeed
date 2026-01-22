@@ -1268,7 +1268,7 @@ class MultiGuildKillfeed {
         try {
             // Get all active base alerts for this guild and server
             const baseAlerts = await db.query(
-                'SELECT ba.id, ba.discord_user_id, ba.base_x, ba.base_y, ba.alert_radius FROM base_alerts ba WHERE ba.guild_id = $1 AND ba.server_name = $2 AND ba.is_active = true',
+                'SELECT ba.id, ba.discord_user_id, ba.player_name, ba.base_x, ba.base_y, ba.alert_radius FROM base_alerts ba WHERE ba.guild_id = $1 AND ba.server_name = $2 AND ba.is_active = true',
                 [guildConfig.guild_id, guildConfig.map_name]
             );
             
@@ -1289,6 +1289,12 @@ class MultiGuildKillfeed {
                 
                 if (distance <= baseAlert.alert_radius) {
                     console.log(`[BASE-ALERT] ${playerInfo.name} within ${Math.round(distance)}m of base ${baseAlert.id} (radius: ${baseAlert.alert_radius}m)`);
+                    
+                    // Check if this is the base owner (don't alert owner about their own base)
+                    if (baseAlert.player_name && playerInfo.name === baseAlert.player_name) {
+                        console.log(`[BASE-ALERT] ${playerInfo.name} is the base owner for base ${baseAlert.id}, skipping`);
+                        continue;
+                    }
                     
                     // Check if player is whitelisted
                     const whitelistCheck = await db.query(
