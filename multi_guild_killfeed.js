@@ -239,32 +239,31 @@ class MultiGuildKillfeed {
                         weapon = killMatch[6];
                         isPlayerKill = true;
                     } else {
-                    // Try without position - also support (DEAD) marker
-                    killMatch = line.match(/Player \"(.+?)\"(?:\s*\(DEAD\))?\s*\(id=[^)]*\) killed by Player \"(.+?)\"(?:\s*\(DEAD\))?\s*\(id=[^)]*\) with (.+)$/);
-                    if (killMatch) {
-                        victim = killMatch[1];
-                        killer = killMatch[2];
-                        weapon = killMatch[3];
-                        isPlayerKill = true; // This is a player-vs-player kill
-                    } else {
-                        // Try zombie/AI/environmental format with position (e.g., grenades, zombies, fall damage)
-                        killMatch = line.match(/(?:Player )?\"(.+?)\"(?:\s*\(DEAD\))?\s*\(id=[^)]*\s+pos=<([^,]+),\s*([^,]+),\s*([^>]+)>\)\s+killed by (.+)$/);
+                        // Try without position - also support (DEAD) marker
+                        killMatch = line.match(/Player \"(.+?)\"(?:\s*\(DEAD\))?\s*\(id=[^)]*\) killed by Player \"(.+?)\"(?:\s*\(DEAD\))?\s*\(id=[^)]*\) with (.+)$/);
                         if (killMatch) {
                             victim = killMatch[1];
-                            position = { x: parseFloat(killMatch[2]), y: parseFloat(killMatch[3]), z: parseFloat(killMatch[4]) };
-                            killer = killMatch[5];
-                            weapon = 'Unknown';
-                            isPlayerKill = false; // Not a player kill (grenade, zombie, environment, etc.)
+                            killer = killMatch[2];
+                            weapon = killMatch[3];
+                            isPlayerKill = true; // This is a player-vs-player kill
                         } else {
-                            // Try zombie/AI/environmental format without position
-                            killMatch = line.match(/(?:Player )?\"(.+?)\"(?:\s*\(DEAD\))?\s*\(id=[^)]*\)\s+killed by (.+)$/);
+                            // Try zombie/AI/environmental format with position (e.g., grenades, zombies, fall damage)
+                            killMatch = line.match(/(?:Player )?\"(.+?)\"(?:\s*\(DEAD\))?\s*\(id=[^)]*\s+pos=<([^,]+),\s*([^,]+),\s*([^>]+)>\)\s+killed by (.+)$/);
                             if (killMatch) {
                                 victim = killMatch[1];
-                                killer = killMatch[2];
+                                position = { x: parseFloat(killMatch[2]), y: parseFloat(killMatch[3]), z: parseFloat(killMatch[4]) };
+                                killer = killMatch[5];
                                 weapon = 'Unknown';
                                 isPlayerKill = false; // Not a player kill (grenade, zombie, environment, etc.)
-                            }
-                        }
+                            } else {
+                                // Try zombie/AI/environmental format without position
+                                killMatch = line.match(/(?:Player )?\"(.+?)\"(?:\s*\(DEAD\))?\s*\(id=[^)]*\)\s+killed by (.+)$/);
+                                if (killMatch) {
+                                    victim = killMatch[1];
+                                    killer = killMatch[2];
+                                    weapon = 'Unknown';
+                                    isPlayerKill = false; // Not a player kill (grenade, zombie, environment, etc.)
+                                }
                     }
                 }
                 
