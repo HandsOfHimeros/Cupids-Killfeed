@@ -220,8 +220,8 @@ class MultiGuildKillfeed {
                 let victim, killer, weapon, position, killerPosition;
                 let isPlayerKill = false; // Flag to track if this is a player-vs-player kill
                 
-                // Try to match with BOTH victim and killer positions
-                let killMatch = line.match(/Player \"(.+?)\"(?:\s*\(DEAD\))?\s*\(id=[^)]*\s+pos=<([^,]+),\s*([^,]+),\s*([^>]+)>\)\s+killed by Player \"(.+?)\"(?:\s*\(DEAD\))?\s*\(id=[^)]*\s+pos=<([^,]+),\s*([^,]+),\s*([^>]+)>\)\s+with (.+?)(?:\s+from\s+[\d.]+\s+meters)?$/);
+                // Try to match with BOTH victim and killer positions (newer log format with distance)
+                let killMatch = line.match(/Player \"(.+?)\"(?:\s*\(DEAD\))?\s*\(id=[^)]*\s+pos=<([^,]+),\s*([^,]+),\s*([^>]+)>\)\s+killed by Player \"(.+?)\"(?:\s*\(DEAD\))?\s*\(id=[^)]*\s+pos=<([^,]+),\s*([^,]+),\s*([^>]+)>\)\s+with (.+)$/);
                 if (killMatch) {
                     victim = killMatch[1];
                     position = { x: parseFloat(killMatch[2]), y: parseFloat(killMatch[3]), z: parseFloat(killMatch[4]) };
