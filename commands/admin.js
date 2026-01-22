@@ -1099,17 +1099,15 @@ async function handleRaidStatus(interaction, guildConfig) {
     );
     
     // Countdown
-    if (scheduleEnabled && guildConfig.raid_start_day !== null) {
+    if (scheduleEnabled && guildConfig.raid_start_day !== null && guildConfig.raid_start_time) {
         const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
         const countdown = calculateRaidCountdown(guildConfig);
         
-        if (countdown) {
-            embed.addField(
-                isActive ? '⏰ Raid Weekend Ends In' : '⏰ Next Raid Weekend Starts In',
-                countdown,
-                false
-            );
-        }
+        embed.addField(
+            isActive ? '⏰ Raid Weekend Ends In' : '⏰ Next Raid Weekend Starts In',
+            countdown,
+            false
+        );
         
         // Schedule info
         embed.addField(
@@ -1145,6 +1143,11 @@ function calculateRaidCountdown(guildConfig) {
         const targetDay = isActive ? guildConfig.raid_end_day : guildConfig.raid_start_day;
         const targetTime = isActive ? guildConfig.raid_end_time : guildConfig.raid_start_time;
         const timezone = guildConfig.raid_timezone || 'America/New_York';
+        
+        // Check if schedule data exists
+        if (targetDay === null || targetDay === undefined || !targetTime) {
+            return 'Unable to calculate';
+        }
         
         // Get current time in the guild's timezone
         const now = new Date().toLocaleString('en-US', { timeZone: timezone });
