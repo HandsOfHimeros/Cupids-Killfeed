@@ -592,7 +592,14 @@ class MultiGuildKillfeed {
                     
                     // Check base proximity alerts
                     if (event.position) {
-                        await this.checkBaseProximityAlerts(guildConfig, event);
+                        try {
+                            console.log(`[MULTI-KILLFEED] Checking base proximity for kill event in guild ${guildConfig.guild_id}`);
+                            await this.checkBaseProximityAlerts(guildConfig, event);
+                            console.log(`[MULTI-KILLFEED] Base proximity check complete`);
+                        } catch (baseAlertError) {
+                            console.error(`[MULTI-KILLFEED] Error in base proximity alerts (non-fatal): ${baseAlertError.message}`);
+                            // Don't let base alert errors prevent killfeed posting
+                        }
                     }
                 } else {
                     // Skip unparseable kill events instead of showing raw log
