@@ -1,7 +1,7 @@
 // Multi-Guild Killfeed System
 const axios = require('axios');
 const db = require('./database.js');
-const { EmbedBuilder } = require('discord.js');
+const { MessageEmbed } = require('discord.js');
 
 class MultiGuildKillfeed {
     constructor(bot) {
@@ -494,7 +494,7 @@ class MultiGuildKillfeed {
             
             console.log(`[MULTI-KILLFEED] Channel found: ${channel.name}, preparing embed...`);
             
-            let embed = new EmbedBuilder().setTimestamp();
+            let embed = new MessageEmbed().setTimestamp();
             
             if (event.type === 'kill') {
                 // Calculate distance if available from weapon info
@@ -1360,8 +1360,8 @@ class MultiGuildKillfeed {
             const mapName = mapNames[guildConfig.map_name] || guildConfig.map_name;
             
             const mapUrl = this.getMapUrl(guildConfig.map_name, playerInfo.position);
-            
-            const embed = new EmbedBuilder()
+
+            const embed = new MessageEmbed()
                 .setColor('#FFA500')
                 .setTitle('🚨 BASE PROXIMITY ALERT')
                 .setDescription(
@@ -1407,8 +1407,8 @@ class MultiGuildKillfeed {
                 'sakhal': 'sakhal/'
             };
             const mapUrl = this.getMapUrl(guildConfig.map_name, player.position);
-            
-            const embed = new EmbedBuilder()
+
+            const embed = new MessageEmbed()
                 .setColor('#FF0000')
                 .setTitle('🚨 BASE PROXIMITY ALERT')
                 .setDescription(
@@ -1499,7 +1499,7 @@ class MultiGuildKillfeed {
                 try {
                     const killerUser = await guild.members.fetch(killerUserId);
                     if (killerUser) {
-                        const dmEmbed = new EmbedBuilder()
+                        const dmEmbed = new MessageEmbed()
                             .setColor('#FFD700')
                             .setTitle('🎯 BOUNTY CLAIMED!')
                             .setDescription(`You claimed a bounty by killing **${event.victim}**!`)
