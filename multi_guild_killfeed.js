@@ -264,6 +264,8 @@ class MultiGuildKillfeed {
                                     weapon = 'Unknown';
                                     isPlayerKill = false; // Not a player kill (grenade, zombie, environment, etc.)
                                 }
+                            }
+                        }
                     }
                 }
                 
