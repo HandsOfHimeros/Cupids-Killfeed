@@ -3,6 +3,15 @@ const axios = require('axios');
 const db = require('./database.js');
 const { MessageEmbed } = require('discord.js');
 
+// Helper function to get platform-specific path
+function getPlatformPath(platform) {
+    if (!platform) return 'dayzps'; // Default to PS for backwards compatibility
+    const plat = platform.toUpperCase();
+    if (plat === 'XBOX' || plat === 'XB') return 'dayzxb';
+    if (plat === 'PS4' || plat === 'PS5' || plat === 'PLAYSTATION') return 'dayzps';
+    return 'dayzstandalone'; // PC fallback
+}
+
 class MultiGuildKillfeed {
     constructor(bot) {
         this.bot = bot;
@@ -161,7 +170,8 @@ class MultiGuildKillfeed {
     async fetchGuildLog(guildConfig) {
         try {
             // Get list of log files
-            const listUrl = `https://api.nitrado.net/services/${guildConfig.nitrado_service_id}/gameservers/file_server/list?dir=/games/${guildConfig.nitrado_instance}/noftp/dayzps/config/`;
+            const platformPath = getPlatformPath(guildConfig.platform);
+            const listUrl = `https://api.nitrado.net/services/${guildConfig.nitrado_service_id}/gameservers/file_server/list?dir=/games/${guildConfig.nitrado_instance}/noftp/${platformPath}/config/`;
             
             const listResp = await axios.get(listUrl, {
                 headers: { 'Authorization': `Bearer ${guildConfig.nitrado_token}` }
@@ -185,7 +195,7 @@ class MultiGuildKillfeed {
             const latestFile = admFiles[0];
             
             // Download log file - first get the temporary download URL
-            const downloadUrl = `https://api.nitrado.net/services/${guildConfig.nitrado_service_id}/gameservers/file_server/download?file=/games/${guildConfig.nitrado_instance}/noftp/dayzps/config/${latestFile.name}`;
+            const downloadUrl = `https://api.nitrado.net/services/${guildConfig.nitrado_service_id}/gameservers/file_server/download?file=/games/${guildConfig.nitrado_instance}/noftp/${platformPath}/config/${latestFile.name}`;
             
             const downloadResp = await axios.get(downloadUrl, {
                 headers: { 'Authorization': `Bearer ${guildConfig.nitrado_token}` }
@@ -1105,8 +1115,9 @@ class MultiGuildKillfeed {
     }
 
     async cleanupSpawnJson(guildConfig, state) {
-        const FILE_PATH = `/games/${guildConfig.nitrado_instance}/ftproot/dayzps_missions/dayzOffline.${guildConfig.map_name}/custom/spawn.json`;
-        const FTP_FILE_PATH = `/dayzps_missions/dayzOffline.${guildConfig.map_name}/custom/spawn.json`;
+        const platformPath = getPlatformPath(guildConfig.platform);
+        const FILE_PATH = `/games/${guildConfig.nitrado_instance}/ftproot/${platformPath}_missions/dayzOffline.${guildConfig.map_name}/custom/spawn.json`;
+        const FTP_FILE_PATH = `/${platformPath}_missions/dayzOffline.${guildConfig.map_name}/custom/spawn.json`;
         const BASE_URL = 'https://api.nitrado.net/services';
         const axios = require('axios');
         const fs = require('fs');

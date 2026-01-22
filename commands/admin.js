@@ -28,6 +28,15 @@ const readline = require('readline');
 const colors = require('colors');
 const moment = require('moment-timezone');
 
+// Helper function to get platform-specific path
+function getPlatformPath(platform) {
+    if (!platform) return 'dayzps'; // Default to PS for backwards compatibility
+    const plat = platform.toUpperCase();
+    if (plat === 'XBOX' || plat === 'XB') return 'dayzxb';
+    if (plat === 'PS4' || plat === 'PS5' || plat === 'PLAYSTATION') return 'dayzps';
+    return 'dayzstandalone'; // PC fallback
+}
+
 // Support both config.ini (local) and environment variables (Heroku)
 let config = { mapLoc: 0, showLoc: 1, kfChan: '', locChan: '', alrmChan: '' };
 try {
@@ -909,8 +918,9 @@ async function handleRaidToggle(interaction, guildConfig, enableRaiding) {
     try {
         console.log(`[RAIDING] ${enableRaiding ? 'Enabling' : 'Disabling'} raiding for guild ${guildId}`);
         
-        const GAMEPLAY_FILE_PATH = `/games/${guildConfig.nitrado_instance}/ftproot/dayzps_missions/dayzOffline.${guildConfig.map_name}/cfggameplay.json`;
-        const GAMEPLAY_FTP_PATH = `/dayzps_missions/dayzOffline.${guildConfig.map_name}/cfggameplay.json`;
+        const platformPath = getPlatformPath(guildConfig.platform);
+        const GAMEPLAY_FILE_PATH = `/games/${guildConfig.nitrado_instance}/ftproot/${platformPath}_missions/dayzOffline.${guildConfig.map_name}/cfggameplay.json`;
+        const GAMEPLAY_FTP_PATH = `/${platformPath}_missions/dayzOffline.${guildConfig.map_name}/cfggameplay.json`;
         const BASE_URL = 'https://api.nitrado.net/services';
         
         // Download cfggameplay.json as TEXT (preserve formatting)
@@ -1792,8 +1802,13 @@ async function handleSetupModalSubmit(interaction) {
         const serviceId = interaction.fields.getTextInputValue('nitrado_service_id');
         const instance = interaction.fields.getTextInputValue('nitrado_instance');
         const token = interaction.fields.getTextInputValue('nitrado_token');
-        const mapName = interaction.fields.getTextInputValue('map_name').toLowerCase();
-        const restartHours = interaction.fields.getTextInputValue('restart_hours');
+        const platform = interaction.fields.getTextInputValue('platform').toUpperCase();
+        const mapRestart = interaction.fields.getTextInputValue('map_restart');
+        
+        // Parse map and restart hours from combined field
+        const parts = mapRestart.split(',').map(p => p.trim());
+        const mapName = parts[0].toLowerCase();
+        const restartHours = parts.slice(1).join(',');
         
         const validMaps = ['chernarusplus', 'enoch', 'sakhal'];
         if (!validMaps.includes(mapName)) {
@@ -1803,12 +1818,20 @@ async function handleSetupModalSubmit(interaction) {
             return;
         }
         
+        const validPlatforms = ['PS4', 'PS5', 'XBOX'];
+        if (!validPlatforms.includes(platform)) {
+            await interaction.editReply({
+                content: `Invalid platform. Must be one of: ${validPlatforms.join(', ')}`
+            });
+            return;
+        }
+        
         await db.setGuildConfig(guildId, {
             nitratoServiceId: serviceId,
             nitratoInstance: instance,
             nitratoToken: token,
             mapName: mapName,
-            platform: 'PS4',
+            platform: platform,
             restartHours: restartHours,
             timezone: 'UTC'
         });
@@ -1887,7 +1910,7 @@ async function handleSetupModalSubmit(interaction) {
                         { name: 'Build Log Channel', value: `<#${channels.buildChannel}>`, inline: true },
                         { name: 'Suicide Log Channel', value: `<#${channels.suicideChannel}>`, inline: true },
                         { name: 'Map', value: mapName, inline: true },
-                        { name: 'Platform', value: 'PS4', inline: true }
+                        { name: 'Platform', value: platform, inline: true }
                     )
                     .setFooter({ text: 'Bot is now ready to use!' })
             ]

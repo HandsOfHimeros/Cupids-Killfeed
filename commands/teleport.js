@@ -5,6 +5,14 @@ const fs = require('fs');
 const config = fs.existsSync('./config.json') ? require('../config.json') : {};
 const axios = require('axios');
 
+function getPlatformPath(platform) {
+    if (!platform) return 'dayzps';
+    const plat = platform.toUpperCase();
+    if (plat === 'XBOX' || plat === 'XB') return 'dayzxb';
+    if (plat === 'PS4' || plat === 'PS5' || plat === 'PLAYSTATION') return 'dayzps';
+    return 'dayzstandalone';
+}
+
 // Store last /imhere coordinates per user
 const lastCoordinates = new Map();
 
@@ -296,14 +304,15 @@ module.exports = {
                 return false;
             }
 
-            const { nitrado_token, nitrado_service_id: server_id, nitrado_instance } = guildConfig.rows[0];
+            const { nitrado_token, nitrado_service_id: server_id, nitrado_instance, platform } = guildConfig.rows[0];
 
             const headers = {
                 'Authorization': `Bearer ${nitrado_token}`,
                 'Content-Type': 'application/json'
             };
 
-            const filePath = `/games/${nitrado_instance}/ftproot/dayzps_missions/dayzOffline.${server}/custom/${fileName}`;
+            const platformPath = getPlatformPath(platform);
+            const filePath = `/games/${nitrado_instance}/ftproot/${platformPath}_missions/dayzOffline.${server}/custom/${fileName}`;
 
             await axios.delete(
                 `https://api.nitrado.net/services/${server_id}/gameservers/file_server/delete`,
@@ -332,16 +341,17 @@ module.exports = {
                 return false;
             }
 
-            const { nitrado_token, nitrado_service_id: server_id, nitrado_instance } = guildConfig.rows[0];
+            const { nitrado_token, nitrado_service_id: server_id, nitrado_instance, platform } = guildConfig.rows[0];
 
             const headers = {
                 'Authorization': `Bearer ${nitrado_token}`,
                 'Content-Type': 'application/json'
             };
 
+            const platformPath = getPlatformPath(platform);
             // Download current cfggameplay.json
             const downloadResponse = await axios.get(
-                `https://api.nitrado.net/services/${server_id}/gameservers/file_server/download?file=/games/${nitrado_instance}/ftproot/dayzps/config/ServerDZ/cfggameplay.json`,
+                `https://api.nitrado.net/services/${server_id}/gameservers/file_server/download?file=/games/${nitrado_instance}/ftproot/${platformPath}/config/ServerDZ/cfggameplay.json`,
                 { headers }
             );
 
@@ -375,7 +385,8 @@ module.exports = {
 
         const tmpPath = path.join(__dirname, '..', 'logs', `cfggameplay_delete_${Date.now()}.json`);
         fs.writeFileSync(tmpPath, JSON.stringify(cfgGameplay, null, 4), 'utf8');
-        await client.uploadFrom(tmpPath, `/dayzps_missions/dayzOffline.${server}/cfggameplay.json`);
+        const platformPath = getPlatformPath(guildConfig.rows[0].platform);
+        await client.uploadFrom(tmpPath, `/${platformPath}_missions/dayzOffline.${server}/cfggameplay.json`);
         fs.unlinkSync(tmpPath);
         client.close();
 
@@ -1194,7 +1205,13 @@ module.exports = {
                 const tmpPath = path.join(__dirname, '..', 'logs', `teleport_${Date.now()}.json`);
                 fs.writeFileSync(tmpPath, JSON.stringify(jsonContent, null, 4), 'utf8');
 
-                const ftpFilePath = `/dayzps_missions/dayzOffline.${serverName}/custom/${fileName}`;
+                // Get platform from guild config
+                const guildConfigResult = await db.query(
+                    'SELECT platform FROM guild_configs WHERE guild_id = $1',
+                    [guildId]
+                );
+                const platformPath = getPlatformPath(guildConfigResult.rows[0]?.platform);
+                const ftpFilePath = `/${platformPath}_missions/dayzOffline.${serverName}/custom/${fileName}`;
                 await client.uploadFrom(tmpPath, ftpFilePath);
                 fs.unlinkSync(tmpPath);
 
@@ -1224,7 +1241,7 @@ module.exports = {
                 return false;
             }
 
-            const { nitrado_token, nitrado_service_id: server_id, nitrado_instance } = guildConfig.rows[0];
+            const { nitrado_token, nitrado_service_id: server_id, nitrado_instance, platform } = guildConfig.rows[0];
 
             const headers = {
                 'Authorization': `Bearer ${nitrado_token}`,
@@ -1232,7 +1249,8 @@ module.exports = {
             };
 
             // Download current cfggameplay.json via HTTP API (downloads work fine)
-            const cfgGameplayPath = `/games/${nitrado_instance}/ftproot/dayzps_missions/dayzOffline.${serverName}/cfggameplay.json`;
+            const platformPath = getPlatformPath(platform);
+            const cfgGameplayPath = `/games/${nitrado_instance}/ftproot/${platformPath}_missions/dayzOffline.${serverName}/cfggameplay.json`;
             const downloadResponse = await axios.get(
                 `https://api.nitrado.net/services/${server_id}/gameservers/file_server/download?file=${encodeURIComponent(cfgGameplayPath)}`,
                 { headers }
@@ -1294,7 +1312,7 @@ module.exports = {
                 const tmpPath = path.join(__dirname, '..', 'logs', `cfggameplay_${Date.now()}.json`);
                 fs.writeFileSync(tmpPath, JSON.stringify(cfgGameplay, null, 4), 'utf8');
 
-                const ftpCfgPath = `/dayzps_missions/dayzOffline.${serverName}/cfggameplay.json`;
+                const ftpCfgPath = `/${platformPath}_missions/dayzOffline.${serverName}/cfggameplay.json`;
                 await client.uploadFrom(tmpPath, ftpCfgPath);
                 fs.unlinkSync(tmpPath);
 

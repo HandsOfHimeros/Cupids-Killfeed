@@ -9,6 +9,15 @@ const { Pool } = require('pg');
 const db = require('./database.js');
 const MultiGuildKillfeed = require('./multi_guild_killfeed.js');
 
+// Helper function to get platform-specific path
+function getPlatformPath(platform) {
+    if (!platform) return 'dayzps'; // Default to PS for backwards compatibility
+    const plat = platform.toUpperCase();
+    if (plat === 'XBOX' || plat === 'XB') return 'dayzxb';
+    if (plat === 'PS4' || plat === 'PS5' || plat === 'PLAYSTATION') return 'dayzps';
+    return 'dayzstandalone'; // PC fallback
+}
+
 // Create database pool for spawn tables
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
@@ -293,10 +302,11 @@ async function addCupidSpawnEntry(spawnEntry, guildId) {
         throw new Error('Guild not configured. Please run /admin killfeed setup first.');
     }
     
-    const FILE_PATH = `/games/${guildConfig.nitrado_instance}/ftproot/dayzps_missions/dayzOffline.${guildConfig.map_name}/custom/spawn.json`;
-    const FTP_FILE_PATH = `/dayzps_missions/dayzOffline.${guildConfig.map_name}/custom/spawn.json`;
-    const GAMEPLAY_FILE_PATH = `/games/${guildConfig.nitrado_instance}/ftproot/dayzps_missions/dayzOffline.${guildConfig.map_name}/cfggameplay.json`;
-    const GAMEPLAY_FTP_PATH = `/dayzps_missions/dayzOffline.${guildConfig.map_name}/cfggameplay.json`;
+    const platformPath = getPlatformPath(guildConfig.platform);
+    const FILE_PATH = `/games/${guildConfig.nitrado_instance}/ftproot/${platformPath}_missions/dayzOffline.${guildConfig.map_name}/custom/spawn.json`;
+    const FTP_FILE_PATH = `/${platformPath}_missions/dayzOffline.${guildConfig.map_name}/custom/spawn.json`;
+    const GAMEPLAY_FILE_PATH = `/games/${guildConfig.nitrado_instance}/ftproot/${platformPath}_missions/dayzOffline.${guildConfig.map_name}/cfggameplay.json`;
+    const GAMEPLAY_FTP_PATH = `/${platformPath}_missions/dayzOffline.${guildConfig.map_name}/cfggameplay.json`;
     const BASE_URL = 'https://api.nitrado.net/services';
     
     try {
@@ -1262,8 +1272,9 @@ async function automaticRaidToggle(bot, guildConfig, enableRaiding) {
     try {
         console.log(`[AUTO RAID] ${enableRaiding ? 'Enabling' : 'Disabling'} raiding for guild ${guildConfig.guild_id}`);
         
-        const GAMEPLAY_FILE_PATH = `/games/${guildConfig.nitrado_instance}/ftproot/dayzps_missions/dayzOffline.${guildConfig.map_name}/cfggameplay.json`;
-        const GAMEPLAY_FTP_PATH = `/dayzps_missions/dayzOffline.${guildConfig.map_name}/cfggameplay.json`;
+        const platformPath = getPlatformPath(guildConfig.platform);
+        const GAMEPLAY_FILE_PATH = `/games/${guildConfig.nitrado_instance}/ftproot/${platformPath}_missions/dayzOffline.${guildConfig.map_name}/cfggameplay.json`;
+        const GAMEPLAY_FTP_PATH = `/${platformPath}_missions/dayzOffline.${guildConfig.map_name}/cfggameplay.json`;
         const BASE_URL = 'https://api.nitrado.net/services';
         
         // Download cfggameplay.json
@@ -1539,8 +1550,9 @@ async function cleanupSpawnJson(guildId) {
         return;
     }
     
-    const FILE_PATH = `/games/${guildConfig.nitrado_instance}/ftproot/dayzps_missions/dayzOffline.${guildConfig.map_name}/custom/spawn.json`;
-    const FTP_FILE_PATH = `/dayzps_missions/dayzOffline.${guildConfig.map_name}/custom/spawn.json`;
+    const platformPath = getPlatformPath(guildConfig.platform);
+    const FILE_PATH = `/games/${guildConfig.nitrado_instance}/ftproot/${platformPath}_missions/dayzOffline.${guildConfig.map_name}/custom/spawn.json`;
+    const FTP_FILE_PATH = `/${platformPath}_missions/dayzOffline.${guildConfig.map_name}/custom/spawn.json`;
     const BASE_URL = 'https://api.nitrado.net/services';
     
     try {
