@@ -139,6 +139,10 @@ class MultiGuildKillfeed {
             console.log(`[MULTI-KILLFEED] Guild ${guildId}: ${newEvents.length} new events`);
             for (const event of newEvents) {
                 console.log(`[MULTI-KILLFEED] Posting event type: ${event.type}`);
+                // Log raw line for killfeed events only if death locations are enabled
+                if (guildConfig.show_death_locations && (event.type === 'kill' || event.type === 'hit' || event.type === 'suicide' || event.type === 'build')) {
+                    console.log(`[KILLFEED-RAW] ${event.type.toUpperCase()}: ${event.raw}`);
+                }
                 await this.postEventToGuild(guildConfig, event);
             }
         }
@@ -269,17 +273,20 @@ class MultiGuildKillfeed {
                     }
                 }
                 
-                events.push({ 
-                    type: 'kill', 
-                    time: time, 
-                    victim: victim,
-                    killer: killer,
-                    weapon: weapon,
-                    position: position,
-                    killerPosition: killerPosition, // Killer's position for PVP zone check
-                    isPlayerKill: isPlayerKill, // Add flag to event
-                    raw: line 
-                });
+                // Only push kill event if we successfully parsed victim and killer
+                if (victim && killer) {
+                    events.push({ 
+                        type: 'kill', 
+                        time: time, 
+                        victim: victim,
+                        killer: killer,
+                        weapon: weapon,
+                        position: position,
+                        killerPosition: killerPosition, // Killer's position for PVP zone check
+                        isPlayerKill: isPlayerKill, // Add flag to event
+                        raw: line 
+                    });
+                }
             } else if (line.includes('hit by') || line.includes('Struck by')) {
                 // Try to parse hit details
                 let victim, source, weapon, distance;
@@ -316,17 +323,24 @@ class MultiGuildKillfeed {
                         victim = vehicleHitMatch[1];
                         source = `${vehicleHitMatch[2]} (Vehicle)`;
                     } else {
-                        // Try player-to-player hit
-                        let hitMatch = line.match(/Player \"(.+?)\"\(id=[^)]*\) hit by Player \"(.+?)\"\(id=[^)]*\) with (.+)$/);
-                        if (hitMatch) {
-                            victim = hitMatch[1];
-                            source = `${hitMatch[2]} with ${hitMatch[3]}`;
+                        // Try NEW detailed player-to-player hit format (with HP, positions, body parts, damage)
+                        let detailedHitMatch = line.match(/Player \"(.+?)\"(?:\s*\(DEAD\))?\s*\(id=[^)]*(?:\s+pos=[^)]+)?\)(?:\[HP:\s*[\d.]+\])?\s+hit by Player \"(.+?)\"(?:\s*\(DEAD\))?\s*\(id=[^)]*(?:\s+pos=[^)]+)?\)\s+into\s+\S+(?:\(\d+\))?\s+for\s+[\d.]+\s+damage\s+\([^)]+\)\s+with\s+(.+)$/);
+                        if (detailedHitMatch) {
+                            victim = detailedHitMatch[1];
+                            source = `${detailedHitMatch[2]} with ${detailedHitMatch[3]}`;
                         } else {
-                            // Try environmental/zombie hit
-                            hitMatch = line.match(/(?:Player )?\"(.+?)\"(?:\s*\(DEAD\))?\s*(?:\(id=[^)]*(?:\s+pos=[^)]+)?\))?(?:\[HP:\s*\d+(?:\.\d+)?\])?\s+hit by (.+)$/);
+                            // Try OLD simple player-to-player hit format (fallback)
+                            let hitMatch = line.match(/Player \"(.+?)\"\(id=[^)]*\) hit by Player \"(.+?)\"\(id=[^)]*\) with (.+)$/);
                             if (hitMatch) {
                                 victim = hitMatch[1];
-                                source = hitMatch[2];
+                                source = `${hitMatch[2]} with ${hitMatch[3]}`;
+                            } else {
+                                // Try environmental/zombie hit (original simple pattern)
+                                hitMatch = line.match(/(?:Player )?\"(.+?)\"(?:\s*\(DEAD\))?\s*(?:\(id=[^)]*(?:\s+pos=[^)]+)?\))?\s+hit by (.+)$/);
+                                if (hitMatch) {
+                                    victim = hitMatch[1];
+                                    source = hitMatch[2];
+                                }
                             }
                         }
                     }
