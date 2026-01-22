@@ -532,7 +532,8 @@ class MultiGuildKillfeed {
                     if (guildConfig.auto_ban_on_kill && event.isPlayerKill && event.killer && event.victim) {
                         // Skip if suicide (killer = victim)
                         if (event.killer === event.victim) {
-                            con{
+                            console.log(`[AUTO-BAN] ${event.killer} committed suicide, no ban`);
+                        } else {
                             // Check KILLER's position to see if they were in a PVP zone
                             const checkPosition = event.killerPosition || event.position; // Use killer position if available, fallback to victim
                             
@@ -555,7 +556,6 @@ class MultiGuildKillfeed {
                                         console.error(`[AUTO-BAN] Failed to ban ${event.killer}:`, error.message);
                                         embed.addFields({ name: '❌ Auto-Ban Failed', value: `Could not ban ${event.killer}: ${error.message}`, inline: false });
                                     }
-                                    embed.addFields({ name: '❌ Auto-Ban Failed', value: `Could not ban ${event.killer}: ${error.message}`, inline: false });
                                 }
                             }
                         }
