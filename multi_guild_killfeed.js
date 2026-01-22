@@ -494,7 +494,7 @@ class MultiGuildKillfeed {
             
             console.log(`[MULTI-KILLFEED] Channel found: ${channel.name}, preparing embed...`);
             
-            let embed = new MessageEmbed().setTimestamp();
+            let embed = new EmbedBuilder().setTimestamp();
             
             if (event.type === 'kill') {
                 // Calculate distance if available from weapon info
@@ -1322,13 +1322,20 @@ class MultiGuildKillfeed {
                     console.log(`[BASE-ALERT] Sending alert to user ${baseAlert.discord_user_id} for ${playerInfo.name} at ${Math.round(distance)}m`);
                     
                     // Send DM to base owner
-                    await this.sendPlayerProximityDM(baseAlert.discord_user_id, guildConfig, playerInfo, distance);
-                    
-                    // Log to history
-                    await db.query(
-                        'INSERT INTO base_alert_history (base_alert_id, detected_player_name, distance, event_type) VALUES ($1, $2, $3, $4)',
-                        [baseAlert.id, playerInfo.name, distance, 'player_proximity']
-                    );
+                    try {
+                        await this.sendPlayerProximityDM(baseAlert.discord_user_id, guildConfig, playerInfo, distance);
+                        console.log(`[BASE-ALERT] DM sent successfully to ${baseAlert.discord_user_id}`);
+                        
+                        // Log to history only after successful DM send
+                        await db.query(
+                            'INSERT INTO base_alert_history (base_alert_id, detected_player_name, distance, event_type) VALUES ($1, $2, $3, $4)',
+                            [baseAlert.id, playerInfo.name, distance, 'player_proximity']
+                        );
+                        console.log(`[BASE-ALERT] Logged alert history for ${playerInfo.name} at base ${baseAlert.id}`);
+                    } catch (dmError) {
+                        console.error(`[BASE-ALERT] Failed to send DM or log history:`, dmError.message);
+                        // Don't insert history if DM failed - this way we'll try again next time
+                    }
                 }
             }
         } catch (error) {
@@ -1337,6 +1344,7 @@ class MultiGuildKillfeed {
     }
     
     async sendPlayerProximityDM(discordUserId, guildConfig, playerInfo, distance) {
+        console.log(`[BASE-ALERT-DM] Attempting to send DM to user ${discordUserId} for ${playerInfo.name}`);
         try {
             const user = await this.bot.users.fetch(discordUserId);
             if (!user) {
