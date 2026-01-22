@@ -1200,12 +1200,25 @@ bot.on('ready', async () => {
                     continue;
                 }
                 
-                const timezone = guildConfig.raid_timezone || 'America/New_York';
+                let timezone = guildConfig.raid_timezone || 'America/New_York';
+                
+                // Fix common timezone issues
+                if (timezone === 'New_York') timezone = 'America/New_York';
+                if (timezone === 'Los_Angeles') timezone = 'America/Los_Angeles';
+                if (timezone === 'Chicago') timezone = 'America/Chicago';
+                if (timezone === 'Denver') timezone = 'America/Denver';
                 
                 try {
-                    // Get current time in guild's timezone
-                    const now = new Date().toLocaleString('en-US', { timeZone: timezone });
-                    const currentDate = new Date(now);
+                    // Get current time in guild's timezone with fallback
+                    let currentDate;
+                    try {
+                        const now = new Date().toLocaleString('en-US', { timeZone: timezone });
+                        currentDate = new Date(now);
+                    } catch (tzError) {
+                        console.error(`[RAID SCHEDULER] Invalid timezone for guild ${guildConfig.guild_id}, using UTC:`, timezone);
+                        currentDate = new Date();
+                    }
+                    
                     const currentDay = currentDate.getDay();
                     const currentHours = String(currentDate.getHours()).padStart(2, '0');
                     const currentMinutes = String(currentDate.getMinutes()).padStart(2, '0');

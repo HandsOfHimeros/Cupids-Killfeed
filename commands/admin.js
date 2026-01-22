@@ -1142,16 +1142,29 @@ function calculateRaidCountdown(guildConfig) {
         const isActive = guildConfig.raid_currently_active;
         const targetDay = isActive ? guildConfig.raid_end_day : guildConfig.raid_start_day;
         const targetTime = isActive ? guildConfig.raid_end_time : guildConfig.raid_start_time;
-        const timezone = guildConfig.raid_timezone || 'America/New_York';
+        let timezone = guildConfig.raid_timezone || 'America/New_York';
+        
+        // Fix common timezone issues
+        if (timezone === 'New_York') timezone = 'America/New_York';
+        if (timezone === 'Los_Angeles') timezone = 'America/Los_Angeles';
+        if (timezone === 'Chicago') timezone = 'America/Chicago';
+        if (timezone === 'Denver') timezone = 'America/Denver';
         
         // Check if schedule data exists
         if (targetDay === null || targetDay === undefined || !targetTime) {
             return 'Unable to calculate';
         }
         
-        // Get current time in the guild's timezone
-        const now = new Date().toLocaleString('en-US', { timeZone: timezone });
-        const currentDate = new Date(now);
+        // Get current time in the guild's timezone with fallback
+        let currentDate;
+        try {
+            const now = new Date().toLocaleString('en-US', { timeZone: timezone });
+            currentDate = new Date(now);
+        } catch (tzError) {
+            console.error('[RAID COUNTDOWN] Invalid timezone, using UTC:', timezone);
+            currentDate = new Date();
+        }
+        
         const currentDay = currentDate.getDay();
         const currentHours = currentDate.getHours();
         const currentMinutes = currentDate.getMinutes();
