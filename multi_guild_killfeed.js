@@ -1038,8 +1038,8 @@ class MultiGuildKillfeed {
                 if (locInfo) {
                     await db.setPlayerLocation(guildId, locInfo.name, locInfo.position.x, locInfo.position.y, locInfo.position.z);
                     
-                    // Check base proximity alerts for this player location
-                    await this.checkBaseProximityForPlayer(guildConfig, locInfo);
+                    // Check base proximity alerts for this player location, passing the log timestamp
+                    await this.checkBaseProximityForPlayer(guildConfig, locInfo, locInfo.timestamp);
                     
                     // Also update distance tracking for active sessions
                     const distance = await db.updatePlayerDistance(guildId, locInfo.name, locInfo.position.x, locInfo.position.y, locInfo.position.z);
@@ -1299,15 +1299,15 @@ class MultiGuildKillfeed {
                             continue;
                         }
                         
-                        // Check if we recently alerted for ANY activity at this base (within last 5 minutes to avoid spam)
+                        // Check if we recently alerted for THIS SPECIFIC PLAYER at this base (within last 15 minutes to avoid spam)
                         const recentAlert = await db.query(
-                            'SELECT id FROM base_alert_history WHERE base_alert_id = $1 AND detected_at > NOW() - INTERVAL \'5 minutes\' ORDER BY detected_at DESC LIMIT 1',
-                            [baseAlert.id]
+                            'SELECT id FROM base_alert_history WHERE base_alert_id = $1 AND detected_player_name = $2 AND detected_at > NOW() - INTERVAL \'15 minutes\' ORDER BY detected_at DESC LIMIT 1',
+                            [baseAlert.id, player.name]
                         );
                         
                         if (recentAlert.rows.length > 0) {
-                            console.log(`[BASE-ALERT] Already alerted for base ${baseAlert.id} within last 5 minutes (${player.name} detected), skipping`);
-                            continue; // Already alerted recently for this location
+                            console.log(`[BASE-ALERT] Already alerted for ${player.name} at base ${baseAlert.id} within last 15 minutes, skipping`);
+                            continue; // Already alerted recently for this player at this location
                         }
                         
                         // Send DM to base owner
@@ -1327,7 +1327,7 @@ class MultiGuildKillfeed {
     }
     
     // Check if a player's current position is near any bases (for live tracking)
-    async checkBaseProximityForPlayer(guildConfig, playerInfo) {
+    async checkBaseProximityForPlayer(guildConfig, playerInfo, logTimestamp) {
         try {
             // Get all active base alerts for this guild and server
             const baseAlerts = await db.query(
@@ -1371,15 +1371,17 @@ class MultiGuildKillfeed {
                         continue; // Skip whitelisted players
                     }
                     
-                    // Check if we recently alerted for ANY activity at this base (within last 5 minutes to avoid spam)
+                    // Check if we've already alerted for this exact log entry (same timestamp + player + base)
+                    // This prevents duplicate alerts from re-processing the same log lines
+                    const logKey = `${logTimestamp}:${playerInfo.name}:${baseAlert.id}`;
                     const recentAlert = await db.query(
-                        'SELECT id FROM base_alert_history WHERE base_alert_id = $1 AND detected_at > NOW() - INTERVAL \'5 minutes\' ORDER BY detected_at DESC LIMIT 1',
-                        [baseAlert.id]
+                        'SELECT id FROM base_alert_history WHERE base_alert_id = $1 AND detected_player_name = $2 AND log_timestamp = $3 LIMIT 1',
+                        [baseAlert.id, playerInfo.name, logTimestamp]
                     );
                     
                     if (recentAlert.rows.length > 0) {
-                        console.log(`[BASE-ALERT] Already alerted for base ${baseAlert.id} within last 5 minutes (${playerInfo.name} detected), skipping`);
-                        continue; // Already alerted recently for this location
+                        // Already processed this exact log entry
+                        continue;
                     }
                     
                     console.log(`[BASE-ALERT] Sending alert to user ${baseAlert.discord_user_id} for ${playerInfo.name} at ${Math.round(distance)}m`);
@@ -1389,12 +1391,12 @@ class MultiGuildKillfeed {
                         await this.sendPlayerProximityDM(baseAlert.discord_user_id, guildConfig, playerInfo, distance);
                         console.log(`[BASE-ALERT] DM sent successfully to ${baseAlert.discord_user_id}`);
                         
-                        // Log to history only after successful DM send
+                        // Log to history only after successful DM send, including log timestamp to prevent duplicates
                         await db.query(
-                            'INSERT INTO base_alert_history (base_alert_id, detected_player_name, distance, event_type) VALUES ($1, $2, $3, $4)',
-                            [baseAlert.id, playerInfo.name, distance, 'player_proximity']
+                            'INSERT INTO base_alert_history (base_alert_id, detected_player_name, distance, event_type, log_timestamp) VALUES ($1, $2, $3, $4, $5)',
+                            [baseAlert.id, playerInfo.name, distance, 'player_proximity', logTimestamp]
                         );
-                        console.log(`[BASE-ALERT] Logged alert history for ${playerInfo.name} at base ${baseAlert.id}`);
+                        console.log(`[BASE-ALERT] Logged alert history for ${playerInfo.name} at base ${baseAlert.id} (log time: ${logTimestamp})`);
                     } catch (dmError) {
                         console.error(`[BASE-ALERT] Failed to send DM or log history:`, dmError.message);
                         // Don't insert history if DM failed - this way we'll try again next time
