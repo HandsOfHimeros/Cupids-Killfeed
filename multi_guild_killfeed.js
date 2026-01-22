@@ -1285,6 +1285,8 @@ class MultiGuildKillfeed {
                     baseAlert.base_y
                 );
                 
+                console.log(`[BASE-ALERT] Distance from ${playerInfo.name} (${Math.round(playerInfo.position.x)}, ${Math.round(playerInfo.position.z)}) to base ${baseAlert.id} (${baseAlert.base_x}, ${baseAlert.base_y}): ${Math.round(distance)}m (radius: ${baseAlert.alert_radius}m)`);
+                
                 if (distance <= baseAlert.alert_radius) {
                     console.log(`[BASE-ALERT] ${playerInfo.name} within ${Math.round(distance)}m of base ${baseAlert.id} (radius: ${baseAlert.alert_radius}m)`);
                     
