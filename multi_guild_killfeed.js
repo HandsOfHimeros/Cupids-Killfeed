@@ -105,6 +105,8 @@ class MultiGuildKillfeed {
         // Filter to only new events
         let newEvents = events;
         if (state.lastLogLine && events.length > 0) {
+            console.log(`[MULTI-KILLFEED-DEBUG] Guild ${guildId}: lastLogLine exists, filtering for new events`);
+            console.log(`[MULTI-KILLFEED-DEBUG] Last tracked line: ${state.lastLogLine.substring(0, 100)}...`);
             // Find where we left off - look from the end backwards for efficiency
             let foundIndex = -1;
             for (let i = events.length - 1; i >= 0; i--) {
@@ -115,10 +117,12 @@ class MultiGuildKillfeed {
             }
             
             if (foundIndex !== -1) {
+                console.log(`[MULTI-KILLFEED-DEBUG] Guild ${guildId}: Found last line at index ${foundIndex}, ${events.length - foundIndex - 1} new events after it`);
                 // Only post events AFTER the last known line (foundIndex + 1 onwards)
                 // This ensures no duplicates - we already posted everything up to foundIndex
                 newEvents = events.slice(foundIndex + 1);
             } else {
+                console.log(`[MULTI-KILLFEED-DEBUG] Guild ${guildId}: Could not find last line in events, checking log rotation`);
                 // If we can't find the last line, the log file might have rotated
                 // Only post events if this is the first poll (lastPollTime is recent startup)
                 const timeSinceLastPoll = Date.now() - state.lastPollTime;
