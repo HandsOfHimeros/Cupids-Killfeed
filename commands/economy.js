@@ -2794,8 +2794,8 @@ module.exports = {
                             .setColor('#00ff99')
                             .setTitle('📍 Your Last Known Location')
                             .setDescription(`**DayZ Name:** ${dayzName}`)
-                            .addField('Position', `X: ${location.x}\nY: ${location.y}\nZ: ${location.z} (elevation)`, false)
-                            .addField('Spawn Format', `[${location.x}, ${location.z}, ${location.y}]`, false)
+                            .addField('Position', `X: ${location.x}\nY: ${location.y} (elevation)\nZ: ${location.z}`, false)
+                            .addField('Spawn Format', `[${location.x}, ${location.y}, ${location.z}]`, false)
                             .setFooter({ text: 'Items will spawn at this location after the next server restart' })
                     ], ephemeral: true
                 });
