@@ -1,6 +1,6 @@
 {
   "name": "dayzero",
-  "version": "325.0.0",
+  "version": "325.0.1",
   "description": "DayZ Console Killfeed Discord Bot",
   "main": "index.js",
   "scripts": {

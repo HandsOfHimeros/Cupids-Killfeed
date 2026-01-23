@@ -373,9 +373,11 @@ async function addCupidSpawnEntry(spawnEntry, guildId) {
         }
         
         // Step 4: Check if there's a table near player's current location (within 5 meters)
+        // Database stores: x, y, z where y is elevation (saved by multi_guild_killfeed)
+        // spawn.json needs: [x, y, z] where y is elevation
         const playerX = playerLocation.x;
-        const playerY = playerLocation.z; // Z in database is Y (elevation) in DayZ
-        const playerZ = playerLocation.y; // Y in database is Z in DayZ
+        const playerY = playerLocation.y; // Y is elevation
+        const playerZ = playerLocation.z; // Z is horizontal
         
         let nearbyTable = null;
         for (const obj of spawnJson.Objects) {
