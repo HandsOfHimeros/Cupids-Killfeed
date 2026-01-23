@@ -102,53 +102,39 @@ class MultiGuildKillfeed {
             console.log(`[MULTI-KILLFEED-DEBUG] Event types: ${events.map(e => e.type).join(', ')}`);
         }
         
-        // Filter to only new events
-        let newEvents = events;
-        if (state.lastLogLine && events.length > 0) {
-            console.log(`[MULTI-KILLFEED-DEBUG] Guild ${guildId}: lastLogLine exists, filtering for new events`);
-            console.log(`[MULTI-KILLFEED-DEBUG] Last tracked line: ${state.lastLogLine.substring(0, 100)}...`);
-            // Find where we left off - look from the end backwards for efficiency
-            let foundIndex = -1;
-            for (let i = events.length - 1; i >= 0; i--) {
-                if (events[i].raw === state.lastLogLine) {
-                    foundIndex = i;
-                    break;
-                }
-            }
-            
-            if (foundIndex !== -1) {
-                console.log(`[MULTI-KILLFEED-DEBUG] Guild ${guildId}: Found last line at index ${foundIndex}, ${events.length - foundIndex - 1} new events after it`);
-                // Only post events AFTER the last known line (foundIndex + 1 onwards)
-                // This ensures no duplicates - we already posted everything up to foundIndex
-                newEvents = events.slice(foundIndex + 1);
+        // Filter to only new events - use simple timestamp approach
+        let newEvents = [];
+        
+        if (events.length > 0) {
+            // On first poll, skip old events
+            if (state.lastPollTime === 0 || !state.lastLogLine) {
+                console.log(`[MULTI-KILLFEED] Guild ${guildId}: First poll, skipping ${events.length} old events to prevent spam`);
+                // Update tracking without posting
             } else {
-                console.log(`[MULTI-KILLFEED-DEBUG] Guild ${guildId}: Could not find last line in events, checking log rotation`);
-                // If we can't find the last line, the log file might have rotated
-                // Only post events if this is the first poll (lastPollTime is recent startup)
-                const timeSinceLastPoll = Date.now() - state.lastPollTime;
-                if (state.lastPollTime > 0 && timeSinceLastPoll < 300000) {
-                    // Recently polled but can't find last line - log rotated
-                    // Skip this batch to avoid duplicates, but update tracking to last event in current log
-                    // so we can continue detecting new events going forward
-                    console.log(`[MULTI-KILLFEED] Guild ${guildId}: Can't find last line, log may have rotated. Resetting tracking to current log.`);
-                    newEvents = [];
-                    // Update lastLogLine to the most recent event in the current log
-                    if (events.length > 0) {
-                        state.lastLogLine = events[events.length - 1].raw;
-                        await db.updateKillfeedState(guildId, state.lastLogLine);
-                        console.log(`[MULTI-KILLFEED] Guild ${guildId}: Tracking reset to latest event, will detect new events on next poll`);
+                // Post events that happened after our last poll time
+                // Each event has a timestamp in HH:MM:SS format, but Nitrado logs don't include dates
+                // So we just look for events that come AFTER the last known event in the log
+                // Simple approach: if we can't find our lastLogLine, post everything (better to see kills than filter them)
+                
+                let foundIndex = -1;
+                for (let i = events.length - 1; i >= 0; i--) {
+                    if (events[i].raw === state.lastLogLine) {
+                        foundIndex = i;
+                        break;
                     }
-                } else if (state.lastPollTime === 0) {
-                    // First poll after bot startup - skip all old events to avoid duplicates
-                    console.log(`[MULTI-KILLFEED] Guild ${guildId}: First poll after startup, skipping old events to prevent duplicates`);
-                    newEvents = [];
                 }
-                // Otherwise post all (rare case of very long time since last poll)
+                
+                if (foundIndex !== -1) {
+                    // Found our last line - post everything AFTER it
+                    newEvents = events.slice(foundIndex + 1);
+                    console.log(`[MULTI-KILLFEED] Guild ${guildId}: Found last line at index ${foundIndex}, posting ${newEvents.length} new events`);
+                } else {
+                    // Couldn't find last line - log might have rotated or been cleared
+                    // POST EVERYTHING to avoid missing kills (duplicates are better than missing events)
+                    console.log(`[MULTI-KILLFEED] Guild ${guildId}: Last line not found (log rotation?), posting all ${events.length} events to avoid missing kills`);
+                    newEvents = events;
+                }
             }
-        } else if (state.lastLogLine === '' && events.length > 0) {
-            // Empty lastLogLine means never polled before - skip old events to avoid initial spam
-            console.log(`[MULTI-KILLFEED] Guild ${guildId}: No previous state, skipping old events`);
-            newEvents = [];
         }
         
         // Post new events to this guild's killfeed channel
@@ -251,6 +237,7 @@ class MultiGuildKillfeed {
                     killerPosition = { x: parseFloat(killMatch[6]), y: parseFloat(killMatch[7]), z: parseFloat(killMatch[8]) };
                     weapon = killMatch[9];
                     isPlayerKill = true;
+                    console.log(`[KILL-PARSE] Pattern 1 matched - victim: ${victim}, killer: ${killer}, weapon: ${weapon}`);
                 } else {
                     // Try without killer position (older log format)
                     killMatch = line.match(/Player \"(.+?)\"(?:\s*\(DEAD\))?\s*\(id=[^)]*\s+pos=<([^,]+),\s*([^,]+),\s*([^>]+)>\)\s+killed by Player \"(.+?)\"(?:\s*\(DEAD\))?\s*\(id=[^)]*\) with (.+)$/);
@@ -260,6 +247,7 @@ class MultiGuildKillfeed {
                         killer = killMatch[5];
                         weapon = killMatch[6];
                         isPlayerKill = true;
+                        console.log(`[KILL-PARSE] Pattern 2 matched - victim: ${victim}, killer: ${killer}, weapon: ${weapon}`);
                     } else {
                         // Try without position - also support (DEAD) marker
                         killMatch = line.match(/Player \"(.+?)\"(?:\s*\(DEAD\))?\s*\(id=[^)]*\) killed by Player \"(.+?)\"(?:\s*\(DEAD\))?\s*\(id=[^)]*\) with (.+)$/);
@@ -268,7 +256,10 @@ class MultiGuildKillfeed {
                             killer = killMatch[2];
                             weapon = killMatch[3];
                             isPlayerKill = true; // This is a player-vs-player kill
+                            console.log(`[KILL-PARSE] Pattern 3 matched - victim: ${victim}, killer: ${killer}, weapon: ${weapon}`);
                         } else {
+                            // No pattern matched
+                            console.log(`[KILL-PARSE] NO PATTERN MATCHED for line: ${line}`);
                             // Try zombie/AI/environmental format with position (e.g., grenades, zombies, fall damage)
                             killMatch = line.match(/(?:Player )?\"(.+?)\"(?:\s*\(DEAD\))?\s*\(id=[^)]*\s+pos=<([^,]+),\s*([^,]+),\s*([^>]+)>\)\s+killed by (.+)$/);
                             if (killMatch) {
