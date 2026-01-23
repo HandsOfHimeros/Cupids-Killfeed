@@ -85,6 +85,14 @@ class MultiGuildKillfeed {
         
         console.log(`[MULTI-KILLFEED] Polling guild ${guildId}...`);
         
+        // Fetch Discord guild object for bounty DMs
+        let guild;
+        try {
+            guild = await this.bot.guilds.fetch(guildId);
+        } catch (error) {
+            console.error(`[MULTI-KILLFEED] Could not fetch guild ${guildId}:`, error.message);
+        }
+        
         // Fetch log from this guild's Nitrado server
         const logData = await this.fetchGuildLog(guildConfig);
         if (!logData) return;
@@ -146,7 +154,7 @@ class MultiGuildKillfeed {
                 if (guildConfig.show_death_locations && (event.type === 'kill' || event.type === 'hit' || event.type === 'suicide' || event.type === 'build')) {
                     console.log(`[KILLFEED-RAW] ${event.type.toUpperCase()}: ${event.raw}`);
                 }
-                await this.postEventToGuild(guildConfig, event);
+                await this.postEventToGuild(guildConfig, event, guild);
             }
         }
         
@@ -229,21 +237,23 @@ class MultiGuildKillfeed {
                 let isPlayerKill = false; // Flag to track if this is a player-vs-player kill
                 
                 // Try to match with BOTH victim and killer positions (newer log format with distance)
+                // NOTE: DayZ log format is <X, Z, Y> where Y is height
                 let killMatch = line.match(/Player \"(.+?)\"(?:\s*\(DEAD\))?\s*\(id=[^)]*\s+pos=<([^,]+),\s*([^,]+),\s*([^>]+)>\)\s+killed by Player \"(.+?)\"(?:\s*\(DEAD\))?\s*\(id=[^)]*\s+pos=<([^,]+),\s*([^,]+),\s*([^>]+)>\)\s+with (.+)$/);
                 if (killMatch) {
                     victim = killMatch[1];
-                    position = { x: parseFloat(killMatch[2]), y: parseFloat(killMatch[3]), z: parseFloat(killMatch[4]) };
+                    position = { x: parseFloat(killMatch[2]), z: parseFloat(killMatch[3]), y: parseFloat(killMatch[4]) };
                     killer = killMatch[5];
-                    killerPosition = { x: parseFloat(killMatch[6]), y: parseFloat(killMatch[7]), z: parseFloat(killMatch[8]) };
+                    killerPosition = { x: parseFloat(killMatch[6]), z: parseFloat(killMatch[7]), y: parseFloat(killMatch[8]) };
                     weapon = killMatch[9];
                     isPlayerKill = true;
                     console.log(`[KILL-PARSE] Pattern 1 matched - victim: ${victim}, killer: ${killer}, weapon: ${weapon}`);
                 } else {
                     // Try without killer position (older log format)
+                    // NOTE: DayZ log format is <X, Z, Y> where Y is height
                     killMatch = line.match(/Player \"(.+?)\"(?:\s*\(DEAD\))?\s*\(id=[^)]*\s+pos=<([^,]+),\s*([^,]+),\s*([^>]+)>\)\s+killed by Player \"(.+?)\"(?:\s*\(DEAD\))?\s*\(id=[^)]*\) with (.+)$/);
                     if (killMatch) {
                         victim = killMatch[1];
-                        position = { x: parseFloat(killMatch[2]), y: parseFloat(killMatch[3]), z: parseFloat(killMatch[4]) };
+                        position = { x: parseFloat(killMatch[2]), z: parseFloat(killMatch[3]), y: parseFloat(killMatch[4]) };
                         killer = killMatch[5];
                         weapon = killMatch[6];
                         isPlayerKill = true;
@@ -261,10 +271,11 @@ class MultiGuildKillfeed {
                             // No pattern matched
                             console.log(`[KILL-PARSE] NO PATTERN MATCHED for line: ${line}`);
                             // Try zombie/AI/environmental format with position (e.g., grenades, zombies, fall damage)
+                            // NOTE: DayZ log format is <X, Z, Y> where Y is height
                             killMatch = line.match(/(?:Player )?\"(.+?)\"(?:\s*\(DEAD\))?\s*\(id=[^)]*\s+pos=<([^,]+),\s*([^,]+),\s*([^>]+)>\)\s+killed by (.+)$/);
                             if (killMatch) {
                                 victim = killMatch[1];
-                                position = { x: parseFloat(killMatch[2]), y: parseFloat(killMatch[3]), z: parseFloat(killMatch[4]) };
+                                position = { x: parseFloat(killMatch[2]), z: parseFloat(killMatch[3]), y: parseFloat(killMatch[4]) };
                                 killer = killMatch[5];
                                 weapon = 'Unknown';
                                 isPlayerKill = false; // Not a player kill (grenade, zombie, environment, etc.)
@@ -400,10 +411,11 @@ class MultiGuildKillfeed {
             } else if (line.includes('committed suicide')) {
                 // Parse player name and position
                 let player, position;
+                // NOTE: DayZ log format is <X, Z, Y> where Y is height
                 const suicideMatch = line.match(/Player \"(.+?)\"\(id=[^)]*\s+pos=<([^,]+),\s*([^,]+),\s*([^>]+)>\)/);
                 if (suicideMatch) {
                     player = suicideMatch[1];
-                    position = { x: parseFloat(suicideMatch[2]), y: parseFloat(suicideMatch[3]), z: parseFloat(suicideMatch[4]) };
+                    position = { x: parseFloat(suicideMatch[2]), z: parseFloat(suicideMatch[3]), y: parseFloat(suicideMatch[4]) };
                 } else {
                     // Try without position
                     const simpleMatch = line.match(/Player \"(.+?)\"/);
@@ -465,7 +477,7 @@ class MultiGuildKillfeed {
         return events;
     }
 
-    async postEventToGuild(guildConfig, event) {
+    async postEventToGuild(guildConfig, event, guild) {
         try {
             console.log(`[MULTI-KILLFEED] postEventToGuild called for guild ${guildConfig.guild_id}, event type: ${event.type}`);
             
@@ -609,8 +621,12 @@ class MultiGuildKillfeed {
                     }
                     
                     // Process bounty claims for player kills
+                    console.log(`[BOUNTY-CHECK] isPlayerKill=${event.isPlayerKill}, killer=${event.killer}, victim=${event.victim}, same?=${event.killer === event.victim}`);
                     if (event.isPlayerKill && event.killer && event.victim && event.killer !== event.victim) {
+                        console.log(`[BOUNTY] Processing bounty claim for ${event.killer} killing ${event.victim}`);
                         await this.processBountyClaim(guildConfig, event, embed, guild);
+                    } else {
+                        console.log(`[BOUNTY] Skipping bounty check - conditions not met`);
                     }
                     
                     // Base alerts disabled for kill events - only trigger from live position tracking
@@ -842,13 +858,13 @@ class MultiGuildKillfeed {
         const z = position.z;
         
         for (const zone of zones) {
-            console.log(`[PVP-ZONE] Checking zone "${zone.name}": X[${zone.x1} to ${zone.x2}], Z[${zone.z1} to ${zone.z2}]`);
+            // Support both old format (x1/x2/z1/z2) and new format (minX/maxX/minZ/maxZ)
+            const minX = Math.min(zone.x1 || zone.minX, zone.x2 || zone.maxX);
+            const maxX = Math.max(zone.x1 || zone.minX, zone.x2 || zone.maxX);
+            const minZ = Math.min(zone.z1 || zone.minZ, zone.z2 || zone.maxZ);
+            const maxZ = Math.max(zone.z1 || zone.minZ, zone.z2 || zone.maxZ);
             
-            // Check if position is within rectangular zone bounds
-            const minX = Math.min(zone.x1, zone.x2);
-            const maxX = Math.max(zone.x1, zone.x2);
-            const minZ = Math.min(zone.z1, zone.z2);
-            const maxZ = Math.max(zone.z1, zone.z2);
+            console.log(`[PVP-ZONE] Checking zone "${zone.name}": X[${minX} to ${maxX}], Z[${minZ} to ${maxZ}]`);
             
             if (x >= minX && x <= maxX && z >= minZ && z <= maxZ) {
                 console.log(`[PVP-ZONE] ✓ Position (${x}, ${z}) IS IN PVP zone: ${zone.name}`);
@@ -1515,7 +1531,9 @@ class MultiGuildKillfeed {
             // Check PVE server restrictions
             if (guildConfig.auto_ban_on_kill) {
                 // PVE server - only award bounty if kill was in PVP zone
-                const inPvpZone = event.position && this.isInPvpZone(guildConfig, event.position);
+                // Use killer position (same logic as auto-ban)
+                const checkPosition = event.killerPosition || event.position;
+                const inPvpZone = checkPosition && this.isInPvpZone(guildConfig, checkPosition);
                 if (!inPvpZone) {
                     console.log(`[BOUNTY] Kill on PVE server outside PVP zone - no bounty claim`);
                     return; // Killer will be banned anyway
@@ -1524,7 +1542,9 @@ class MultiGuildKillfeed {
             
             // Check safe zone restrictions on PVP servers
             if (guildConfig.auto_ban_in_safe_zones) {
-                const inSafeZone = event.position && this.isInSafeZone(guildConfig, event.position);
+                // Use killer position (same logic as auto-ban)
+                const checkPosition = event.killerPosition || event.position;
+                const inSafeZone = checkPosition && this.isInSafeZone(guildConfig, checkPosition);
                 if (inSafeZone) {
                     console.log(`[BOUNTY] Kill in safe zone - no bounty claim`);
                     return; // Killer will be banned anyway
@@ -1533,6 +1553,18 @@ class MultiGuildKillfeed {
             
             // Get killer's Discord user ID
             const killerUserId = await db.getUserIdByDayZName(guildConfig.guild_id, event.killer);
+            
+            // Killer MUST have Discord linked to receive bounty money
+            if (!killerUserId) {
+                console.log(`[BOUNTY] ${event.killer} not linked to Discord - cannot claim bounty`);
+                // Add warning to embed
+                embed.addFields({
+                    name: '⚠️ Bounty Not Claimed',
+                    value: `**${event.killer}** killed a player with $${bounties.reduce((sum, b) => sum + b.amount, 0).toLocaleString()} in bounties, but their DayZ name is not linked to Discord. Use \`/link\` to claim future bounties!`,
+                    inline: false
+                });
+                return;
+            }
             
             // Claim all bounties on this target
             const claimResult = await db.claimBounties(
