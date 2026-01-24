@@ -577,7 +577,16 @@ module.exports = {
     claimBounties,
     cancelBounty,
     getUserActiveBounties,
-    expireOldBounties
+    expireOldBounties,
+    
+    // Subscription functions
+    getSubscription,
+    createSubscription,
+    updateSubscriptionStatus,
+    cancelSubscription,
+    isPremium,
+    getSubscriptionPlan,
+    getAllSubscriptionPlans
 };
 
 // Bounty operations
@@ -713,5 +722,91 @@ async function expireOldBounties() {
     `);
     
     return result.rowCount;
+}
+
+// ============ SUBSCRIPTION SYSTEM ============
+
+async function getSubscription(guildId) {
+    const result = await pool.query(
+        'SELECT * FROM subscriptions WHERE guild_id = $1',
+        [guildId]
+    );
+    return result.rows[0] || null;
+}
+
+async function createSubscription(guildId, data) {
+    const { stripeCustomerId, stripeSubscriptionId, planTier, status, currentPeriodStart, currentPeriodEnd, trialEnd } = data;
+    const result = await pool.query(`
+        INSERT INTO subscriptions 
+        (guild_id, stripe_customer_id, stripe_subscription_id, plan_tier, status, current_period_start, current_period_end, trial_end, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
+        ON CONFLICT (guild_id) 
+        DO UPDATE SET 
+            stripe_customer_id = $2,
+            stripe_subscription_id = $3,
+            plan_tier = $4,
+            status = $5,
+            current_period_start = $6,
+            current_period_end = $7,
+            trial_end = $8,
+            updated_at = NOW()
+        RETURNING *
+    `, [guildId, stripeCustomerId, stripeSubscriptionId, planTier, status, currentPeriodStart, currentPeriodEnd, trialEnd]);
+    return result.rows[0];
+}
+
+async function updateSubscriptionStatus(guildId, status, currentPeriodEnd = null) {
+    const result = await pool.query(`
+        UPDATE subscriptions 
+        SET status = $2, 
+            current_period_end = COALESCE($3, current_period_end),
+            updated_at = NOW()
+        WHERE guild_id = $1
+        RETURNING *
+    `, [guildId, status, currentPeriodEnd]);
+    return result.rows[0];
+}
+
+async function cancelSubscription(guildId) {
+    const result = await pool.query(`
+        UPDATE subscriptions 
+        SET status = 'canceled',
+            canceled_at = NOW(),
+            updated_at = NOW()
+        WHERE guild_id = $1
+        RETURNING *
+    `, [guildId]);
+    return result.rows[0];
+}
+
+async function isPremium(guildId) {
+    const subscription = await getSubscription(guildId);
+    if (!subscription) return false;
+    
+    // Check if subscription is active and premium
+    if (subscription.plan_tier === 'premium' && subscription.status === 'active') {
+        // Check if subscription hasn't expired
+        if (subscription.current_period_end) {
+            return new Date(subscription.current_period_end) > new Date();
+        }
+        return true;
+    }
+    
+    return false;
+}
+
+async function getSubscriptionPlan(planId) {
+    const result = await pool.query(
+        'SELECT * FROM subscription_plans WHERE plan_id = $1',
+        [planId]
+    );
+    return result.rows[0] || null;
+}
+
+async function getAllSubscriptionPlans() {
+    const result = await pool.query(
+        'SELECT * FROM subscription_plans WHERE is_active = true ORDER BY price_monthly'
+    );
+    return result.rows;
 }
 

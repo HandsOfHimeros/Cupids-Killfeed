@@ -1836,6 +1836,23 @@ async function handleSetupModalSubmit(interaction) {
             timezone: 'UTC'
         });
         
+        // Auto-detect if guild owner is bot owner
+        const botOwner = await interaction.client.application.fetch();
+        const isOwnerServer = interaction.guild.ownerId === botOwner.owner.id;
+        
+        // Initialize subscription - PREMIUM for owner, FREE for others
+        const tier = isOwnerServer ? 'premium' : 'free';
+        await db.createSubscription(guildId, {
+            planTier: tier,
+            status: 'active',
+            stripeCustomerId: null,
+            stripeSubscriptionId: null,
+            currentPeriodStart: null,
+            currentPeriodEnd: null,
+            trialEnd: null
+        });
+        console.log(`[SETUP_MODAL] Initialized ${tier.toUpperCase()} tier subscription for guild ${guildId} (owner server: ${isOwnerServer})`);
+        
         await interaction.editReply({ content: 'Creating Discord channels...' });
         
         const channels = {};
