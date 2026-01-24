@@ -1274,6 +1274,42 @@ bot.on('ready', async () => {
     console.log('[RAID SCHEDULER] Automatic raid weekend scheduler started (5-minute interval)');
 });
 
+// Welcome new members
+bot.on('guildMemberAdd', async (member) => {
+    try {
+        console.log(`[WELCOME] New member joined: ${member.user.tag} in guild ${member.guild.id}`);
+        
+        // Find general channel
+        const generalChannel = member.guild.channels.cache.find(
+            ch => ch.name.includes('general') || ch.name.includes('General')
+        );
+        
+        if (generalChannel) {
+            const { MessageEmbed } = require('discord.js');
+            const embed = new MessageEmbed()
+                .setColor('#00ff99')
+                .setTitle('👋 Welcome to the Server!')
+                .setDescription(`Welcome ${member}! We're glad to have you here!`)
+                .addField('📋 Getting Started', 
+                    '• Check out the server rules\n' +
+                    '• Introduce yourself in this channel\n' +
+                    '• Type `/shophelp` to learn about the shop system\n' +
+                    '• Have fun and enjoy your stay!', 
+                    false)
+                .setThumbnail(member.user.displayAvatarURL({ dynamic: true }))
+                .setFooter({ text: `Member #${member.guild.memberCount}` })
+                .setTimestamp();
+            
+            await generalChannel.send({ content: `${member}`, embeds: [embed] });
+            console.log(`[WELCOME] Sent welcome message for ${member.user.tag}`);
+        } else {
+            console.log(`[WELCOME] No general channel found in guild ${member.guild.id}`);
+        }
+    } catch (error) {
+        console.error('[WELCOME] Error sending welcome message:', error);
+    }
+});
+
 async function automaticRaidToggle(bot, guildConfig, enableRaiding) {
     const axios = require('axios');
     const { Client: FTPClient } = require('basic-ftp');
