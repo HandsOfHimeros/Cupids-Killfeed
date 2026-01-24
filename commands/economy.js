@@ -3162,7 +3162,7 @@ module.exports = {
                     new MessageEmbed()
                         .setColor('#f39c12')
                         .setTitle('🏇 Jousting Tournament')
-                        .setDescription(`Thou hast entered today's grand tournament!\n\n💰 Entry Fee: $${entryFee}\n🏆 Winners announced at day's end!\n\n*Tournament results coming soon...*`)
+                        .setDescription(`Thou hast entered today's grand tournament!\n\n💰 Entry Fee: $${entryFee}\n🏆 **Winner selected at midnight!**\n💵 Prize: 3x the total entry pool\n\n*May the best knight win!*`)
                 ]
             });
             

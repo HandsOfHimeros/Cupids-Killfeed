@@ -1272,7 +1272,110 @@ bot.on('ready', async () => {
     }, 5 * 60 * 1000); // Every 5 minutes
     
     console.log('[RAID SCHEDULER] Automatic raid weekend scheduler started (5-minute interval)');
+    
+    // TOURNAMENT WINNER SCHEDULER: Pick winners daily at midnight
+    setInterval(async () => {
+        try {
+            const now = new Date();
+            const hours = now.getHours();
+            const minutes = now.getMinutes();
+            
+            // Run at midnight (00:00 - 00:05)
+            if (hours === 0 && minutes < 5) {
+                console.log('[TOURNAMENT] Running daily tournament winner selection...');
+                await selectTournamentWinners(bot);
+            }
+        } catch (error) {
+            console.error('[TOURNAMENT] Error in scheduler:', error);
+        }
+    }, 5 * 60 * 1000); // Check every 5 minutes
+    
+    console.log('[TOURNAMENT] Daily tournament scheduler started');
 });
+
+async function selectTournamentWinners(bot) {
+    const { MessageEmbed } = require('discord.js');
+    
+    try {
+        // Get yesterday's date
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        const tournamentDate = yesterday.toISOString().split('T')[0];
+        
+        console.log(`[TOURNAMENT] Selecting winners for ${tournamentDate}`);
+        
+        // Get all guilds
+        const guilds = await db.getAllGuildConfigs();
+        
+        for (const guildConfig of guilds) {
+            try {
+                // Get all entries for this guild from yesterday
+                const entries = await db.query(
+                    'SELECT user_id, entry_cost FROM tournament_entries WHERE guild_id = $1 AND entry_date = $2',
+                    [guildConfig.guild_id, tournamentDate]
+                );
+                
+                if (entries.rows.length === 0) {
+                    console.log(`[TOURNAMENT] No entries for guild ${guildConfig.guild_id}`);
+                    continue;
+                }
+                
+                console.log(`[TOURNAMENT] Guild ${guildConfig.guild_id}: ${entries.rows.length} entries`);
+                
+                // Calculate prize pool
+                const prizePool = entries.rows.reduce((sum, e) => sum + e.entry_cost, 0);
+                
+                // Select random winner
+                const winnerEntry = entries.rows[Math.floor(Math.random() * entries.rows.length)];
+                const winnerId = winnerEntry.user_id;
+                
+                // Award prize (3x entry fees as prize)
+                const prize = prizePool * 3;
+                await db.addBalance(guildConfig.guild_id, winnerId, prize);
+                
+                // Update stats
+                const { updateUserStats } = require('./commands/economy.js');
+                await updateUserStats(guildConfig.guild_id, winnerId, prize, true);
+                
+                // Post announcement
+                const guild = await bot.guilds.fetch(guildConfig.guild_id);
+                const generalChannel = guild.channels.cache.find(
+                    ch => ch.name.includes('general') || ch.name.includes('General')
+                );
+                
+                if (generalChannel) {
+                    const embed = new MessageEmbed()
+                        .setColor('#f39c12')
+                        .setTitle('🏇 Jousting Tournament Results!')
+                        .setDescription(`**Yesterday's Grand Tournament**`)
+                        .addField('🏆 Champion', `<@${winnerId}>`, true)
+                        .addField('💰 Prize', `$${prize}`, true)
+                        .addField('👥 Participants', `${entries.rows.length} brave knights`, true)
+                        .setFooter({ text: 'Use /joust to enter today\'s tournament!' })
+                        .setTimestamp();
+                    
+                    await generalChannel.send({ embeds: [embed] });
+                    console.log(`[TOURNAMENT] Announced winner in guild ${guildConfig.guild_id}`);
+                }
+                
+                // Clean up old entries (older than 7 days)
+                const weekAgo = new Date();
+                weekAgo.setDate(weekAgo.getDate() - 7);
+                await db.query(
+                    'DELETE FROM tournament_entries WHERE guild_id = $1 AND entry_date < $2',
+                    [guildConfig.guild_id, weekAgo.toISOString().split('T')[0]]
+                );
+                
+            } catch (guildError) {
+                console.error(`[TOURNAMENT] Error processing guild ${guildConfig.guild_id}:`, guildError);
+            }
+        }
+        
+        console.log('[TOURNAMENT] Winner selection complete');
+    } catch (error) {
+        console.error('[TOURNAMENT] Fatal error:', error);
+    }
+}
 
 // Welcome new members
 bot.on('guildMemberAdd', async (member) => {
