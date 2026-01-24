@@ -58,6 +58,28 @@ module.exports = {
                 .setDescription('View your active bounties')),
 
     async execute(interaction) {
+        // Premium feature check
+        const guildId = interaction.guild.id;
+        const isPremium = await db.isPremium(guildId);
+        if (!isPremium) {
+            const { MessageEmbed } = require('discord.js');
+            const premiumEmbed = new MessageEmbed()
+                .setColor('#ff5555')
+                .setTitle('🔒 Premium Feature')
+                .setDescription(
+                    `**Bounty System** is a premium feature!\n\n` +
+                    `**Upgrade to Premium ($5/month) to unlock:**\n` +
+                    `• Place bounties on players\n` +
+                    `• Claim bounty rewards\n` +
+                    `• Anonymous bounty placement\n` +
+                    `• And all other premium features!\n\n` +
+                    `*Contact the server owner to upgrade.*`
+                )
+                .setFooter({ text: 'Free tier: Killfeed, K/D, daily rewards, 3 mini-games' });
+            await interaction.reply({ embeds: [premiumEmbed], ephemeral: true });
+            return;
+        }
+        
         // Defer immediately to prevent timeout during database operations
         await interaction.deferReply({ ephemeral: true });
         

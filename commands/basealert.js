@@ -119,6 +119,28 @@ module.exports = {
         ),
 
     async execute(interaction) {
+        // Premium feature check
+        const guildId = interaction.guild.id;
+        const isPremium = await db.isPremium(guildId);
+        if (!isPremium) {
+            const { MessageEmbed } = require('discord.js');
+            const premiumEmbed = new MessageEmbed()
+                .setColor('#ff5555')
+                .setTitle('🔒 Premium Feature')
+                .setDescription(
+                    `**Base Alert System** is a premium feature!\n\n` +
+                    `**Upgrade to Premium ($5/month) to unlock:**\n` +
+                    `• Base proximity alerts\n` +
+                    `• Whitelist trusted players\n` +
+                    `• 200m detection radius\n` +
+                    `• And all other premium features!\n\n` +
+                    `*Contact the server owner to upgrade.*`
+                )
+                .setFooter({ text: 'Free tier: Killfeed, K/D, daily rewards, 3 mini-games' });
+            await interaction.reply({ embeds: [premiumEmbed], ephemeral: true });
+            return;
+        }
+        
         // Defer reply immediately to prevent timeout
         await interaction.deferReply({ ephemeral: true });
         

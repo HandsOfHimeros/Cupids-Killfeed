@@ -8,6 +8,32 @@ const MINI_GAMES = ['fortuneteller','pillage','archery','tarot','quest','liarsdi
 const COOLDOWN_LIMIT = 1; // times allowed
 const COOLDOWN_WINDOW = 6 * 60 * 60 * 1000; // 6 hours in ms
 
+// FREE TIER GAMES - Available without premium subscription
+const FREE_TIER_GAMES = ['fortuneteller', 'labor', 'taverndice'];
+
+// Premium check helper function
+async function requiresPremium(guildId, commandName) {
+    const isPremium = await db.isPremium(guildId);
+    if (!isPremium) {
+        return new MessageEmbed()
+            .setColor('#ff5555')
+            .setTitle('🔒 Premium Feature')
+            .setDescription(
+                `**${commandName}** is a premium feature!\n\n` +
+                `**Upgrade to Premium ($5/month) to unlock:**\n` +
+                `• Full shop system with item spawning\n` +
+                `• 27+ medieval mini-games\n` +
+                `• Bounty system\n` +
+                `• Base alerts & trader system\n` +
+                `• Properties & achievements\n` +
+                `• And much more!\n\n` +
+                `*Contact the server owner to upgrade.*`
+            )
+            .setFooter({ text: 'Free tier: Killfeed, K/D, daily rewards, 3 mini-games' });
+    }
+    return null; // Premium active
+}
+
 function getCooldowns() {
     if (!fs.existsSync(COOLDOWN_FILE)) fs.writeFileSync(COOLDOWN_FILE, '{}');
     return JSON.parse(fs.readFileSync(COOLDOWN_FILE, 'utf8'));
@@ -1020,6 +1046,13 @@ module.exports = {
         if (interaction.commandName === 'shop') {
             console.log('[SHOP] Entered /shop logic');
             try {
+                // Check for premium subscription
+                const premiumError = await requiresPremium(guildId, 'Shop');
+                if (premiumError) {
+                    await interaction.reply({ embeds: [premiumError], ephemeral: true });
+                    return;
+                }
+                
                 console.log('[SHOP] Channel check');
                 if (!DEV_MODE && interaction.channelId !== SHOP_CHANNEL_ID) {
                     await interaction.reply({
@@ -1794,6 +1827,12 @@ module.exports = {
                 ]
             });
         } else if (commandName === 'deposit') {
+            // Premium feature check
+            const premiumError = await requiresPremium(guildId, 'Deposit');
+            if (premiumError) {
+                await interaction.reply({ embeds: [premiumError], ephemeral: true });
+                return;
+            }
             const amount = interaction.options.getInteger('amount');
             const bal = await db.getBalance(guildId, userId);
             const { MessageEmbed } = require('discord.js');
@@ -1809,6 +1848,12 @@ module.exports = {
             const newBank = await db.addBank(guildId, userId, amount);
             await interaction.reply({ embeds: [new MessageEmbed().setColor('#00aaff').setTitle('💸 Deposit Successful').addField('Amount', `$${amount}`, true).addField('New Bank Balance', `$${newBank}`, true)] });
         } else if (commandName === 'withdraw') {
+            // Premium feature check
+            const premiumError = await requiresPremium(guildId, 'Withdraw');
+            if (premiumError) {
+                await interaction.reply({ embeds: [premiumError], ephemeral: true });
+                return;
+            }
             const amount = interaction.options.getInteger('amount');
             const bank = await db.getBank(guildId, userId);
             const { MessageEmbed } = require('discord.js');
@@ -1852,7 +1897,18 @@ module.exports = {
                 desc += `**#${i + 1}** <@${top[i][0]}>: $${top[i][1]}\n`;
             }
             await interaction.reply({ embeds: [new MessageEmbed().setColor('#ffd700').setTitle('🏆 Economy Leaderboard').setDescription(desc)] });
-        } else if (commandName === 'fortuneteller') {
+        }
+        
+        // Check premium for mini-games (except free tier games)
+        if (MINI_GAMES.includes(commandName) && !FREE_TIER_GAMES.includes(commandName)) {
+            const premiumError = await requiresPremium(guildId, 'Mini-Game: ' + commandName);
+            if (premiumError) {
+                await interaction.reply({ embeds: [premiumError], ephemeral: true });
+                return;
+            }
+        }
+        
+        if (commandName === 'fortuneteller') {
             if (!canPlayMiniGame(userId, 'fortuneteller')) {
                 const nextTime = nextAvailableMiniGame(userId);
                 await interaction.reply({ content: `⏳ The oracle rests! Return <t:${Math.floor(nextTime / 1000)}:R>`, ephemeral: true });
@@ -4351,6 +4407,12 @@ module.exports = {
             
         // ========== GIFT ==========
         } else if (commandName === 'gift') {
+            // Premium feature check
+            const premiumError = await requiresPremium(guildId, 'Gift');
+            if (premiumError) {
+                await interaction.reply({ embeds: [premiumError], ephemeral: true });
+                return;
+            }
             const targetUser = interaction.options.getUser('user');
             const amount = interaction.options.getInteger('amount');
             
@@ -4382,6 +4444,12 @@ module.exports = {
             
         // ========== PROPERTIES ==========
         } else if (commandName === 'properties') {
+            // Premium feature check
+            const premiumError = await requiresPremium(guildId, 'Properties');
+            if (premiumError) {
+                await interaction.reply({ embeds: [premiumError], ephemeral: true });
+                return;
+            }
             const properties = await db.getUserProperties(guildId, userId);
             
             if (properties.length === 0) {
@@ -4426,6 +4494,12 @@ module.exports = {
             
         // ========== BUY PROPERTY ==========
         } else if (commandName === 'buyproperty') {
+            // Premium feature check
+            const premiumError = await requiresPremium(guildId, 'Buy Property');
+            if (premiumError) {
+                await interaction.reply({ embeds: [premiumError], ephemeral: true });
+                return;
+            }
             const propertyType = interaction.options.getString('type');
             
             const PROPERTY_TYPES = {
