@@ -145,7 +145,6 @@ module.exports = {
         await interaction.deferReply({ ephemeral: true });
         
         const subcommand = interaction.options.getSubcommand();
-        const guildId = interaction.guild.id;
         const userId = interaction.user.id;
 
         try {

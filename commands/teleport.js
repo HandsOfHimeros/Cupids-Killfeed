@@ -385,7 +385,6 @@ module.exports = {
 
         const tmpPath = path.join(__dirname, '..', 'logs', `cfggameplay_delete_${Date.now()}.json`);
         fs.writeFileSync(tmpPath, JSON.stringify(cfgGameplay, null, 4), 'utf8');
-        const platformPath = getPlatformPath(guildConfig.rows[0].platform);
         await client.uploadFrom(tmpPath, `/${platformPath}_missions/dayzOffline.${server}/cfggameplay.json`);
         fs.unlinkSync(tmpPath);
         client.close();
