@@ -1232,24 +1232,33 @@ bot.on('ready', async () => {
                     }
                     
                     const currentDay = currentDate.getDay();
-                    const currentHours = String(currentDate.getHours()).padStart(2, '0');
-                    const currentMinutes = String(currentDate.getMinutes()).padStart(2, '0');
-                    const currentTime = `${currentHours}:${currentMinutes}`;
+                    const currentHours = currentDate.getHours();
+                    const currentMinutes = currentDate.getMinutes();
                     
                     const isCurrentlyActive = guildConfig.raid_currently_active || false;
                     
+                    // Helper to check if current time is within 5 minutes of target time
+                    const isWithin5Minutes = (targetTime) => {
+                        const [targetHour, targetMin] = targetTime.split(':').map(Number);
+                        const currentTotalMinutes = currentHours * 60 + currentMinutes;
+                        const targetTotalMinutes = targetHour * 60 + targetMin;
+                        const diff = currentTotalMinutes - targetTotalMinutes;
+                        // Check if we're within the current 5-minute window (0-4 minutes past target)
+                        return diff >= 0 && diff < 5;
+                    };
+                    
                     // Check if it's time to START raiding
-                    if (currentDay === guildConfig.raid_start_day && currentTime === guildConfig.raid_start_time) {
+                    if (currentDay === guildConfig.raid_start_day && isWithin5Minutes(guildConfig.raid_start_time)) {
                         if (!isCurrentlyActive) {
-                            console.log(`[RAID SCHEDULER] Triggering raid START for guild ${guildConfig.guild_id}`);
+                            console.log(`[RAID SCHEDULER] Triggering raid START for guild ${guildConfig.guild_id} at ${currentHours}:${String(currentMinutes).padStart(2, '0')}`);
                             await automaticRaidToggle(bot, guildConfig, true);
                         }
                     }
                     
                     // Check if it's time to END raiding
-                    if (currentDay === guildConfig.raid_end_day && currentTime === guildConfig.raid_end_time) {
+                    if (currentDay === guildConfig.raid_end_day && isWithin5Minutes(guildConfig.raid_end_time)) {
                         if (isCurrentlyActive) {
-                            console.log(`[RAID SCHEDULER] Triggering raid END for guild ${guildConfig.guild_id}`);
+                            console.log(`[RAID SCHEDULER] Triggering raid END for guild ${guildConfig.guild_id} at ${currentHours}:${String(currentMinutes).padStart(2, '0')}`);
                             await automaticRaidToggle(bot, guildConfig, false);
                         }
                     }
