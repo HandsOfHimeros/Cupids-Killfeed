@@ -3281,13 +3281,13 @@ module.exports = {
                         .addField('2️⃣ Check Your Name', 
                             '`/myname` - Verify your registered name', false)
                         .addField('3️⃣ Browse the Shop', 
-                            '`/shop` - View all available items and prices', false)
-                        .addField('4️⃣ Purchase an Item', 
-                            '`/shop item:canteen` - Buy an item from the shop', false)
+                            '`/shop` - Opens category browser with buttons\n• Click a category (Weapons, Medical, Food, etc.)\n• Browse items with ⬅️ ➡️ buttons\n• Click **Add to Cart** to purchase', false)
+                        .addField('4️⃣ View Your Location', 
+                            '`/imhere` - Check where your items will spawn', false)
                         .addField('📍 Location System', 
-                            '• Items spawn at your **last known location**\n• Bot tracks your position from server logs\n• Make sure you\'ve been on the server recently\n• Items will spawn at your location after next restart', false)
-                        .addField('🔄 Restart Schedule', 
-                            '**Server restarts:** 3, 6, 9, 12 (AM/PM) EST\n• Purchased items spawn on next restart\n• Items spawn once and are removed from spawn list\n• Buy anytime - spawns on next scheduled restart', false)
+                            '• Items spawn at your **last known location**\n• Bot tracks your position from server logs\n• Use `/imhere` to verify your spawn location\n• **Important:** Stand still for up to 20 minutes for location to update\n• Nitrado logs can be delayed - be patient!\n• Items spawn on a table near you after next restart', false)
+                        .addField('🔄 How Spawning Works', 
+                            '• Purchased items spawn after the **next server restart**\n• Items appear on a table at your last known location\n• Buy anytime - items will spawn on next restart\n• Check restart times in your server info channel', false)
                         .addField('💰 Earn Money', 
                             'Medieval mini-games! Use `/rank` to see unlocked games.\n⏳ Each can be used once every 6 hours', false)
                         .setFooter({ text: 'Need help? Ask an admin!' })
