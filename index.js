@@ -1,6 +1,14 @@
 // Load environment variables FIRST before any other imports
 require('dotenv').config();
 
+// Start Stripe webhook server if configured
+if (process.env.STRIPE_SECRET_KEY && process.env.STRIPE_WEBHOOK_SECRET) {
+    console.log('[STRIPE] Starting webhook server...');
+    require('./stripe_webhook.js');
+} else {
+    console.log('[STRIPE] Webhook server disabled - missing Stripe environment variables');
+}
+
 // --- Killfeed Channel Monitor ---
 const fs = require('fs');
 const path = require('path');
