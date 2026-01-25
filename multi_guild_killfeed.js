@@ -1014,7 +1014,6 @@ class MultiGuildKillfeed {
         if (!position || !position.x || !position.z) return null;
         
         const x = Math.round(position.x);
-        const y = Math.round(position.y);
         const z = Math.round(position.z);
         
         // Map name to iZurvive URLs
@@ -1028,8 +1027,8 @@ class MultiGuildKillfeed {
             baseUrl = 'https://www.izurvive.com/#location=';
         }
         
-        // Format: X;Y;Z
-        const coords = `${x};${y};${z}`;
+        // Format: X;Z (iZurvive only needs 2D map coordinates, not height)
+        const coords = `${x};${z}`;
         const url = `${baseUrl}${coords}`;
         
         return `[${x}, ${z}](${url})`;
