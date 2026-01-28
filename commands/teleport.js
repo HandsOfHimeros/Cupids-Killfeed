@@ -335,7 +335,7 @@ module.exports = {
     async removeFromCfgGameplay(guildId, server, fileName) {
         try {
             const guildConfig = await db.query(
-                'SELECT nitrado_token, nitrado_service_id, nitrado_instance FROM guild_configs WHERE guild_id = $1',
+                'SELECT nitrado_token, nitrado_service_id, nitrado_instance, platform FROM guild_configs WHERE guild_id = $1',
                 [guildId]
             );
 
@@ -352,12 +352,16 @@ module.exports = {
 
             const platformPath = getPlatformPath(platform);
             // Download current cfggameplay.json
+            const cfgGameplayPath = `/games/${nitrado_instance}/ftproot/${platformPath}_missions/dayzOffline.${server}/cfggameplay.json`;
             const downloadResponse = await axios.get(
-                `https://api.nitrado.net/services/${server_id}/gameservers/file_server/download?file=/games/${nitrado_instance}/ftproot/${platformPath}/config/ServerDZ/cfggameplay.json`,
+                `https://api.nitrado.net/services/${server_id}/gameservers/file_server/download?file=${encodeURIComponent(cfgGameplayPath)}`,
                 { headers }
             );
 
-            let cfgGameplay = downloadResponse.data;
+            const fileUrl = downloadResponse.data.data.token.url;
+            const fileResp = await axios.get(fileUrl);
+            let cfgGameplay = fileResp.data;
+            
             if (typeof cfgGameplay === 'string') {
                 cfgGameplay = JSON.parse(cfgGameplay);
             }
