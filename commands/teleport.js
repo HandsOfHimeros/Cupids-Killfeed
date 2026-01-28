@@ -362,31 +362,37 @@ module.exports = {
             // Remove from playerRestrictedAreaFiles array
             if (cfgGameplay.WorldsData?.playerRestrictedAreaFiles) {
                 const customPath = `custom/${fileName}`;
+                const lengthBefore = cfgGameplay.WorldsData.playerRestrictedAreaFiles.length;
                 cfgGameplay.WorldsData.playerRestrictedAreaFiles = cfgGameplay.WorldsData.playerRestrictedAreaFiles.filter(
                     file => file !== customPath
                 );
+                const lengthAfter = cfgGameplay.WorldsData.playerRestrictedAreaFiles.length;
+                console.log(`[TELEPORT] Filtered ${customPath}: ${lengthBefore} -> ${lengthAfter} files`);
+            } else {
+                console.log('[TELEPORT] No playerRestrictedAreaFiles array found in WorldsData');
             }
 
-// Get FTP credentials and upload modified cfggameplay.json
-        const infoUrl = `https://api.nitrado.net/services/${server_id}/gameservers`;
-        const infoResp = await axios.get(infoUrl, { headers });
-        const ftpCreds = infoResp.data.data.gameserver.credentials.ftp;
+            // Get FTP credentials and upload modified cfggameplay.json
+            const infoUrl = `https://api.nitrado.net/services/${server_id}/gameservers`;
+            const infoResp = await axios.get(infoUrl, { headers });
+            const ftpCreds = infoResp.data.data.gameserver.credentials.ftp;
 
-        const { Client } = require('basic-ftp');
-        const client = new Client();
-        await client.access({
-            host: ftpCreds.hostname,
-            user: ftpCreds.username,
-            password: ftpCreds.password,
-            port: ftpCreds.port || 21,
-            secure: false
-        });
+            const { Client } = require('basic-ftp');
+            const client = new Client();
+            await client.access({
+                host: ftpCreds.hostname,
+                user: ftpCreds.username,
+                password: ftpCreds.password,
+                port: ftpCreds.port || 21,
+                secure: false
+            });
 
-        const tmpPath = path.join(__dirname, '..', 'logs', `cfggameplay_delete_${Date.now()}.json`);
-        fs.writeFileSync(tmpPath, JSON.stringify(cfgGameplay, null, 4), 'utf8');
-        await client.uploadFrom(tmpPath, `/${platformPath}_missions/dayzOffline.${server}/cfggameplay.json`);
-        fs.unlinkSync(tmpPath);
-        client.close();
+            const path = require('path');
+            const tmpPath = path.join(__dirname, '..', 'logs', `cfggameplay_delete_${Date.now()}.json`);
+            fs.writeFileSync(tmpPath, JSON.stringify(cfgGameplay, null, 4), 'utf8');
+            await client.uploadFrom(tmpPath, `/${platformPath}_missions/dayzOffline.${server}/cfggameplay.json`);
+            fs.unlinkSync(tmpPath);
+            client.close();
 
             console.log(`[TELEPORT] Removed ${fileName} from cfggameplay.json for guild ${guildId}`);
             return true;
