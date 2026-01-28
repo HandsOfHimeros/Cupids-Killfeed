@@ -275,11 +275,11 @@ module.exports = {
                     [
                         [27, 5.2, 11],
                         [108, 0, 0],
-                        [fromZone.x, fromZone.z, fromZone.y]
+                        [fromZone.x, fromZone.y, fromZone.z]
                     ]
                 ],
                 safePositions3D: [
-                    [toZone.x, toZone.z, toZone.y]
+                    [toZone.x, toZone.y, toZone.z]
                 ]
             };
 
@@ -578,11 +578,11 @@ module.exports = {
                 [
                     [27, 5.2, 11],
                     [108, 0, 0],
-                    [fromZone.x, fromZone.z, fromZone.y]
+                    [fromZone.x, fromZone.y, fromZone.z]
                 ]
             ],
             safePositions3D: [
-                [toZone.x, toZone.z, toZone.y]
+                [toZone.x, toZone.y, toZone.z]
             ]
         };
 
@@ -894,18 +894,11 @@ module.exports = {
                 [
                     [27, 5.2, 11],
                     [108, 0, 0],
-                    [fromZone.x, fromZone.z, fromZone.y]
+                    [fromZone.x, fromZone.y, fromZone.z]
                 ]
             ],
             safePositions3D: [
-                [toZone.x, toZone.z, toZone.y]
-            ]
-                    trespassWarning: 1,
-                    bannedWeapons: [],
-                    safePositions3D: [
-                        { x: toZone.x, z: toZone.y, y: toZone.z }
-                    ]
-                }
+                [toZone.x, toZone.y, toZone.z]
             ]
         };
 
@@ -1459,11 +1452,11 @@ module.exports = {
                 [
                     [27, 5.2, 11],
                     [108, 0, 0],
-                    [fromZone.x, fromZone.z, fromZone.y]
+                    [fromZone.x, fromZone.y, fromZone.z]
                 ]
             ],
             safePositions3D: [
-                [toZone.x, toZone.z, toZone.y]
+                [toZone.x, toZone.y, toZone.z]
             ]
         };
 
