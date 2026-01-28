@@ -17,7 +17,9 @@ function getPlatformPath(platform) {
 const lastCoordinates = new Map();
 
 module.exports = {
-    // No data export - this is only called as a subcommand from admin.js
+    data: new SlashCommandBuilder()
+        .setName('teleport')
+        .setDescription('Manage teleport zones and routes (Admin only)'),
     
     async execute(interaction) {
         // Check admin permission
@@ -1232,7 +1234,7 @@ module.exports = {
         
         try {
             const guildConfig = await db.query(
-                'SELECT nitrado_token, nitrado_service_id, nitrado_instance FROM guild_configs WHERE guild_id = $1',
+                'SELECT nitrado_token, nitrado_service_id, nitrado_instance, platform FROM guild_configs WHERE guild_id = $1',
                 [guildId]
             );
 
