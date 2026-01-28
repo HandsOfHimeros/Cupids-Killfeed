@@ -270,23 +270,16 @@ module.exports = {
 
             // Regenerate JSON
             const teleportJson = {
+                areaName: `RestrictedArea-${route.from_zone_name}2${route.to_zone_name}`,
                 PRABoxes: [
-                    {
-                        type: "Box",
-                        points: [
-                            { x: fromZone.x, z: fromZone.y, y: fromZone.z }
-                        ],
-                        size: { x: 27, z: 5.2, y: 11 },
-                        rotation: { x: 108, z: 0, y: 0 },
-                        display: `${route.from_zone_name} to ${route.to_zone_name}`,
-                        allowedWeapons: 0,
-                        schedule: 0,
-                        trespassWarning: 1,
-                        bannedWeapons: [],
-                        safePositions3D: [
-                            { x: toZone.x, z: toZone.y, y: toZone.z }
-                        ]
-                    }
+                    [
+                        [27, 5.2, 11],
+                        [108, 0, 0],
+                        [fromZone.x, fromZone.z, fromZone.y]
+                    ]
+                ],
+                safePositions3D: [
+                    [toZone.x, toZone.z, toZone.y]
                 ]
             };
 
@@ -574,18 +567,17 @@ module.exports = {
 
         // Generate JSON
         const teleportJson = {
-            PRABoxes: [{
-                type: "Box",
-                points: [{ x: fromZone.x, z: fromZone.y, y: fromZone.z }],
-                size: { x: 27, z: 5.2, y: 11 },
-                rotation: { x: 108, z: 0, y: 0 },
-                display: `${fromZoneName} to ${toZoneName}`,
-                allowedWeapons: 0,
-                schedule: 0,
-                trespassWarning: 1,
-                bannedWeapons: [],
-                safePositions3D: [{ x: toZone.x, z: toZone.y, y: toZone.z }]
-            }]
+            areaName: `RestrictedArea-${fromZoneName}2${toZoneName}`,
+            PRABoxes: [
+                [
+                    [27, 5.2, 11],
+                    [108, 0, 0],
+                    [fromZone.x, fromZone.z, fromZone.y]
+                ]
+            ],
+            safePositions3D: [
+                [toZone.x, toZone.z, toZone.y]
+            ]
         };
 
         // Upload to Nitrado
@@ -891,17 +883,17 @@ module.exports = {
 
         // Generate JSON file content
         const teleportJson = {
+            areaName: `RestrictedArea-${fromZoneName}2${toZoneName}`,
             PRABoxes: [
-                {
-                    type: "Box",
-                    points: [
-                        { x: fromZone.x, z: fromZone.y, y: fromZone.z }
-                    ],
-                    size: { x: 27, z: 5.2, y: 11 },
-                    rotation: { x: 108, z: 0, y: 0 },
-                    display: `${fromZoneName} to ${toZoneName}`,
-                    allowedWeapons: 0,
-                    schedule: 0,
+                [
+                    [27, 5.2, 11],
+                    [108, 0, 0],
+                    [fromZone.x, fromZone.z, fromZone.y]
+                ]
+            ],
+            safePositions3D: [
+                [toZone.x, toZone.z, toZone.y]
+            ]
                     trespassWarning: 1,
                     bannedWeapons: [],
                     safePositions3D: [
@@ -1456,23 +1448,16 @@ module.exports = {
 
         // Create teleport JSON
         const teleportJson = {
+            areaName: `RestrictedArea-${fromZoneName}2${toZoneName}`,
             PRABoxes: [
-                {
-                    type: "Box",
-                    points: [
-                        { x: fromZone.x, z: fromZone.y, y: fromZone.z }
-                    ],
-                    size: { x: 27, z: 5.2, y: 11 },
-                    rotation: { x: 108, z: 0, y: 0 },
-                    display: `${fromZoneName} to ${toZoneName}`,
-                    allowedWeapons: 0,
-                    schedule: 0,
-                    trespassWarning: 1,
-                    bannedWeapons: [],
-                    safePositions3D: [
-                        { x: toZone.x, z: toZone.y, y: toZone.z }
-                    ]
-                }
+                [
+                    [27, 5.2, 11],
+                    [108, 0, 0],
+                    [fromZone.x, fromZone.z, fromZone.y]
+                ]
+            ],
+            safePositions3D: [
+                [toZone.x, toZone.z, toZone.y]
             ]
         };
 
