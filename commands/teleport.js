@@ -367,9 +367,9 @@ module.exports = {
             }
 
             // Remove from playerRestrictedAreaFiles array
-            if (cfgGameplay.playerRestrictedAreaFiles) {
+            if (cfgGameplay.WorldsData?.playerRestrictedAreaFiles) {
                 const customPath = `custom/${fileName}`;
-                cfgGameplay.playerRestrictedAreaFiles = cfgGameplay.playerRestrictedAreaFiles.filter(
+                cfgGameplay.WorldsData.playerRestrictedAreaFiles = cfgGameplay.WorldsData.playerRestrictedAreaFiles.filter(
                     file => file !== customPath
                 );
             }
@@ -1269,18 +1269,18 @@ module.exports = {
                 cfgGameplay = JSON.parse(cfgGameplay);
             }
 
-            console.log('[TELEPORT] Current cfggameplay has playerRestrictedAreaFiles:', !!cfgGameplay.playerRestrictedAreaFiles);
+            console.log('[TELEPORT] Current cfggameplay has playerRestrictedAreaFiles:', !!cfgGameplay.WorldsData?.playerRestrictedAreaFiles);
 
             // Add to playerRestrictedAreaFiles array (create if doesn't exist)
-            if (!cfgGameplay.playerRestrictedAreaFiles) {
+            if (!cfgGameplay.WorldsData.playerRestrictedAreaFiles) {
                 console.log('[TELEPORT] Creating playerRestrictedAreaFiles array');
-                cfgGameplay.playerRestrictedAreaFiles = [];
+                cfgGameplay.WorldsData.playerRestrictedAreaFiles = [];
             }
 
             const customPath = `custom/${fileName}`;
-            if (!cfgGameplay.playerRestrictedAreaFiles.includes(customPath)) {
-                cfgGameplay.playerRestrictedAreaFiles.push(customPath);
-                console.log(`[TELEPORT] Added ${customPath} to playerRestrictedAreaFiles (total: ${cfgGameplay.playerRestrictedAreaFiles.length})`);
+            if (!cfgGameplay.WorldsData.playerRestrictedAreaFiles.includes(customPath)) {
+                cfgGameplay.WorldsData.playerRestrictedAreaFiles.push(customPath);
+                console.log(`[TELEPORT] Added ${customPath} to playerRestrictedAreaFiles (total: ${cfgGameplay.WorldsData.playerRestrictedAreaFiles.length})`);
             } else {
                 console.log(`[TELEPORT] ${customPath} already in playerRestrictedAreaFiles`);
             }
