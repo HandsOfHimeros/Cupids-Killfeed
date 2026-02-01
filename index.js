@@ -32,6 +32,29 @@ const pool = new Pool({
     ssl: process.env.DATABASE_URL.includes('localhost') ? false : { rejectUnauthorized: false }
 });
 
+// Queue system to prevent concurrent spawn.json writes per guild
+const spawnWriteQueues = new Map(); // guildId -> Promise chain
+
+async function queueSpawnWrite(guildId, operation) {
+    // Get or create the queue for this guild
+    if (!spawnWriteQueues.has(guildId)) {
+        spawnWriteQueues.set(guildId, Promise.resolve());
+    }
+    
+    // Chain this operation to the queue
+    const queue = spawnWriteQueues.get(guildId);
+    const newQueue = queue.then(async () => {
+        console.log(`[SPAWN-QUEUE] Processing spawn write for guild ${guildId}`);
+        return await operation();
+    }).catch(err => {
+        console.error(`[SPAWN-QUEUE] Error in queued operation for guild ${guildId}:`, err.message);
+        throw err;
+    });
+    
+    spawnWriteQueues.set(guildId, newQueue);
+    return newQueue;
+}
+
 // Patch Discord.js v13 for Node.js 24 compatibility
 const discord = require('discord.js');
 const BaseChannel = discord.BaseChannel || discord.Channel;
@@ -304,6 +327,13 @@ module.exports.fetchMostRecentDayZLog = fetchMostRecentDayZLog;
 
 // Function to add a spawn entry to spawn.json on Nitrado server
 async function addCupidSpawnEntry(spawnEntry, guildId) {
+    // Queue this operation to prevent concurrent writes to spawn.json
+    return queueSpawnWrite(guildId, async () => {
+        return await addCupidSpawnEntryInternal(spawnEntry, guildId);
+    });
+}
+
+async function addCupidSpawnEntryInternal(spawnEntry, guildId) {
     // Get guild configuration
     const guildConfig = await db.getGuildConfig(guildId);
     if (!guildConfig) {
@@ -395,7 +425,7 @@ async function addCupidSpawnEntry(spawnEntry, guildId) {
                     Math.pow(obj.pos[2] - playerZ, 2) // Use X and Z for horizontal distance
                 );
                 
-                if (distance < 5) { // Within 5 meters
+                if (distance < 20) { // Within 20 meters
                     nearbyTable = obj;
                     console.log(`[SPAWN] Found nearby table at [${obj.pos[0]}, ${obj.pos[1]}, ${obj.pos[2]}], distance: ${distance.toFixed(2)}m`);
                     break;
