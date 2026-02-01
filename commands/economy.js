@@ -1699,8 +1699,8 @@ module.exports = {
                                     })
                                     .join('\n');
                                 
-                                // Get player's current position to show spawn location
-                                const playerPos = await db.getPlayerPosition(guildId, dayzName);
+                                // Get player's current position to show spawn location (use same function as spawn system)
+                                const playerPos = await db.getPlayerLocation(guildId, dayzName);
                                 let locationInfo = '\n\n**Items will spawn on a table near your current location!**\nIf no table exists within 5m, a new one will be created.';
 
                                 if (playerPos) {
