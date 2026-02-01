@@ -517,7 +517,7 @@ module.exports = [
   
   // Mines & Traps
   { name: 'Landmine', class: 'Landmine', averagePrice: 800, description: 'Anti-personnel mine' },
-  { name: 'Claymore Mine', class: 'Claymore_Mine', averagePrice: 900, description: 'Directional mine' },
+  { name: 'Claymore Mine', class: 'ClaymoreMine', averagePrice: 900, description: 'Directional mine' },
   { name: 'Tripwire Trap', class: 'TripwireTrap', averagePrice: 200, description: 'Alarm trap' },
   
   // Electronics

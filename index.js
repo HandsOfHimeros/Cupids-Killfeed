@@ -392,7 +392,7 @@ async function addCupidSpawnEntryInternal(spawnEntry, guildId) {
         
         // Step 3: Get spawn template for this item class
         const template = spawnTemplates[spawnEntry.class] || { ...defaultTemplate, name: spawnEntry.class };
-        const itemYOffset = (template.pos && template.pos[1]) || 0.55; // Default to +0.55 for standing items on table surface
+        const itemYOffset = (template.pos && template.pos[1] !== undefined && template.pos[1] !== 0) ? template.pos[1] : 0.55; // Default to +0.55 for items on table surface
         
         // Step 3.5: Get player's current location from database
         let playerLocation = null;

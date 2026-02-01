@@ -6601,8 +6601,8 @@
       "scale": 1,
       "enableCEPersistency": 0
     },
-    "Claymore_Mine": {
-      "name": "Claymore_Mine",
+    "ClaymoreMine": {
+      "name": "ClaymoreMine",
       "pos": [
         0,
         0,
