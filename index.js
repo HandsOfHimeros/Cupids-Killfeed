@@ -402,12 +402,14 @@ async function addCupidSpawnEntryInternal(spawnEntry, guildId) {
             if (playerLocation) {
                 console.log(`[SPAWN] Found location for ${spawnEntry.dayzPlayerName}: [${playerLocation.x}, ${playerLocation.z}, ${playerLocation.y}]`);
             } else {
-                console.log(`[SPAWN] No location found for ${spawnEntry.dayzPlayerName}`);
-                return; // Can't spawn without location
+                const errorMsg = `No location found for ${spawnEntry.dayzPlayerName}. Player must be tracked in-game before purchasing.`;
+                console.error(`[SPAWN] ${errorMsg}`);
+                throw new Error(errorMsg);
             }
         } else {
-            console.log('[SPAWN] No dayzPlayerName provided in spawn entry');
-            return;
+            const errorMsg = 'No dayzPlayerName provided in spawn entry';
+            console.error(`[SPAWN] ${errorMsg}`);
+            throw new Error(errorMsg);
         }
         
         // Step 4: Check if there's a table near player's current location (within 5 meters)

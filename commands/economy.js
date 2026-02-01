@@ -1681,7 +1681,20 @@ module.exports = {
                                 // Get DayZ name
                                 const dayzName = await db.getDayZName(guildId, userId) || interaction.user.username;
                                 
+                                // Check if player has a location before processing
+                                const playerPos = await db.getPlayerLocation(guildId, dayzName);
+                                if (!playerPos) {
+                                    await i.followUp({ 
+                                        content: `❌ **Location Not Found**\n\nYour location hasn't been tracked yet. You must be in-game and tracked before purchasing.\n\nYour money has been refunded.`, 
+                                        ephemeral: true 
+                                    });
+                                    // Refund the money
+                                    await db.addBalance(guildId, userId, totalCost);
+                                    return;
+                                }
+                                
                                 // Add all items to spawn - MUST BE SEQUENTIAL to avoid race condition
+                                let spawnErrors = [];
                                 for (const [itemIdx, qty] of shoppingCart.entries()) {
                                     const item = shopItems[itemIdx];
                                     
@@ -1701,10 +1714,19 @@ module.exports = {
                                             console.log(`[SHOP] Spawned ${item.name} (${i+1}/${qty})`);
                                         } catch (error) {
                                             console.error(`[SHOP] Error spawning ${item.name}:`, error.message);
+                                            spawnErrors.push(`${item.name}: ${error.message}`);
                                         }
                                     }
                                     
                                     console.log(`[SHOP] Added ${qty}x ${item.name} for ${dayzName}`);
+                                }
+                                
+                                // If there were spawn errors, notify user
+                                if (spawnErrors.length > 0) {
+                                    await i.followUp({
+                                        content: `⚠️ **Some items failed to spawn:**\n${spawnErrors.join('\n')}\n\nContact an admin for assistance.`,
+                                        ephemeral: true
+                                    });
                                 }
                                 
                                 const itemList = Array.from(shoppingCart.entries())
@@ -1718,18 +1740,11 @@ module.exports = {
                                     })
                                     .join('\n');
                                 
-                                // Get player's current position to show spawn location (use same function as spawn system)
-                                const playerPos = await db.getPlayerLocation(guildId, dayzName);
-                                let locationInfo = '\n\n**Items will spawn on a table near your current location!**\nIf no table exists within 20m, a new one will be created.';
-
-                                if (playerPos) {
-                                    const x = Math.round(playerPos.x * 10) / 10;
-                                    const y = Math.round(playerPos.y * 10) / 10;
-                                    const z = Math.round(playerPos.z * 10) / 10;
-                                    locationInfo = `\n\n📍 **Spawn Location:** Near [${x}, ${y}, ${z}]\nItems will spawn on a table close to this position.\nIf no table exists within 20m, a new one will be created.`;
-                                } else {
-                                    locationInfo += '\n\n⚠️ Your location is not currently tracked. Make sure you\'re in-game!';
-                                }
+                                // Build location info for display (playerPos already retrieved above)
+                                const x = Math.round(playerPos.x * 10) / 10;
+                                const y = Math.round(playerPos.y * 10) / 10;
+                                const z = Math.round(playerPos.z * 10) / 10;
+                                const locationInfo = `\n\n📍 **Spawn Location:** Near [${x}, ${y}, ${z}]\nItems will spawn on a table close to this position.\nIf no table exists within 20m, a new one will be created.`;
 
                                 shoppingCart.clear();
 
