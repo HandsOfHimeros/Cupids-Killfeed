@@ -1644,15 +1644,34 @@ module.exports = {
                             
                             // Checkout
                             if (i.customId === 'checkout') {
-                                // Defer reply immediately to prevent timeout
-                                await i.deferUpdate();
+                                // Immediately disable all buttons to prevent double-clicking
+                                const disabledRow = new MessageActionRow()
+                                    .addComponents(
+                                        new MessageButton()
+                                            .setCustomId('checkout')
+                                            .setLabel('💳 Processing...')
+                                            .setStyle('SUCCESS')
+                                            .setDisabled(true),
+                                        new MessageButton()
+                                            .setCustomId('clear_cart')
+                                            .setLabel('🗑️ Clear Cart')
+                                            .setStyle('DANGER')
+                                            .setDisabled(true),
+                                        new MessageButton()
+                                            .setCustomId('back_to_categories')
+                                            .setLabel('← Continue Shopping')
+                                            .setStyle('PRIMARY')
+                                            .setDisabled(true)
+                                    );
+                                
+                                await i.update({ components: [disabledRow] });
                                 
                                 const totalCost = Array.from(shoppingCart.entries())
                                     .reduce((sum, [idx, qty]) => sum + (shopItems[idx].averagePrice * qty), 0);
                                 
                                 const bal = await db.getBalance(guildId, userId);
                                 if (bal < totalCost) {
-                                    await i.editReply({ content: 'Insufficient funds!', ephemeral: true });
+                                    await i.followUp({ content: 'Insufficient funds!', ephemeral: true });
                                     return;
                                 }
                                 
@@ -1714,7 +1733,7 @@ module.exports = {
 
                                 shoppingCart.clear();
 
-                                await i.editReply({
+                                await i.followUp({
                                     embeds: [
                                         new MessageEmbed()
                                             .setColor('#00ff00')
