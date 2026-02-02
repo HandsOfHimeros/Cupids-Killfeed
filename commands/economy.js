@@ -727,6 +727,14 @@ async function getUserStats(guildId, userId) {
 
 async function updateUserStats(guildId, userId, updates) {
     try {
+        // First ensure the user has a stats row
+        await db.query(
+            `INSERT INTO user_stats (guild_id, user_id, total_earned, total_spent, mini_games_played, mini_games_won, distance_traveled)
+             VALUES ($1, $2, 0, 0, 0, 0, 0)
+             ON CONFLICT (guild_id, user_id) DO NOTHING`,
+            [guildId, userId]
+        );
+        
         const sets = [];
         const values = [];
         let paramIndex = 1;
