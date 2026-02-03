@@ -3952,7 +3952,8 @@ module.exports = {
                 components: [row]
             });
 
-            const collector = interaction.channel.createMessageComponentCollector({ time: 30000 });
+            const filter = i => i.user.id === userId;
+            const collector = interaction.channel.createMessageComponentCollector({ filter, time: 30000 });
             
             collector.on('collect', async i => {
                 if (i.user.id !== userId) return i.reply({ content: 'This be not thy hunt!', ephemeral: true });
@@ -4019,7 +4020,8 @@ module.exports = {
                 components: [row]
             });
 
-            const collector = interaction.channel.createMessageComponentCollector({ time: 30000 });
+            const filter = i => i.user.id === userId;
+            const collector = interaction.channel.createMessageComponentCollector({ filter, time: 30000 });
             
             collector.on('collect', async i => {
                 if (i.user.id !== userId) return i.reply({ content: 'This be not thy fishing spot!', ephemeral: true });
@@ -4086,7 +4088,8 @@ module.exports = {
                 components: [row]
             });
 
-            const collector = interaction.channel.createMessageComponentCollector({ time: 30000 });
+            const filter = i => i.user.id === userId;
+            const collector = interaction.channel.createMessageComponentCollector({ filter, time: 30000 });
             
             collector.on('collect', async i => {
                 if (i.user.id !== userId) return i.reply({ content: 'This be not thy mine!', ephemeral: true });
@@ -4157,7 +4160,8 @@ module.exports = {
                 components: [row]
             });
 
-            const collector = interaction.channel.createMessageComponentCollector({ time: 30000 });
+            const filter = i => i.user.id === userId;
+            const collector = interaction.channel.createMessageComponentCollector({ filter, time: 30000 });
             
             collector.on('collect', async i => {
                 if (i.user.id !== userId) return i.reply({ content: 'This be not thy gathering!', ephemeral: true });
