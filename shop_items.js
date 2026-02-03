@@ -45,8 +45,7 @@ module.exports = [
   { name: 'Scout', class: 'Scout', averagePrice: 850, description: '.308 compact bolt-action rifle' },
   { name: 'SSG82', class: 'SSG82', averagePrice: 750, description: '.22 LR bolt-action rifle' },
   { name: 'B95', class: 'B95', averagePrice: 900, description: '.308 double-barrel rifle' },
-  { name: 'Blaze 95', class: 'Blaze95', averagePrice: 950, description: '.308 double-barrel hunting rifle' },
-  { name: 'M70 Tundra', class: 'M70Tundra', averagePrice: 1000, description: '.308 bolt-action hunting rifle' },
+  { name: 'M70 Tundra', class: 'Winchester70', averagePrice: 1000, description: '.308 bolt-action hunting rifle' },
   { name: 'SV-98', class: 'SV98', averagePrice: 1800, description: '7.62x54mmR precision sniper rifle' },
   { name: 'Longhorn', class: 'Longhorn', averagePrice: 1250, description: '.308 lever-action rifle' },
 
@@ -58,10 +57,9 @@ module.exports = [
   { name: 'Ruger 10/22', class: 'Ruger1022', averagePrice: 450, description: '.22 LR semi-auto rifle' },
   { name: 'IZH-18', class: 'Izh18', averagePrice: 400, description: '.308 single-shot rifle' },
   { name: 'IZH-43 Shotgun', class: 'Izh43Shotgun', averagePrice: 500, description: '12ga double-barrel shotgun' },
-  { name: 'BK-133 Shotgun', class: 'BK133Shotgun', averagePrice: 600, description: '12ga pump-action shotgun' },
+  { name: 'BK-133 Shotgun', class: 'Mp133Shotgun', averagePrice: 600, description: '12ga pump-action shotgun' },
   { name: 'MP-133 Shotgun', class: 'Mp133Shotgun', averagePrice: 650, description: '12ga pump-action shotgun' },
   { name: 'Saiga Shotgun', class: 'Saiga', averagePrice: 800, description: '12ga semi-auto shotgun' },
-  { name: 'M1014 Shotgun', class: 'M1014', averagePrice: 850, description: '12ga tactical semi-auto shotgun' },
 
   // ===================================================================
   // 🔫 PISTOLS & SIDEARMS
@@ -76,7 +74,7 @@ module.exports = [
   { name: 'MKII', class: 'MKII', averagePrice: 250, description: '.22 LR target pistol' },
   { name: 'Colt 1911', class: 'Colt1911', averagePrice: 550, description: '.45 ACP classic semi-auto pistol' },
   { name: 'Engraved 1911', class: 'Engraved1911', averagePrice: 800, description: '.45 ACP engraved classic pistol' },
-  { name: 'Revolver', class: 'Revolver_357', averagePrice: 400, description: '.357 Magnum double-action revolver' },
+  { name: 'Revolver', class: 'Magnum', averagePrice: 400, description: '.357 Magnum double-action revolver' },
   { name: 'Derringer (Black)', class: 'Derringer_Black', averagePrice: 200, description: '.45-70 compact derringer (black)' },
   { name: 'Derringer (Grey)', class: 'Derringer_Grey', averagePrice: 200, description: '.45-70 compact derringer (grey)' },
   { name: 'Derringer (Pink)', class: 'Derringer_Pink', averagePrice: 200, description: '.45-70 compact derringer (pink)' },
@@ -97,8 +95,8 @@ module.exports = [
   { name: 'Kitchen Knife', class: 'KitchenKnife', averagePrice: 30, description: 'Small blade' },
   { name: 'Combat Knife', class: 'CombatKnife', averagePrice: 70, description: 'Military knife' },
   { name: 'Hunting Knife', class: 'HuntingKnife', averagePrice: 60, description: 'Survival knife' },
-  { name: 'Kukri', class: 'Kukri', averagePrice: 90, description: 'Curved blade' },
-  { name: 'Sword', class: 'OrientalSword', averagePrice: 200, description: 'Katana sword' },
+  { name: 'Kukri', class: 'KukriKnife', averagePrice: 90, description: 'Curved blade' },
+  { name: 'Sword', class: 'Sword', averagePrice: 200, description: 'Katana sword' },
   { name: 'Pitchfork', class: 'Pitchfork', averagePrice: 50, description: 'Farm tool weapon' },
   { name: 'Shovel', class: 'Shovel', averagePrice: 40, description: 'Digging tool' },
   { name: 'Field Shovel', class: 'FieldShovel', averagePrice: 50, description: 'Military shovel' },
@@ -118,9 +116,9 @@ module.exports = [
   { name: 'M4 Carry Handle', class: 'M4_CarryHandleOptic', averagePrice: 150, description: 'Iron sights' },
   { name: 'Red Dot Sight', class: 'ReflexOptic', averagePrice: 200, description: 'Close range sight' },
   { name: 'M68 Optic', class: 'M68Optic', averagePrice: 220, description: 'Red dot optic' },
-  { name: 'MK4 Optic (Black)', class: 'MK4Optic_Black', averagePrice: 280, description: 'MK4 optic (black)' },
-  { name: 'MK4 Optic (Green)', class: 'MK4Optic_Green', averagePrice: 280, description: 'MK4 optic (green)' },
-  { name: 'MK4 Optic (Tan)', class: 'MK4Optic_Tan', averagePrice: 280, description: 'MK4 optic (tan)' },
+  { name: 'MK4 Optic (Black)', class: 'MK4Optic_black', averagePrice: 280, description: 'MK4 optic (black)' },
+  { name: 'MK4 Optic (Green)', class: 'MK4Optic_green', averagePrice: 280, description: 'MK4 optic (green)' },
+  { name: 'MK4 Optic (Tan)', class: 'MK4Optic_tan', averagePrice: 280, description: 'MK4 optic (tan)' },
   
   // Suppressors
   { name: 'NATO Suppressor', class: 'ImprovisedSuppressor', averagePrice: 400, description: '5.56mm suppressor' },
@@ -150,7 +148,7 @@ module.exports = [
   
   // Lights & Lasers
   { name: 'Weapon Flashlight', class: 'TLRLight', averagePrice: 120, description: 'Tactical light' },
-  { name: 'Pistol Light', class: 'PistolLight', averagePrice: 100, description: 'Pistol flashlight' },
+  { name: 'Pistol Light', class: 'TLRLight', averagePrice: 100, description: 'Pistol flashlight' },
   
   // Bayonets & Compensators
   { name: 'AK Bayonet', class: 'AK_Bayonet', averagePrice: 60, description: 'AK blade attachment' },
@@ -226,7 +224,6 @@ module.exports = [
   { name: 'Ammo Box (.45 ACP 25rnd)', class: 'AmmoBox_45ACP_25rnd', averagePrice: 130, description: '.45 pistol ammo' },
   { name: 'Ammo Box (.380 ACP 35rnd)', class: 'AmmoBox_380_35rnd', averagePrice: 100, description: '.380 pistol ammo' },
   { name: 'Ammo Box (.357 20rnd)', class: 'AmmoBox_357_20Rnd', averagePrice: 150, description: '.357 Magnum ammo' },
-  { name: 'Ammo Box (9x18 25rnd)', class: 'AmmoBox_9x18_25rnd', averagePrice: 110, description: 'Makarov ammo' },
   
   // Shotgun Ammo Boxes
   { name: 'Ammo Box (12ga Buckshot 10rnd)', class: 'AmmoBox_00buck_10rnd', averagePrice: 150, description: 'Buckshot shells' },
@@ -249,7 +246,7 @@ module.exports = [
   { name: 'Vitamin Bottle', class: 'VitaminBottle', averagePrice: 100, description: 'Immune boost' },
   { name: 'Charcoal Tablets', class: 'CharcoalTablets', averagePrice: 90, description: 'Treats poisoning' },
   { name: 'Painkiller Tablets', class: 'PainkillerTablets', averagePrice: 80, description: 'Pain relief pills' },
-  { name: 'Splint', class: 'WoodSplint', averagePrice: 60, description: 'Heals fractures' },
+  { name: 'Splint', class: 'Splint', averagePrice: 60, description: 'Heals fractures' },
   { name: 'Disinfectant Spray', class: 'DisinfectantSpray', averagePrice: 70, description: 'Disinfects wounds' },
   { name: 'Disinfectant Alcohol', class: 'DisinfectantAlcohol', averagePrice: 65, description: 'Wound cleaning' },
   { name: 'Iodine Tincture', class: 'IodineTincture', averagePrice: 75, description: 'Antiseptic' },
@@ -327,7 +324,7 @@ module.exports = [
   { name: 'Ballistic Helmet (Green)', class: 'BallisticHelmet_Green', averagePrice: 500, description: 'Tactical helmet' },
   { name: 'Mich 2001 Helmet', class: 'Mich2001Helmet', averagePrice: 550, description: 'Military helmet' },
   { name: 'Tactical Helmet', class: 'TacticalGoggles', averagePrice: 400, description: 'Combat helmet' },
-  { name: 'Assault Helmet', class: 'AssaultHelmet_Black', averagePrice: 450, description: 'Assault helmet' },
+  { name: 'Gorka Helmet', class: 'GorkaHelmet_Black', averagePrice: 450, description: 'Russian assault helmet' },
   
   // Jackets
   { name: 'TTsKO Jacket', class: 'TTsKOJacket_Camo', averagePrice: 300, description: 'Military jacket' },
@@ -463,13 +460,13 @@ module.exports = [
   { name: 'Barrel (Yellow)', class: 'Barrel_Yellow', averagePrice: 3000, description: 'Storage barrel' },
   { name: 'Sea Chest', class: 'SeaChest', averagePrice: 4000, description: 'Large storage chest' },
   { name: 'Wooden Crate', class: 'WoodenCrate', averagePrice: 500, description: 'Crafted storage' },
-  { name: 'Protective Case', class: 'ProtectorCase', averagePrice: 400, description: 'Waterproof case' },
+  { name: 'Protective Case', class: 'SmallProtectorCase', averagePrice: 400, description: 'Waterproof case' },
 
   // ===================================================================
   // 🏗️ BASE BUILDING
   // ===================================================================
   { name: 'Nails (Box)', class: 'NailBox', averagePrice: 100, description: 'Box of nails' },
-  { name: 'Nails (70pcs)', class: 'Nails', averagePrice: 30, description: 'Handful of nails' },
+  { name: 'Nails (70pcs)', class: 'Nail', averagePrice: 30, description: 'Handful of nails' },
   { name: 'Wooden Plank', class: 'WoodenPlank', averagePrice: 50, description: 'Building material' },
   { name: 'Metal Plate', class: 'MetalPlate', averagePrice: 120, description: 'Reinforcement plate' },
   { name: 'Metal Wire', class: 'MetalWire', averagePrice: 80, description: 'Wire coil' },
@@ -478,8 +475,7 @@ module.exports = [
   { name: 'Watchtower Kit', class: 'WatchtowerKit', averagePrice: 800, description: 'Tower kit' },
   { name: 'Combination Lock', class: 'CombinationLock', averagePrice: 400, description: '3-digit lock' },
   { name: 'Combination Lock 4', class: 'CombinationLock4', averagePrice: 500, description: '4-digit lock' },
-  { name: 'Camonet', class: 'CamoNet', averagePrice: 200, description: 'Camouflage netting' },
-  { name: 'Tarp', class: 'Tarp', averagePrice: 150, description: 'Waterproof cover' },
+  { name: 'Camonet', class: 'Camonet', averagePrice: 200, description: 'Camouflage netting' },
 
   // ===================================================================
   // 🚗 VEHICLE PARTS
@@ -511,12 +507,12 @@ module.exports = [
   { name: 'M67 Grenade', class: 'M67Grenade', averagePrice: 600, description: 'Frag grenade' },
   { name: 'RGD-5 Grenade', class: 'RGD5Grenade', averagePrice: 550, description: 'Soviet grenade' },
   { name: 'Flashbang', class: 'FlashGrenade', averagePrice: 400, description: 'Stun grenade' },
-  { name: 'Smoke Grenade (White)', class: 'SmokeGrenadeWhite', averagePrice: 300, description: 'Smoke cover' },
-  { name: 'Smoke Grenade (Red)', class: 'SmokeGrenadeRed', averagePrice: 300, description: 'Red smoke' },
-  { name: 'Smoke Grenade (Green)', class: 'SmokeGrenadeGreen', averagePrice: 300, description: 'Green smoke' },
+  { name: 'Smoke Grenade (White)', class: 'M18SmokeGrenade_White', averagePrice: 300, description: 'Smoke cover' },
+  { name: 'Smoke Grenade (Red)', class: 'M18SmokeGrenade_Red', averagePrice: 300, description: 'Red smoke' },
+  { name: 'Smoke Grenade (Green)', class: 'M18SmokeGrenade_Green', averagePrice: 300, description: 'Green smoke' },
   
   // Mines & Traps
-  { name: 'Landmine', class: 'Landmine', averagePrice: 800, description: 'Anti-personnel mine' },
+  { name: 'Landmine', class: 'LandMineTrap', averagePrice: 800, description: 'Anti-personnel mine' },
   { name: 'Claymore Mine', class: 'ClaymoreMine', averagePrice: 900, description: 'Directional mine' },
   { name: 'Tripwire Trap', class: 'TripwireTrap', averagePrice: 200, description: 'Alarm trap' },
   
