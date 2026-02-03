@@ -1310,7 +1310,7 @@ module.exports = {
                                             .setDescription(`**Price:** $${item.averagePrice} each\n\n${item.description}\n\nSelect quantity:`)
                                     ],
                                     components: [qtyRow],
-                                    
+                                    ephemeral: true,
                                     fetchReply: true
                                 });
                                 
