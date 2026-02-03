@@ -586,7 +586,16 @@ module.exports = {
     cancelSubscription,
     isPremium,
     getSubscriptionPlan,
-    getAllSubscriptionPlans
+    getAllSubscriptionPlans,
+    
+    // Throne system functions
+    getReigningKing,
+    setReigningKing,
+    incrementDefenseCount,
+    updateLastChallenged,
+    recordThroneChallenge,
+    getThroneHistory,
+    getUserThroneStats
 };
 
 // Bounty operations
@@ -808,5 +817,76 @@ async function getAllSubscriptionPlans() {
         'SELECT * FROM subscription_plans WHERE is_active = true ORDER BY price_monthly'
     );
     return result.rows;
+}
+
+// ============ THRONE SYSTEM ============
+
+async function getReigningKing(guildId) {
+    const result = await pool.query(
+        'SELECT * FROM reigning_king WHERE guild_id = $1',
+        [guildId]
+    );
+    return result.rows[0] || null;
+}
+
+async function setReigningKing(guildId, userId) {
+    const now = Date.now();
+    await pool.query(`
+        INSERT INTO reigning_king (guild_id, user_id, crowned_at, defense_count, last_challenged)
+        VALUES ($1, $2, $3, 0, 0)
+        ON CONFLICT (guild_id) 
+        DO UPDATE SET 
+            user_id = $2,
+            crowned_at = $3,
+            defense_count = 0,
+            last_challenged = 0
+    `, [guildId, userId, now]);
+}
+
+async function incrementDefenseCount(guildId) {
+    await pool.query(
+        'UPDATE reigning_king SET defense_count = defense_count + 1 WHERE guild_id = $1',
+        [guildId]
+    );
+}
+
+async function updateLastChallenged(guildId, timestamp) {
+    await pool.query(
+        'UPDATE reigning_king SET last_challenged = $2 WHERE guild_id = $1',
+        [guildId, timestamp]
+    );
+}
+
+async function recordThroneChallenge(guildId, challengerId, kingId, outcome, wager, winnerId) {
+    const result = await pool.query(`
+        INSERT INTO throne_challenges 
+        (guild_id, challenger_id, king_id, challenged_at, outcome, wager, winner_id)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        RETURNING *
+    `, [guildId, challengerId, kingId, Date.now(), outcome, wager, winnerId]);
+    return result.rows[0];
+}
+
+async function getThroneHistory(guildId, limit = 10) {
+    const result = await pool.query(`
+        SELECT * FROM throne_challenges 
+        WHERE guild_id = $1 
+        ORDER BY challenged_at DESC 
+        LIMIT $2
+    `, [guildId, limit]);
+    return result.rows;
+}
+
+async function getUserThroneStats(guildId, userId) {
+    const challenges = await pool.query(`
+        SELECT 
+            COUNT(*) as total_challenges,
+            SUM(CASE WHEN winner_id = $2 THEN 1 ELSE 0 END) as wins,
+            SUM(CASE WHEN winner_id != $2 THEN 1 ELSE 0 END) as losses
+        FROM throne_challenges 
+        WHERE guild_id = $1 AND (challenger_id = $2 OR king_id = $2)
+    `, [guildId, userId]);
+    
+    return challenges.rows[0] || { total_challenges: 0, wins: 0, losses: 0 };
 }
 

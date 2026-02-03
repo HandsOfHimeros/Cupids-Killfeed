@@ -1023,6 +1023,12 @@ module.exports = {
         new SlashCommandBuilder()
             .setName('campaign')
             .setDescription('📖 Embark on story-driven quests and adventures'),
+        new SlashCommandBuilder()
+            .setName('throne')
+            .setDescription('👑 View the Reigning King and throne battle history'),
+        new SlashCommandBuilder()
+            .setName('challenge-throne')
+            .setDescription('⚔️ [Duke+] Challenge the Reigning King for the throne! ($5,000 wager, loser drops to Duke)'),
     ],
     async execute(interaction) {
         console.log(`[ECONOMY] execute called for command: ${interaction.commandName}, channel: ${interaction.channelId}`);
@@ -3283,8 +3289,23 @@ module.exports = {
                 .addField('💰 Total Earned', `$${stats.total_earned}`, true)
                 .addField('🎮 Games Played', `${stats.mini_games_played}`, true)
                 .addField('🏆 Games Won', `${stats.mini_games_won}`, true)
-                .addField('🎁 Rank Bonus', `+${Math.round(rank.bonus * 100)}% on all earnings`, true)
-                .addField('💵 Daily Stipend', rank.stipend > 0 ? `$${rank.stipend}/day` : 'None', true);
+                .addField('🎁 Rank Bonus', `+${Math.round(rank.bonus * 100)}% on all earnings`, true);
+            
+            // Show throne status if user is King rank
+            // Check throne status for Duke and King ranks
+            const reigningKing = await db.getReigningKing(guildId);
+            if (rank.name === 'King' && reigningKing && reigningKing.user_id === userId) {
+                // User is the Reigning King!
+                const daysCrowned = Math.floor((Date.now() - reigningKing.crowned_at) / (1000 * 60 * 60 * 24));
+                embed.addField('👑 Royal Status', `**REIGNING KING**\nDefenses: ${reigningKing.defense_count}\nDays on Throne: ${daysCrowned}`, true);
+                embed.addField('💵 Daily Stipend', '$1000/day (Reigning King bonus!)', true);
+            } else if (rank.name === 'Duke' || rank.name === 'King') {
+                // User is Duke or King but not on throne
+                embed.addField('👑 Royal Status', 'Eligible to `/challenge-throne`', true);
+                embed.addField('💵 Daily Stipend', `$${rank.stipend}/day`, true);
+            } else {
+                embed.addField('💵 Daily Stipend', rank.stipend > 0 ? `$${rank.stipend}/day` : 'None', true);
+            }
             
             if (nextRank) {
                 const progress = stats.total_earned - rank.threshold;
@@ -3299,6 +3320,516 @@ module.exports = {
             
             embed.addField('🎮 Unlocked Games', unlockedGames.map(g => `\`/${g}\``).join(', '), false);
             await interaction.reply({ embeds: [embed] });
+            
+        // ============ THRONE SYSTEM ============
+        } else if (commandName === 'throne') {
+            const { MessageEmbed } = require('discord.js');
+            const reigningKing = await db.getReigningKing(guildId);
+            
+            if (!reigningKing) {
+                await interaction.reply({
+                    embeds: [
+                        new MessageEmbed()
+                            .setColor('#ffd700')
+                            .setTitle('👑 The Throne Stands Empty')
+                            .setDescription('No King has claimed the throne yet!\n\nReach King rank ($150,000 total earned) to claim it with `/challenge-throne`\n\nOnce a King is crowned, Dukes ($75,000+) can challenge to take the throne!')
+                    ]
+                });
+                return;
+            }
+            
+            const kingUser = await interaction.client.users.fetch(reigningKing.user_id);
+            const crownedDate = new Date(reigningKing.crowned_at);
+            const daysCrowned = Math.floor((Date.now() - reigningKing.crowned_at) / (1000 * 60 * 60 * 24));
+            
+            const embed = new MessageEmbed()
+                .setColor('#ffd700')
+                .setTitle('👑 The Royal Throne')
+                .setDescription(`**Reigning King:** ${kingUser.username}\n**Crowned:** <t:${Math.floor(crownedDate.getTime() / 1000)}:R>\n**Days Reigning:** ${daysCrowned}\n**Defenses:** ${reigningKing.defense_count}`)
+                .setThumbnail(kingUser.displayAvatarURL());
+            
+            // Get recent throne battles
+            const history = await db.getThroneHistory(guildId, 5);
+            if (history.length > 0) {
+                const historyText = await Promise.all(history.map(async (battle) => {
+                    const challenger = await interaction.client.users.fetch(battle.challenger_id).catch(() => null);
+                    const king = await interaction.client.users.fetch(battle.king_id).catch(() => null);
+                    const winner = await interaction.client.users.fetch(battle.winner_id).catch(() => null);
+                    const date = new Date(battle.challenged_at);
+                    return `<t:${Math.floor(date.getTime() / 1000)}:R> - ${challenger?.username || 'Unknown'} challenged ${king?.username || 'Unknown'}\n**Winner:** ${winner?.username || 'Unknown'}`;
+                }));
+                embed.addField('⚔️ Recent Throne Battles', historyText.join('\n\n'));
+            }
+            
+            embed.setFooter({ text: 'Reach Duke rank ($75,000) to challenge the throne with /challenge-throne' });
+            await interaction.reply({ embeds: [embed] });
+            
+        } else if (commandName === 'challenge-throne') {
+            const { MessageEmbed } = require('discord.js');
+            const stats = await getUserStats(guildId, userId);
+            if (!stats) {
+                await interaction.reply({ content: 'Error loading stats!', ephemeral: true });
+                return;
+            }
+            
+            const rank = getRank(stats.total_earned);
+            
+            // Must be Duke or King rank to challenge
+            if (rank.name !== 'Duke' && rank.name !== 'King') {
+                await interaction.reply({
+                    embeds: [
+                        new MessageEmbed()
+                            .setColor('#ff5555')
+                            .setTitle('⛔ Not Worthy')
+                            .setDescription(`Only Dukes and Kings may challenge for the throne!\n\nThou art but a ${rank.emoji} ${rank.name}. Earn $${75000 - stats.total_earned} more to reach Duke rank.`)
+                    ],
+                    ephemeral: true
+                });
+                return;
+            }
+            
+            const reigningKing = await db.getReigningKing(guildId);
+            
+            // If no king, only King rank can claim throne (not Duke)
+            if (!reigningKing) {
+                if (rank.name !== 'King') {
+                    await interaction.reply({
+                        embeds: [
+                            new MessageEmbed()
+                                .setColor('#ff5555')
+                                .setTitle('⛔ Throne Requires King Rank')
+                                .setDescription(`The throne stands empty, but only those of **King rank** may claim it!\n\nThou art a ${rank.emoji} Duke. Earn $${150000 - stats.total_earned} more to reach King rank and claim the throne.`)
+                        ],
+                        ephemeral: true
+                    });
+                    return;
+                }
+                
+                // King rank claims empty throne
+                await db.setReigningKing(guildId, userId);
+                await interaction.reply({
+                    embeds: [
+                        new MessageEmbed()
+                            .setColor('#ffd700')
+                            .setTitle('👑 A New King Rises!')
+                            .setDescription(`<@${userId}> has claimed the throne and is now the **Reigning King**!\n\nDefend thy crown against challengers to increase thy legend!`)
+                    ]
+                });
+                return;
+            }
+            
+            // Cannot challenge yourself
+            if (reigningKing.user_id === userId) {
+                await interaction.reply({
+                    embeds: [
+                        new MessageEmbed()
+                            .setColor('#ff5555')
+                            .setTitle('⛔ Already Reigning')
+                            .setDescription('Thou art already the Reigning King! Defend thy throne against other challengers.')
+                    ],
+                    ephemeral: true
+                });
+                return;
+            }
+            
+            // Check cooldown (7 days between challenges)
+            const COOLDOWN = 7 * 24 * 60 * 60 * 1000; // 7 days in ms
+            if (reigningKing.last_challenged && (Date.now() - reigningKing.last_challenged) < COOLDOWN) {
+                const timeLeft = reigningKing.last_challenged + COOLDOWN - Date.now();
+                const daysLeft = Math.ceil(timeLeft / (1000 * 60 * 60 * 24));
+                await interaction.reply({
+                    embeds: [
+                        new MessageEmbed()
+                            .setColor('#ff5555')
+                            .setTitle('⛔ Throne Under Protection')
+                            .setDescription(`The throne cannot be challenged yet!\n\nWait ${daysLeft} more day(s) before the next challenge.`)
+                    ],
+                    ephemeral: true
+                });
+                return;
+            }
+            
+            // Check if challenger has enough money (wallet + bank)
+            const WAGER = 5000;
+            const challengerWallet = await db.getBalance(guildId, userId);
+            const challengerBank = await db.getBank(guildId, userId);
+            const challengerTotal = challengerWallet + challengerBank;
+            
+            if (challengerTotal < WAGER) {
+                await interaction.reply({
+                    embeds: [
+                        new MessageEmbed()
+                            .setColor('#ff5555')
+                            .setTitle('⛔ Insufficient Funds')
+                            .setDescription(`Thou need $${WAGER} to challenge the throne!\n\nWallet: $${challengerWallet}\nBank: $${challengerBank}\nTotal: $${challengerTotal}`)
+                    ],
+                    ephemeral: true
+                });
+                return;
+            }
+            
+            // Get king's stats (wallet + bank)
+            const kingWallet = await db.getBalance(guildId, reigningKing.user_id);
+            const kingBank = await db.getBank(guildId, reigningKing.user_id);
+            const kingTotal = kingWallet + kingBank;
+            
+            if (kingTotal < WAGER) {
+                // King cannot defend, challenger wins by default
+                // Deduct wager from challenger
+                if (challengerWallet >= WAGER) {
+                    await db.addBalance(guildId, userId, -WAGER);
+                } else {
+                    await db.setBalance(guildId, userId, 0);
+                    await db.addBank(guildId, userId, -(WAGER - challengerWallet));
+                }
+                
+                // Give challenger their wager back plus king's total funds
+                await db.setBalance(guildId, reigningKing.user_id, 0);
+                await db.setBank(guildId, reigningKing.user_id, 0);
+                await db.addBalance(guildId, userId, WAGER + kingTotal);
+                
+                // Demote old king to Duke
+                const oldKingStats = await getUserStats(guildId, reigningKing.user_id);
+                await db.query('UPDATE user_stats SET total_earned = $1 WHERE guild_id = $2 AND user_id = $3', [74999, guildId, reigningKing.user_id]);
+                
+                // Crown new king
+                await db.setReigningKing(guildId, userId);
+                await db.recordThroneChallenge(guildId, userId, reigningKing.user_id, 'default_win', WAGER, userId);
+                
+                const kingUser = await interaction.client.users.fetch(reigningKing.user_id);
+                await interaction.reply({
+                    embeds: [
+                        new MessageEmbed()
+                            .setColor('#ffd700')
+                            .setTitle('👑 The King Falls!')
+                            .setDescription(`${kingUser.username} could not defend the throne!\n\n<@${userId}> is now the **Reigning King**!\n\n${kingUser.username} has been demoted to Duke rank.`)
+                    ]
+                });
+                return;
+            }
+            
+            // Both players have funds - THRONE BATTLE!
+            const { MessageButton, MessageActionRow } = require('discord.js');
+            const kingUser = await interaction.client.users.fetch(reigningKing.user_id);
+            
+            const acceptRow = new MessageActionRow()
+                .addComponents(
+                    new MessageButton()
+                        .setCustomId('throne_accept')
+                        .setLabel('⚔️ Defend Throne')
+                        .setStyle('DANGER'),
+                    new MessageButton()
+                        .setCustomId('throne_decline')
+                        .setLabel('🏳️ Abdicate')
+                        .setStyle('SECONDARY')
+                );
+            
+            const challengeMessage = await interaction.reply({
+                content: `<@${reigningKing.user_id}>`,
+                embeds: [
+                    new MessageEmbed()
+                        .setColor('#ff0000')
+                        .setTitle('⚔️ THRONE CHALLENGE!')
+                        .setDescription(`<@${userId}> challenges the Reigning King!\n\n**Wager:** $${WAGER} each\n**Stakes:** Loser demoted to Duke rank\n\n${kingUser.username}, wilt thou defend thy crown?`)
+                        .setFooter({ text: '6 hours to respond' })
+                ],
+                components: [acceptRow],
+                fetchReply: true
+            });
+            
+            const filter = i => i.user.id === reigningKing.user_id;
+            const collector = challengeMessage.createMessageComponentCollector({ filter, time: 21600000, max: 1 });
+            
+            collector.on('collect', async i => {
+                if (i.customId === 'throne_decline') {
+                    // King declines - loses throne and is demoted
+                    // Deduct wager from king (wallet first, then bank)
+                    if (kingWallet >= WAGER) {
+                        await db.addBalance(guildId, reigningKing.user_id, -WAGER);
+                    } else {
+                        await db.setBalance(guildId, reigningKing.user_id, 0);
+                        await db.addBank(guildId, reigningKing.user_id, -(WAGER - kingWallet));
+                    }
+                    // Challenger gets their wager back (no battle happens)
+                    // No deduction from challenger since king abdicates
+                    await db.query('UPDATE user_stats SET total_earned = $1 WHERE guild_id = $2 AND user_id = $3', [74999, guildId, reigningKing.user_id]);
+                    await db.setReigningKing(guildId, userId);
+                    await db.recordThroneChallenge(guildId, userId, reigningKing.user_id, 'abdication', WAGER, userId);
+                    
+                    await i.update({
+                        embeds: [
+                            new MessageEmbed()
+                                .setColor('#ffd700')
+                                .setTitle('👑 The King Abdicates!')
+                                .setDescription(`${kingUser.username} has abdicated the throne!\n\n<@${userId}> is now the **Reigning King**!\n\n${kingUser.username} has been demoted to Duke rank.`)
+                        ],
+                        components: []
+                    });
+                    return;
+                }
+                
+                // King accepts - Wait for challenger confirmation
+                await i.update({
+                    embeds: [new MessageEmbed()
+                        .setColor('#f39c12')
+                        .setTitle('⚔️ KING ACCEPTS!')
+                        .setDescription(`${kingUser.username} has accepted the throne challenge!\n\nWaiting for <@${userId}> to confirm they are ready...`)],
+                    components: []
+                });
+                
+                // Ask challenger if they're ready
+                const readyRow = new MessageActionRow()
+                    .addComponents(
+                        new MessageButton()
+                            .setCustomId('challenger_ready')
+                            .setLabel('⚔️ I Am Ready!')
+                            .setStyle('SUCCESS'),
+                        new MessageButton()
+                            .setCustomId('challenger_cancel')
+                            .setLabel('❌ Cancel Challenge')
+                            .setStyle('DANGER')
+                    );
+                
+                const readyMessage = await interaction.followUp({
+                    content: `<@${userId}>`,
+                    embeds: [new MessageEmbed()
+                        .setColor('#ff9900')
+                        .setTitle('⚔️ Are You Ready?')
+                        .setDescription(`The King has accepted thy challenge!\n\nArt thou ready to battle for the throne?\n\n**Note:** If thou cancel, thy $${WAGER} wager will be refunded but the King keeps theirs.`)
+                        .setFooter({ text: '5 minutes to confirm' })],
+                    components: [readyRow]
+                });
+                
+                const readyFilter = i2 => i2.user.id === userId;
+                const readyCollector = readyMessage.createMessageComponentCollector({ filter: readyFilter, time: 300000, max: 1 });
+                
+                readyCollector.on('collect', async i2 => {
+                    if (i2.customId === 'challenger_cancel') {
+                        // Challenger cancels - refund challenger, king loses wager
+                        if (challengerWallet >= WAGER) {
+                            await db.addBalance(guildId, userId, WAGER);
+                        } else {
+                            await db.setBalance(guildId, userId, challengerWallet);
+                            await db.addBank(guildId, userId, WAGER - challengerWallet);
+                        }
+                        
+                        await i2.update({
+                            embeds: [new MessageEmbed()
+                                .setColor('#ff5555')
+                                .setTitle('❌ Challenge Cancelled')
+                                .setDescription(`<@${userId}> has withdrawn from the throne challenge!\n\nChallenger's wager refunded.\nKing's wager forfeited.`)],
+                            components: []
+                        });
+                        return;
+                    }
+                    
+                    // Challenger ready - START BATTLE!
+                    await i2.deferUpdate();
+                
+                // Take wagers from both players (wallet first, then bank if needed)
+                // Challenger wager
+                if (challengerWallet >= WAGER) {
+                    await db.addBalance(guildId, userId, -WAGER);
+                } else {
+                    await db.setBalance(guildId, userId, 0);
+                    await db.addBank(guildId, userId, -(WAGER - challengerWallet));
+                }
+                
+                // King wager
+                if (kingWallet >= WAGER) {
+                    await db.addBalance(guildId, reigningKing.user_id, -WAGER);
+                } else {
+                    await db.setBalance(guildId, reigningKing.user_id, 0);
+                    await db.addBank(guildId, reigningKing.user_id, -(WAGER - kingWallet));
+                }
+                
+                // THRONE BATTLE - 5 rounds of combat!
+                await interaction.followUp({
+                    embeds: [new MessageEmbed()
+                        .setColor('#f39c12')
+                        .setTitle('⚔️ THRONE BATTLE BEGINS!')
+                        .setDescription(`**${interaction.user.username}** vs **${kingUser.username}**\n\nBattle for the crown - Best of 5 rounds!\n\n⏳ Round 1 starting...`)],
+                });
+                
+                let challengerWins = 0;
+                let kingWins = 0;
+                const rounds = [];
+                
+                // 5 rounds of combat
+                for (let round = 1; round <= 5; round++) {
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    
+                    const combatRow = new MessageActionRow().addComponents(
+                        new MessageButton().setCustomId('strike').setLabel('⚔️ Strike').setStyle('DANGER'),
+                        new MessageButton().setCustomId('block').setLabel('🛡️ Block').setStyle('PRIMARY'),
+                        new MessageButton().setCustomId('power').setLabel('💥 Power Attack').setStyle('SUCCESS')
+                    );
+                    
+                    const roundMsg = await interaction.followUp({
+                        content: `<@${userId}> <@${reigningKing.user_id}>`,
+                        embeds: [new MessageEmbed()
+                            .setColor('#e74c3c')
+                            .setTitle(`⚔️ Round ${round} of 5`)
+                            .setDescription(`**Choose thy move!**\n\n⚔️ **Strike** - Fast attack\n🛡️ **Block** - Defensive stance\n💥 **Power Attack** - High risk, high reward\n\n**Score:** ${interaction.user.username}: ${challengerWins} | ${kingUser.username}: ${kingWins}`)
+                            .setFooter({ text: '15 seconds to choose!' })],
+                        components: [combatRow]
+                    });
+                    
+                    const roundFilter = i2 => (i2.user.id === userId || i2.user.id === reigningKing.user_id) && ['strike', 'block', 'power'].includes(i2.customId);
+                    const roundCollector = interaction.channel.createMessageComponentCollector({ filter: roundFilter, time: 15000 });
+                    
+                    const choices = {};
+                    
+                    await new Promise((resolve) => {
+                        roundCollector.on('collect', async i2 => {
+                            if (choices[i2.user.id]) {
+                                await i2.reply({ content: 'Thou hast already chosen!', ephemeral: true });
+                                return;
+                            }
+                            
+                            choices[i2.user.id] = i2.customId;
+                            await i2.reply({ content: `⚔️ Move selected!`, ephemeral: true });
+                            
+                            if (choices[userId] && choices[reigningKing.user_id]) {
+                                roundCollector.stop();
+                                resolve();
+                            }
+                        });
+                        
+                        roundCollector.on('end', () => resolve());
+                    });
+                    
+                    // Default to random if no choice
+                    if (!choices[userId]) choices[userId] = ['strike', 'block', 'power'][Math.floor(Math.random() * 3)];
+                    if (!choices[reigningKing.user_id]) choices[reigningKing.user_id] = ['strike', 'block', 'power'][Math.floor(Math.random() * 3)];
+                    
+                    // Combat logic: strike beats power, power beats block, block beats strike
+                    const challengerMove = choices[userId];
+                    const kingMove = choices[reigningKing.user_id];
+                    
+                    let roundWinner = null;
+                    if (challengerMove === kingMove) {
+                        // Tie - King gets advantage
+                        roundWinner = 'king';
+                        kingWins++;
+                    } else if (
+                        (challengerMove === 'strike' && kingMove === 'power') ||
+                        (challengerMove === 'power' && kingMove === 'block') ||
+                        (challengerMove === 'block' && kingMove === 'strike')
+                    ) {
+                        roundWinner = 'challenger';
+                        challengerWins++;
+                    } else {
+                        roundWinner = 'king';
+                        kingWins++;
+                    }
+                    
+                    rounds.push({ round, challengerMove, kingMove, winner: roundWinner });
+                    
+                    const moveEmoji = { strike: '⚔️', block: '🛡️', power: '💥' };
+                    await interaction.followUp({
+                        embeds: [new MessageEmbed()
+                            .setColor(roundWinner === 'challenger' ? '#00ff00' : '#ff0000')
+                            .setTitle(`Round ${round} Result`)
+                            .setDescription(`**${interaction.user.username}**: ${moveEmoji[challengerMove]} ${challengerMove}\n**${kingUser.username}**: ${moveEmoji[kingMove]} ${kingMove}${challengerMove === kingMove ? ' (King\'s advantage!)' : ''}\n\n${roundWinner === 'challenger' ? `⚔️ **${interaction.user.username} wins the round!**` : `👑 **${kingUser.username} wins the round!**`}\n\n**Score:** ${challengerWins} - ${kingWins}`)],
+                    });
+                }
+                
+                // Determine final winner
+                const winner = challengerWins > kingWins ? userId : reigningKing.user_id;
+                const loser = winner === userId ? reigningKing.user_id : userId;
+                const winnerUser = await interaction.client.users.fetch(winner);
+                const loserUser = await interaction.client.users.fetch(loser);
+                
+                // Award winnings
+                await db.addBalance(guildId, winner, WAGER * 2);
+                
+                let resultEmbed;
+                if (winner === userId) {
+                    // Challenger wins!
+                    await db.query('UPDATE user_stats SET total_earned = $1 WHERE guild_id = $2 AND user_id = $3', [74999, guildId, reigningKing.user_id]);
+                    await db.setReigningKing(guildId, userId);
+                    await db.recordThroneChallenge(guildId, userId, reigningKing.user_id, 'victory', WAGER, userId);
+                    
+                    resultEmbed = new MessageEmbed()
+                        .setColor('#ffd700')
+                        .setTitle('👑 A NEW KING RISES!')
+                        .setDescription(`**Final Score:** ${challengerWins} - ${kingWins}\n\n**🏆 WINNER: ${winnerUser.username}**\n\n<@${userId}> has defeated the king and claimed the throne!\n\n${loserUser.username} has been demoted to Duke rank.\n\n**Prize:** $${WAGER * 2}`);
+                } else {
+                    // King defends successfully!
+                    await db.incrementDefenseCount(guildId);
+                    await db.updateLastChallenged(guildId, Date.now());
+                    await db.query('UPDATE user_stats SET total_earned = $1 WHERE guild_id = $2 AND user_id = $3', [74999, guildId, userId]);
+                    await db.recordThroneChallenge(guildId, userId, reigningKing.user_id, 'defense', WAGER, reigningKing.user_id);
+                    
+                    resultEmbed = new MessageEmbed()
+                        .setColor('#ff0000')
+                        .setTitle('👑 THE KING PREVAILS!')
+                        .setDescription(`**Final Score:** ${kingWins} - ${challengerWins}\n\n**🏆 WINNER: ${winnerUser.username}**\n\n${winnerUser.username} has defended the throne!\n\n${loserUser.username} has been demoted to Duke rank.\n\n**Prize:** $${WAGER * 2}`);
+                }
+                
+                await interaction.followUp({
+                    embeds: [resultEmbed]
+                });
+                });
+                
+                readyCollector.on('end', async collected => {
+                    if (collected.size === 0) {
+                        // Challenger didn't respond - refund challenger, king keeps wager
+                        if (challengerWallet >= WAGER) {
+                            await db.addBalance(guildId, userId, WAGER);
+                        } else {
+                            await db.setBalance(guildId, userId, challengerWallet);
+                            await db.addBank(guildId, userId, WAGER - challengerWallet);
+                        }
+                        
+                        await readyMessage.edit({
+                            embeds: [new MessageEmbed()
+                                .setColor('#ff5555')
+                                .setTitle('⏰ Challenge Expired')
+                                .setDescription(`<@${userId}> did not respond in time!\n\nChallenge cancelled. Challenger's wager refunded, King's wager forfeited.`)],
+                            components: []
+                        });
+                    }
+                });
+            });
+            
+            collector.on('end', async collected => {
+                if (collected.size === 0) {
+                    // Timeout - King loses by default
+                    // Deduct wager from king
+                    if (kingWallet >= WAGER) {
+                        await db.addBalance(guildId, reigningKing.user_id, -WAGER);
+                    } else {
+                        await db.setBalance(guildId, reigningKing.user_id, 0);
+                        await db.addBank(guildId, reigningKing.user_id, -(WAGER - kingWallet));
+                    }
+                    
+                    // Deduct wager from challenger
+                    if (challengerWallet >= WAGER) {
+                        await db.addBalance(guildId, userId, -WAGER);
+                    } else {
+                        await db.setBalance(guildId, userId, 0);
+                        await db.addBank(guildId, userId, -(WAGER - challengerWallet));
+                    }
+                    
+                    // Give winner both wagers
+                    await db.addBalance(guildId, userId, WAGER * 2);
+                    await db.query('UPDATE user_stats SET total_earned = $1 WHERE guild_id = $2 AND user_id = $3', [74999, guildId, reigningKing.user_id]);
+                    await db.setReigningKing(guildId, userId);
+                    await db.recordThroneChallenge(guildId, userId, reigningKing.user_id, 'timeout', WAGER, userId);
+                    
+                    await challengeMessage.edit({
+                        embeds: [
+                            new MessageEmbed()
+                                .setColor('#ffd700')
+                                .setTitle('👑 The King Falls!')
+                                .setDescription(`${kingUser.username} failed to defend the throne in time!\n\n<@${userId}> is now the **Reigning King**!\n\n${kingUser.username} has been demoted to Duke rank.`)
+                        ],
+                        components: []
+                    });
+                }
+            });
             
         // ============ MEDIEVAL MINI-GAMES ============
         } else if (commandName === 'labor') {
