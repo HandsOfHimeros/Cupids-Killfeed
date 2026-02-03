@@ -1037,12 +1037,15 @@ module.exports = {
         const guildId = interaction.guildId;
         const { MessageEmbed } = require('discord.js');
         
+        // Defer reply immediately to prevent timeout
+        await interaction.deferReply();
+        
         // Get guild config for channel IDs
         const guildConfig = await db.getGuildConfig(guildId);
         const DEV_MODE = process.env.DEV_MODE === 'true';
         
         if (!guildConfig && !DEV_MODE) {
-            await interaction.reply({
+            await interaction.editReply({
                 embeds: [
                     new MessageEmbed()
                         .setColor('#ff5555')
@@ -1063,21 +1066,20 @@ module.exports = {
                 // Check for premium subscription
                 const premiumError = await requiresPremium(guildId, 'Shop');
                 if (premiumError) {
-                    await interaction.reply({ embeds: [premiumError], ephemeral: true });
+                    await interaction.editReply({ embeds: [premiumError] });
                     return;
                 }
                 
                 console.log('[SHOP] Channel check');
                 if (!DEV_MODE && interaction.channelId !== SHOP_CHANNEL_ID) {
-                    await interaction.reply({
+                    await interaction.editReply({
                         embeds: [
                             new MessageEmbed()
                                 .setColor('#ff5555')
                                 .setTitle('Wrong Channel')
                                 .setDescription('Please use this command in the <#' + SHOP_CHANNEL_ID + '> channel.')
                                 .setFooter({ text: 'Shop', iconURL: interaction.client.user.displayAvatarURL() })
-                        ],
-                        ephemeral: true
+                        ]
                     });
                     return;
                 }
@@ -1222,7 +1224,7 @@ module.exports = {
                                 .setStyle('SUCCESS')
                         );
                     
-                    const message = await interaction.reply({
+                    const message = await interaction.editReply({
                         embeds: [
                             new MessageEmbed()
                                 .setColor('#ff69b4')
@@ -1308,7 +1310,7 @@ module.exports = {
                                             .setDescription(`**Price:** $${item.averagePrice} each\n\n${item.description}\n\nSelect quantity:`)
                                     ],
                                     components: [qtyRow],
-                                    ephemeral: true,
+                                    
                                     fetchReply: true
                                 });
                                 
@@ -1380,7 +1382,7 @@ module.exports = {
                                 const items = category.items;
                                 
                                 if (items.length === 0) {
-                                    await i.reply({ content: 'No items in this category yet!', ephemeral: true });
+                                    await i.reply({ content: 'No items in this category yet!' });
                                     return;
                                 }
                                 
@@ -1592,7 +1594,7 @@ module.exports = {
                             // View cart
                             if (i.customId === 'view_cart') {
                                 if (shoppingCart.size === 0) {
-                                    await i.reply({ content: 'Your cart is empty!', ephemeral: true });
+                                    await i.reply({ content: 'Your cart is empty!' });
                                     return;
                                 }
                                 
@@ -1685,7 +1687,7 @@ module.exports = {
                                 
                                 const bal = await db.getBalance(guildId, userId);
                                 if (bal < totalCost) {
-                                    await i.followUp({ content: 'Insufficient funds!', ephemeral: true });
+                                    await i.followUp({ content: 'Insufficient funds!' });
                                     return;
                                 }
                                 
@@ -1777,7 +1779,7 @@ module.exports = {
                             
                         } catch (error) {
                             console.error('[SHOP] Error in collector:', error);
-                            await i.reply({ content: 'An error occurred. Please try again.', ephemeral: true }).catch(() => {});
+                            await i.reply({ content: 'An error occurred. Please try again.' }).catch(() => {});
                         }
                     });
                     
@@ -1790,7 +1792,7 @@ module.exports = {
             } catch (err) {
                 console.error('[SHOP] Fatal error in /shop logic:', err);
                 try {
-                    await interaction.reply({ content: 'Fatal error in /shop logic: ' + err.message, ephemeral: true });
+                    await interaction.editReply({ content: 'Fatal error in /shop logic: ' + err.message });
                 } catch {}
                 return;
             }
@@ -1798,15 +1800,14 @@ module.exports = {
         
         // Check if command is in wrong channel (excluding shop which has its own check above)
         if (interaction.channelId !== ECONOMY_CHANNEL_ID) {
-            await interaction.reply({
+            await interaction.editReply({
                 embeds: [
                     new MessageEmbed()
                         .setColor('#ff5555')
                         .setTitle('Wrong Channel')
                         .setDescription('Please use this command in the <#' + ECONOMY_CHANNEL_ID + '> channel.')
                         .setFooter({ text: 'Economy Bot', iconURL: interaction.client.user.displayAvatarURL() })
-                ],
-                ephemeral: true
+                ]
             });
             return;
         }
@@ -1821,15 +1822,14 @@ module.exports = {
                 const ms = oldest + COOLDOWN_WINDOW - now;
                 const h = Math.floor(ms / (60*60*1000));
                 const m = Math.floor((ms % (60*60*1000)) / (60*1000));
-                await interaction.reply({
+                await interaction.editReply({
                     embeds: [
                         new MessageEmbed()
                             .setColor('#ffaa00')
                             .setTitle('Cooldown')
                             .setDescription(`⏳ You can only play **/${commandName}** twice every 12 hours.\nTry again in **${h}h ${m}m**.`)
                             .setFooter({ text: 'Economy Bot', iconURL: interaction.client.user.displayAvatarURL() })
-                    ],
-                    ephemeral: true
+                    ]
                 });
                 return;
             }
@@ -1842,7 +1842,7 @@ module.exports = {
         if (commandName === 'wallet') {
             const bal = await db.getBalance(guildId, userId);
             const bank = await db.getBank(guildId, userId);
-            await interaction.reply({
+            await interaction.editReply({
                 embeds: [
                     new MessageEmbed()
                         .setColor('#00ff99')
@@ -1854,7 +1854,7 @@ module.exports = {
             });
         } else if (commandName === 'wallet') {
             const bal = await db.getBalance(guildId, userId);
-            await interaction.reply({
+            await interaction.editReply({
                 embeds: [
                     new MessageEmbed()
                         .setColor('#00ff99')
@@ -1865,7 +1865,7 @@ module.exports = {
             });
         } else if (commandName === 'bank') {
             const bank = await db.getBank(guildId, userId);
-            await interaction.reply({
+            await interaction.editReply({
                 embeds: [
                     new MessageEmbed()
                         .setColor('#00aaff')
@@ -1878,65 +1878,65 @@ module.exports = {
             // Premium feature check
             const premiumError = await requiresPremium(guildId, 'Deposit');
             if (premiumError) {
-                await interaction.reply({ embeds: [premiumError], ephemeral: true });
+                await interaction.editReply({ embeds: [premiumError] });
                 return;
             }
             const amount = interaction.options.getInteger('amount');
             const bal = await db.getBalance(guildId, userId);
             const { MessageEmbed } = require('discord.js');
             if (amount <= 0) {
-                await interaction.reply({ embeds: [new MessageEmbed().setColor('#ffaa00').setTitle('Deposit Failed').setDescription('Amount must be positive.')] });
+                await interaction.editReply({ embeds: [new MessageEmbed().setColor('#ffaa00').setTitle('Deposit Failed').setDescription('Amount must be positive.')] });
                 return;
             }
             if (bal < amount) {
-                await interaction.reply({ embeds: [new MessageEmbed().setColor('#ffaa00').setTitle('Deposit Failed').setDescription('You do not have enough in your wallet.')] });
+                await interaction.editReply({ embeds: [new MessageEmbed().setColor('#ffaa00').setTitle('Deposit Failed').setDescription('You do not have enough in your wallet.')] });
                 return;
             }
             await db.addBalance(guildId, userId, -amount);
             const newBank = await db.addBank(guildId, userId, amount);
-            await interaction.reply({ embeds: [new MessageEmbed().setColor('#00aaff').setTitle('💸 Deposit Successful').addField('Amount', `$${amount}`, true).addField('New Bank Balance', `$${newBank}`, true)] });
+            await interaction.editReply({ embeds: [new MessageEmbed().setColor('#00aaff').setTitle('💸 Deposit Successful').addField('Amount', `$${amount}`, true).addField('New Bank Balance', `$${newBank}`, true)] });
         } else if (commandName === 'withdraw') {
             // Premium feature check
             const premiumError = await requiresPremium(guildId, 'Withdraw');
             if (premiumError) {
-                await interaction.reply({ embeds: [premiumError], ephemeral: true });
+                await interaction.editReply({ embeds: [premiumError] });
                 return;
             }
             const amount = interaction.options.getInteger('amount');
             const bank = await db.getBank(guildId, userId);
             const { MessageEmbed } = require('discord.js');
             if (amount <= 0) {
-                await interaction.reply({ embeds: [new MessageEmbed().setColor('#ffaa00').setTitle('Withdraw Failed').setDescription('Amount must be positive.')] });
+                await interaction.editReply({ embeds: [new MessageEmbed().setColor('#ffaa00').setTitle('Withdraw Failed').setDescription('Amount must be positive.')] });
                 return;
             }
             if (bank < amount) {
-                await interaction.reply({ embeds: [new MessageEmbed().setColor('#ffaa00').setTitle('Withdraw Failed').setDescription('You do not have enough in your bank.')] });
+                await interaction.editReply({ embeds: [new MessageEmbed().setColor('#ffaa00').setTitle('Withdraw Failed').setDescription('You do not have enough in your bank.')] });
                 return;
             }
             await db.addBank(guildId, userId, -amount);
             const newBal = await db.addBalance(guildId, userId, amount);
-            await interaction.reply({ embeds: [new MessageEmbed().setColor('#00aaff').setTitle('🏦 Withdraw Successful').addField('Amount', `$${amount}`, true).addField('New Wallet Balance', `$${newBal}`, true)] });
+            await interaction.editReply({ embeds: [new MessageEmbed().setColor('#00aaff').setTitle('🏦 Withdraw Successful').addField('Amount', `$${amount}`, true).addField('New Wallet Balance', `$${newBal}`, true)] });
         } else if (commandName === 'labor_old_handler') {
             const earned = Math.floor(Math.random() * 100) + 50;
             const bal = await db.addBalance(guildId, userId, earned);
             const { MessageEmbed } = require('discord.js');
-            await interaction.reply({ embeds: [new MessageEmbed().setColor('#43b581').setTitle('🛠️ Work').setDescription(`You worked and earned **$${earned}**!`).addField('New Balance', `$${bal}`, true)] });
+            await interaction.editReply({ embeds: [new MessageEmbed().setColor('#43b581').setTitle('🛠️ Work').setDescription(`You worked and earned **$${earned}**!`).addField('New Balance', `$${bal}`, true)] });
         } else if (commandName === 'pay') {
             const target = interaction.options.getUser('user');
             const amount = interaction.options.getInteger('amount');
             const { MessageEmbed } = require('discord.js');
             if (amount <= 0) {
-                await interaction.reply({ embeds: [new MessageEmbed().setColor('#ffaa00').setTitle('Payment Failed').setDescription('Amount must be positive.')] });
+                await interaction.editReply({ embeds: [new MessageEmbed().setColor('#ffaa00').setTitle('Payment Failed').setDescription('Amount must be positive.')] });
                 return;
             }
             const bal = await db.getBalance(guildId, userId);
             if (bal < amount) {
-                await interaction.reply({ embeds: [new MessageEmbed().setColor('#ffaa00').setTitle('Payment Failed').setDescription('You do not have enough funds.')] });
+                await interaction.editReply({ embeds: [new MessageEmbed().setColor('#ffaa00').setTitle('Payment Failed').setDescription('You do not have enough funds.')] });
                 return;
             }
             await db.addBalance(guildId, userId, -amount);
             await db.addBalance(guildId, target.id, amount);
-            await interaction.reply({ embeds: [new MessageEmbed().setColor('#00ff99').setTitle('💸 Payment Sent').setDescription(`You paid **$${amount}** to <@${target.id}>.`)] });
+            await interaction.editReply({ embeds: [new MessageEmbed().setColor('#00ff99').setTitle('💸 Payment Sent').setDescription(`You paid **$${amount}** to <@${target.id}>.`)] });
         } else if (commandName === 'leaderboard') {
             const top = await db.getLeaderboard(guildId, 10);
             const { MessageEmbed } = require('discord.js');
@@ -1944,14 +1944,14 @@ module.exports = {
             for (let i = 0; i < top.length; i++) {
                 desc += `**#${i + 1}** <@${top[i][0]}>: $${top[i][1]}\n`;
             }
-            await interaction.reply({ embeds: [new MessageEmbed().setColor('#ffd700').setTitle('🏆 Economy Leaderboard').setDescription(desc)] });
+            await interaction.editReply({ embeds: [new MessageEmbed().setColor('#ffd700').setTitle('🏆 Economy Leaderboard').setDescription(desc)] });
         }
         
         // Check premium for mini-games (except free tier games)
         if (MINI_GAMES.includes(commandName) && !FREE_TIER_GAMES.includes(commandName)) {
             const premiumError = await requiresPremium(guildId, 'Mini-Game: ' + commandName);
             if (premiumError) {
-                await interaction.reply({ embeds: [premiumError], ephemeral: true });
+                await interaction.editReply({ embeds: [premiumError] });
                 return;
             }
         }
@@ -1959,7 +1959,7 @@ module.exports = {
         if (commandName === 'fortuneteller') {
             if (!canPlayMiniGame(userId, 'fortuneteller')) {
                 const nextTime = nextAvailableMiniGame(userId);
-                await interaction.reply({ content: `⏳ The oracle rests! Return <t:${Math.floor(nextTime / 1000)}:R>`, ephemeral: true });
+                await interaction.editReply({ content: `⏳ The oracle rests! Return <t:${Math.floor(nextTime / 1000)}:R>` });
                 return;
             }
             
@@ -1969,7 +1969,7 @@ module.exports = {
             const { MessageEmbed } = require('discord.js');
             const symbols = ['🗡️', '👑', '🛡️', '💎', '⚱️'];
             
-            await interaction.reply({
+            await interaction.editReply({
                 embeds: [
                     new MessageEmbed()
                         .setColor('#9b59b6')
@@ -2018,23 +2018,23 @@ module.exports = {
         } else if (commandName === 'pillage') {
             if (!canPlayMiniGame(userId, 'pillage')) {
                 const nextTime = nextAvailableMiniGame(userId);
-                await interaction.reply({ content: `⏳ Thou art too exhausted! Rest until <t:${Math.floor(nextTime / 1000)}:R>`, ephemeral: true });
+                await interaction.editReply({ content: `⏳ Thou art too exhausted! Rest until <t:${Math.floor(nextTime / 1000)}:R>` });
                 return;
             }
             
             const target = interaction.options.getUser('target');
             if (target.id === userId) {
-                await interaction.reply({ content: '⚔️ Thou cannot raid thine own coffers!', ephemeral: true });
+                await interaction.editReply({ content: '⚔️ Thou cannot raid thine own coffers!' });
                 return;
             }
             if (target.bot) {
-                await interaction.reply({ content: '🤖 Thou cannot raid a bot!', ephemeral: true });
+                await interaction.editReply({ content: '🤖 Thou cannot raid a bot!' });
                 return;
             }
             
             const targetBal = await db.getBalance(guildId, target.id);
             if (targetBal < 100) {
-                await interaction.reply({ content: `💰 ${target.username} hath no coin worth pillaging!`, ephemeral: true });
+                await interaction.editReply({ content: `💰 ${target.username} hath no coin worth pillaging!` });
                 return;
             }
             
@@ -2048,7 +2048,7 @@ module.exports = {
                 );
             
             const { MessageEmbed } = require('discord.js');
-            const message = await interaction.reply({
+            const message = await interaction.editReply({
                 embeds: [
                     new MessageEmbed()
                         .setColor('#e74c3c')
@@ -2136,7 +2136,7 @@ module.exports = {
         } else if (commandName === 'archery') {
             if (!canPlayMiniGame(userId, 'archery')) {
                 const nextTime = nextAvailableMiniGame(userId);
-                await interaction.reply({ content: `⏳ Thy arm needs rest! Return <t:${Math.floor(nextTime / 1000)}:R>`, ephemeral: true });
+                await interaction.editReply({ content: `⏳ Thy arm needs rest! Return <t:${Math.floor(nextTime / 1000)}:R>` });
                 return;
             }
             
@@ -2149,7 +2149,7 @@ module.exports = {
                 );
             
             const { MessageEmbed } = require('discord.js');
-            const message = await interaction.reply({
+            const message = await interaction.editReply({
                 embeds: [
                     new MessageEmbed()
                         .setColor('#2ecc71')
@@ -2233,7 +2233,7 @@ module.exports = {
         } else if (commandName === 'tarot') {
             if (!canPlayMiniGame(userId, 'tarot')) {
                 const nextTime = nextAvailableMiniGame(userId);
-                await interaction.reply({ content: `⏳ The cards must rest! Return <t:${Math.floor(nextTime / 1000)}:R>`, ephemeral: true });
+                await interaction.editReply({ content: `⏳ The cards must rest! Return <t:${Math.floor(nextTime / 1000)}:R>` });
                 return;
             }
             
@@ -2260,7 +2260,7 @@ module.exports = {
                 );
             
             const { MessageEmbed } = require('discord.js');
-            const message = await interaction.reply({
+            const message = await interaction.editReply({
                 embeds: [
                     new MessageEmbed()
                         .setColor('#9b59b6')
@@ -2308,7 +2308,7 @@ module.exports = {
         } else if (commandName === 'quest') {
             if (!canPlayMiniGame(userId, 'quest')) {
                 const nextTime = nextAvailableMiniGame(userId);
-                await interaction.reply({ content: `⏳ Thou art weary from adventure! Rest until <t:${Math.floor(nextTime / 1000)}:R>`, ephemeral: true });
+                await interaction.editReply({ content: `⏳ Thou art weary from adventure! Rest until <t:${Math.floor(nextTime / 1000)}:R>` });
                 return;
             }
             
@@ -2329,7 +2329,7 @@ module.exports = {
                 );
             
             const { MessageEmbed } = require('discord.js');
-            const message = await interaction.reply({
+            const message = await interaction.editReply({
                 embeds: [
                     new MessageEmbed()
                         .setColor('#3498db')
@@ -2405,7 +2405,7 @@ module.exports = {
         } else if (commandName === 'liarsdice') {
             if (!canPlayMiniGame(userId, 'liarsdice')) {
                 const nextTime = nextAvailableMiniGame(userId);
-                await interaction.reply({ content: `⏳ The tavern keeper says nay! Return <t:${Math.floor(nextTime / 1000)}:R>`, ephemeral: true });
+                await interaction.editReply({ content: `⏳ The tavern keeper says nay! Return <t:${Math.floor(nextTime / 1000)}:R>` });
                 return;
             }
             
@@ -2425,7 +2425,7 @@ module.exports = {
                     new MessageButton().setCustomId('dice_seven').setLabel('🎯 Wager Seven').setStyle('SUCCESS')
                 );
             
-            const message = await interaction.reply({
+            const message = await interaction.editReply({
                 embeds: [
                     new MessageEmbed()
                         .setColor('#8b4513')
@@ -2505,7 +2505,7 @@ module.exports = {
         } else if (commandName === 'smuggle') {
             if (!canPlayMiniGame(userId, 'smuggle')) {
                 const nextTime = nextAvailableMiniGame(userId);
-                await interaction.reply({ content: `⏳ The gates are watched! Wait until <t:${Math.floor(nextTime / 1000)}:R>`, ephemeral: true });
+                await interaction.editReply({ content: `⏳ The gates are watched! Wait until <t:${Math.floor(nextTime / 1000)}:R>` });
                 return;
             }
             
@@ -2526,7 +2526,7 @@ module.exports = {
                 );
             
             const { MessageEmbed } = require('discord.js');
-            const message = await interaction.reply({
+            const message = await interaction.editReply({
                 embeds: [
                     new MessageEmbed()
                         .setColor('#8e44ad')
@@ -2603,7 +2603,7 @@ module.exports = {
         } else if (commandName === 'pickpocket') {
             if (!canPlayMiniGame(userId, 'pickpocket')) {
                 const nextTime = nextAvailableMiniGame(userId);
-                await interaction.reply({ content: `⏳ Lay low for now! Return <t:${Math.floor(nextTime / 1000)}:R>`, ephemeral: true });
+                await interaction.editReply({ content: `⏳ Lay low for now! Return <t:${Math.floor(nextTime / 1000)}:R>` });
                 return;
             }
             
@@ -2626,7 +2626,7 @@ module.exports = {
                 );
             
             const { MessageEmbed } = require('discord.js');
-            const message = await interaction.reply({
+            const message = await interaction.editReply({
                 embeds: [
                     new MessageEmbed()
                         .setColor('#34495e')
@@ -2701,7 +2701,7 @@ module.exports = {
         } else if (commandName === 'bribe') {
             if (!canPlayMiniGame(userId, 'bribe')) {
                 const nextTime = nextAvailableMiniGame(userId);
-                await interaction.reply({ content: `⏳ The guards remember thee! Wait until <t:${Math.floor(nextTime / 1000)}:R>`, ephemeral: true });
+                await interaction.editReply({ content: `⏳ The guards remember thee! Wait until <t:${Math.floor(nextTime / 1000)}:R>` });
                 return;
             }
             
@@ -2716,7 +2716,7 @@ module.exports = {
                 );
             
             const { MessageEmbed } = require('discord.js');
-            const message = await interaction.reply({
+            const message = await interaction.editReply({
                 embeds: [
                     new MessageEmbed()
                         .setColor('#f39c12')
@@ -2812,60 +2812,56 @@ module.exports = {
         } else if (commandName === 'addmoney') {
             // Only allow admins to use this command
             if (!interaction.memberPermissions || !interaction.memberPermissions.has('ADMINISTRATOR')) {
-                await interaction.reply({ content: 'You do not have permission to use this command.', ephemeral: true });
+                await interaction.editReply({ content: 'You do not have permission to use this command.' });
                 return;
             }
             const target = interaction.options.getUser('user');
             const amount = interaction.options.getInteger('amount');
             if (amount === 0) {
-                await interaction.reply('Amount must not be zero.');
+                await interaction.editReply('Amount must not be zero.');
                 return;
             }
             await db.addBalance(guildId, target.id, amount);
-            await interaction.reply(`Added $${amount} to ${target.username}'s balance.`);
+            await interaction.editReply(`Added $${amount} to ${target.username}'s balance.`);
         } else if (commandName === 'setname') {
             const dayzName = interaction.options.getString('name');
             await db.setDayZName(guildId, userId, dayzName);
-            await interaction.reply({
+            await interaction.editReply({
                 embeds: [
                     new MessageEmbed()
                         .setColor('#00ff99')
                         .setTitle('DayZ Name Set')
                         .setDescription(`Your DayZ player name has been set to: **${dayzName}**\n\nItems purchased from the shop will now spawn at your in-game location!`)
-                ], ephemeral: true
-            });
+                ] });
         } else if (commandName === 'myname') {
             const dayzName = await db.getDayZName(guildId, userId);
             if (!dayzName) {
-                await interaction.reply({
+                await interaction.editReply({
                     embeds: [
                         new MessageEmbed()
                             .setColor('#ffaa00')
                             .setTitle('No DayZ Name Set')
                             .setDescription('You have not set your DayZ player name yet.\n\nUse `/setname` to set it so items spawn at your location!')
-                    ], ephemeral: true
-                });
+                    ] });
             } else {
-                await interaction.reply({
+                await interaction.editReply({
                     embeds: [
                         new MessageEmbed()
                             .setColor('#00aaff')
                             .setTitle('Your DayZ Name')
                             .setDescription(`**${dayzName}**\n\nYou can change it anytime with \`/setname\``)
-                    ], ephemeral: true
-                });
+                    ] });
             }
         } else if (commandName === 'imhere') {
             const dayzName = await db.getDayZName(guildId, userId);
             if (!dayzName) {
-                await interaction.reply({
+                await interaction.editReply({
                     embeds: [
                         new MessageEmbed()
                             .setColor('#ffaa00')
                             .setTitle('❌ No DayZ Name Set')
                             .setDescription('You need to set your DayZ name first!\n\nUse `/setname name:YourDayZName`')
-                    ], ephemeral: true
-                });
+                    ] });
                 return;
             }
 
@@ -2873,14 +2869,13 @@ module.exports = {
             const location = await db.getPlayerLocation(guildId, dayzName);
             
             if (!location) {
-                await interaction.reply({
+                await interaction.editReply({
                     embeds: [
                         new MessageEmbed()
                             .setColor('#ffaa00')
                             .setTitle('📍 No Location Found')
                             .setDescription(`**DayZ Name:** ${dayzName}\n\nYour location hasn't been tracked yet. Make sure you:\n• Have been on the server recently\n• Are online so the bot can track you\n\nThe bot updates locations every 2 minutes from server logs.`)
-                    ], ephemeral: true
-                });
+                    ] });
             } else {
                 // Store coordinates for teleport system (if available)
                 try {
@@ -2892,7 +2887,7 @@ module.exports = {
                     // Teleport module not available, that's okay
                 }
 
-                await interaction.reply({
+                await interaction.editReply({
                     embeds: [
                         new MessageEmbed()
                             .setColor('#00ff99')
@@ -2901,8 +2896,7 @@ module.exports = {
                             .addField('Position', `X: ${location.x}\nY: ${location.y} (elevation)\nZ: ${location.z}`, false)
                             .addField('Spawn Format', `[${location.x}, ${location.y}, ${location.z}]`, false)
                             .setFooter({ text: 'Items will spawn at this location after the next server restart' })
-                    ], ephemeral: true
-                });
+                    ] });
             }
         
         // ============ RANK-LOCKED GAMES ============
@@ -2911,13 +2905,13 @@ module.exports = {
             const rank = getRank(stats ? stats.total_earned : 0);
             
             if (!canPlayGame(rank, 'questboard')) {
-                await interaction.reply({ content: `🔒 Thou must be at least a **Knight** to access the quest board! (Need $5,000 total earned)`, ephemeral: true });
+                await interaction.editReply({ content: `🔒 Thou must be at least a **Knight** to access the quest board! (Need $5,000 total earned)` });
                 return;
             }
             
             if (!canPlayMiniGame(userId, 'questboard')) {
                 const nextTime = nextAvailableMiniGame(userId);
-                await interaction.reply({ content: `⏳ Rest before more quests! Return <t:${Math.floor(nextTime / 1000)}:R>`, ephemeral: true });
+                await interaction.editReply({ content: `⏳ Rest before more quests! Return <t:${Math.floor(nextTime / 1000)}:R>` });
                 return;
             }
             
@@ -2937,7 +2931,7 @@ module.exports = {
             recordMiniGamePlay(userId, 'questboard');
             
             const { MessageEmbed } = require('discord.js');
-            await interaction.reply({
+            await interaction.editReply({
                 embeds: [
                     new MessageEmbed()
                         .setColor('#43b581')
@@ -2953,13 +2947,13 @@ module.exports = {
             const rank = getRank(stats ? stats.total_earned : 0);
             
             if (!canPlayGame(rank, 'taverndice')) {
-                await interaction.reply({ content: `🔒 Thou must be a **Peasant** to play tavern dice!`, ephemeral: true });
+                await interaction.editReply({ content: `🔒 Thou must be a **Peasant** to play tavern dice!` });
                 return;
             }
             
             if (!canPlayMiniGame(userId, 'taverndice')) {
                 const nextTime = nextAvailableMiniGame(userId);
-                await interaction.reply({ content: `⏳ The dice are in use! Return <t:${Math.floor(nextTime / 1000)}:R>`, ephemeral: true });
+                await interaction.editReply({ content: `⏳ The dice are in use! Return <t:${Math.floor(nextTime / 1000)}:R>` });
                 return;
             }
             
@@ -2990,7 +2984,7 @@ module.exports = {
             recordMiniGamePlay(userId, 'taverndice');
             
             const { MessageEmbed } = require('discord.js');
-            await interaction.reply({
+            await interaction.editReply({
                 embeds: [
                     new MessageEmbed()
                         .setColor('#8b4513')
@@ -3006,7 +3000,7 @@ module.exports = {
             const rank = getRank(stats ? stats.total_earned : 0);
             
             if (!canPlayGame(rank, 'duel')) {
-                await interaction.reply({ content: `🔒 Thou must be at least a **Baron** to duel! (Need $15,000 total earned)`, ephemeral: true });
+                await interaction.editReply({ content: `🔒 Thou must be at least a **Baron** to duel! (Need $15,000 total earned)` });
                 return;
             }
             
@@ -3014,7 +3008,7 @@ module.exports = {
                 const nextTime = nextAvailableMiniGame(userId, 'duel');
                 const hours = Math.floor(nextTime / (1000 * 60 * 60));
                 const minutes = Math.floor((nextTime % (1000 * 60 * 60)) / (1000 * 60));
-                await interaction.reply({ content: `⏳ Thy sword arm needs rest! Return in ${hours}h ${minutes}m`, ephemeral: true });
+                await interaction.editReply({ content: `⏳ Thy sword arm needs rest! Return in ${hours}h ${minutes}m` });
                 return;
             }
             
@@ -3022,15 +3016,15 @@ module.exports = {
             const stakes = interaction.options.getInteger('stakes');
             
             if (opponent.id === userId) {
-                await interaction.reply({ content: '⚔️ Thou cannot duel thyself!', ephemeral: true });
+                await interaction.editReply({ content: '⚔️ Thou cannot duel thyself!' });
                 return;
             }
             if (opponent.bot) {
-                await interaction.reply({ content: '🤖 Bots do not accept duels!', ephemeral: true });
+                await interaction.editReply({ content: '🤖 Bots do not accept duels!' });
                 return;
             }
             if (stakes < 50) {
-                await interaction.reply({ content: '⚔️ Stakes must be at least $50!', ephemeral: true });
+                await interaction.editReply({ content: '⚔️ Stakes must be at least $50!' });
                 return;
             }
             
@@ -3038,11 +3032,11 @@ module.exports = {
             const oppBal = await db.getBalance(guildId, opponent.id);
             
             if (userBal < stakes) {
-                await interaction.reply({ content: `💰 Thou dost not have $${stakes}! Balance: $${userBal}`, ephemeral: true });
+                await interaction.editReply({ content: `💰 Thou dost not have $${stakes}! Balance: $${userBal}` });
                 return;
             }
             if (oppBal < stakes) {
-                await interaction.reply({ content: `💰 ${opponent.username} doth not have $${stakes} to match thy stakes!`, ephemeral: true });
+                await interaction.editReply({ content: `💰 ${opponent.username} doth not have $${stakes} to match thy stakes!` });
                 return;
             }
             
@@ -3053,7 +3047,7 @@ module.exports = {
             );
             
             const { MessageEmbed } = require('discord.js');
-            await interaction.reply({
+            await interaction.editReply({
                 content: `<@${opponent.id}>`,
                 embeds: [new MessageEmbed()
                     .setColor('#e74c3c')
@@ -3123,12 +3117,12 @@ module.exports = {
                     await new Promise((resolve) => {
                         roundCollector.on('collect', async i2 => {
                             if (choices[i2.user.id]) {
-                                await i2.reply({ content: 'Thou hast already chosen!', ephemeral: true });
+                                await i2.reply({ content: 'Thou hast already chosen!' });
                                 return;
                             }
                             
                             choices[i2.user.id] = i2.customId;
-                            await i2.reply({ content: `⚔️ Move selected!`, ephemeral: true });
+                            await i2.reply({ content: `⚔️ Move selected!` });
                             
                             if (choices[userId] && choices[opponent.id]) {
                                 roundCollector.stop();
@@ -3229,7 +3223,7 @@ module.exports = {
             const rank = getRank(stats ? stats.total_earned : 0);
             
             if (!canPlayGame(rank, 'joust')) {
-                await interaction.reply({ content: `🔒 Thou must be at least an **Earl** to joust! (Need $35,000 total earned)`, ephemeral: true });
+                await interaction.editReply({ content: `🔒 Thou must be at least an **Earl** to joust! (Need $35,000 total earned)` });
                 return;
             }
             
@@ -3237,7 +3231,7 @@ module.exports = {
             const userBal = await db.getBalance(guildId, userId);
             
             if (userBal < entryFee) {
-                await interaction.reply({ content: `💰 Thou needst $${entryFee} to enter the tournament!`, ephemeral: true });
+                await interaction.editReply({ content: `💰 Thou needst $${entryFee} to enter the tournament!` });
                 return;
             }
             
@@ -3249,7 +3243,7 @@ module.exports = {
             );
             
             if (existingEntry.rows.length > 0) {
-                await interaction.reply({ content: '🏇 Thou hast already entered today\'s tournament!', ephemeral: true });
+                await interaction.editReply({ content: '🏇 Thou hast already entered today\'s tournament!' });
                 return;
             }
             
@@ -3261,7 +3255,7 @@ module.exports = {
             );
             
             const { MessageEmbed } = require('discord.js');
-            await interaction.reply({
+            await interaction.editReply({
                 embeds: [
                     new MessageEmbed()
                         .setColor('#f39c12')
@@ -3274,7 +3268,7 @@ module.exports = {
         } else if (commandName === 'rank') {
             const stats = await getUserStats(guildId, userId);
             if (!stats) {
-                await interaction.reply({ content: 'Error loading stats!', ephemeral: true });
+                await interaction.editReply({ content: 'Error loading stats!' });
                 return;
             }
             const rank = getRank(stats.total_earned);
@@ -3319,7 +3313,7 @@ module.exports = {
             }
             
             embed.addField('🎮 Unlocked Games', unlockedGames.map(g => `\`/${g}\``).join(', '), false);
-            await interaction.reply({ embeds: [embed] });
+            await interaction.editReply({ embeds: [embed] });
             
         // ============ THRONE SYSTEM ============
         } else if (commandName === 'throne') {
@@ -3327,7 +3321,7 @@ module.exports = {
             const reigningKing = await db.getReigningKing(guildId);
             
             if (!reigningKing) {
-                await interaction.reply({
+                await interaction.editReply({
                     embeds: [
                         new MessageEmbed()
                             .setColor('#ffd700')
@@ -3362,13 +3356,13 @@ module.exports = {
             }
             
             embed.setFooter({ text: 'Reach Duke rank ($75,000) to challenge the throne with /challenge-throne' });
-            await interaction.reply({ embeds: [embed] });
+            await interaction.editReply({ embeds: [embed] });
             
         } else if (commandName === 'challenge-throne') {
             const { MessageEmbed } = require('discord.js');
             const stats = await getUserStats(guildId, userId);
             if (!stats) {
-                await interaction.reply({ content: 'Error loading stats!', ephemeral: true });
+                await interaction.editReply({ content: 'Error loading stats!' });
                 return;
             }
             
@@ -3376,7 +3370,7 @@ module.exports = {
             
             // Must be Duke or King rank to challenge
             if (rank.name !== 'Duke' && rank.name !== 'King') {
-                await interaction.reply({
+                await interaction.editReply({
                     embeds: [
                         new MessageEmbed()
                             .setColor('#ff5555')
@@ -3393,7 +3387,7 @@ module.exports = {
             // If no king, only King rank can claim throne (not Duke)
             if (!reigningKing) {
                 if (rank.name !== 'King') {
-                    await interaction.reply({
+                    await interaction.editReply({
                         embeds: [
                             new MessageEmbed()
                                 .setColor('#ff5555')
@@ -3407,7 +3401,7 @@ module.exports = {
                 
                 // King rank claims empty throne
                 await db.setReigningKing(guildId, userId);
-                await interaction.reply({
+                await interaction.editReply({
                     embeds: [
                         new MessageEmbed()
                             .setColor('#ffd700')
@@ -3420,7 +3414,7 @@ module.exports = {
             
             // Cannot challenge yourself
             if (reigningKing.user_id === userId) {
-                await interaction.reply({
+                await interaction.editReply({
                     embeds: [
                         new MessageEmbed()
                             .setColor('#ff5555')
@@ -3437,7 +3431,7 @@ module.exports = {
             if (reigningKing.last_challenged && (Date.now() - reigningKing.last_challenged) < COOLDOWN) {
                 const timeLeft = reigningKing.last_challenged + COOLDOWN - Date.now();
                 const daysLeft = Math.ceil(timeLeft / (1000 * 60 * 60 * 24));
-                await interaction.reply({
+                await interaction.editReply({
                     embeds: [
                         new MessageEmbed()
                             .setColor('#ff5555')
@@ -3456,7 +3450,7 @@ module.exports = {
             const challengerTotal = challengerWallet + challengerBank;
             
             if (challengerTotal < WAGER) {
-                await interaction.reply({
+                await interaction.editReply({
                     embeds: [
                         new MessageEmbed()
                             .setColor('#ff5555')
@@ -3497,7 +3491,7 @@ module.exports = {
                 await db.recordThroneChallenge(guildId, userId, reigningKing.user_id, 'default_win', WAGER, userId);
                 
                 const kingUser = await interaction.client.users.fetch(reigningKing.user_id);
-                await interaction.reply({
+                await interaction.editReply({
                     embeds: [
                         new MessageEmbed()
                             .setColor('#ffd700')
@@ -3524,7 +3518,7 @@ module.exports = {
                         .setStyle('SECONDARY')
                 );
             
-            const challengeMessage = await interaction.reply({
+            const challengeMessage = await interaction.editReply({
                 content: `<@${reigningKing.user_id}>`,
                 embeds: [
                     new MessageEmbed()
@@ -3683,12 +3677,12 @@ module.exports = {
                     await new Promise((resolve) => {
                         roundCollector.on('collect', async i2 => {
                             if (choices[i2.user.id]) {
-                                await i2.reply({ content: 'Thou hast already chosen!', ephemeral: true });
+                                await i2.reply({ content: 'Thou hast already chosen!' });
                                 return;
                             }
                             
                             choices[i2.user.id] = i2.customId;
-                            await i2.reply({ content: `⚔️ Move selected!`, ephemeral: true });
+                            await i2.reply({ content: `⚔️ Move selected!` });
                             
                             if (choices[userId] && choices[reigningKing.user_id]) {
                                 roundCollector.stop();
@@ -3835,7 +3829,7 @@ module.exports = {
         } else if (commandName === 'labor') {
             if (!canPlayMiniGame(userId, 'labor')) {
                 const nextTime = nextAvailableMiniGame(userId);
-                await interaction.reply({ content: `⏳ Thou art weary! Rest until <t:${Math.floor(nextTime / 1000)}:R>`, ephemeral: true });
+                await interaction.editReply({ content: `⏳ Thou art weary! Rest until <t:${Math.floor(nextTime / 1000)}:R>` });
                 return;
             }
             
@@ -3850,7 +3844,7 @@ module.exports = {
                 );
             
             const { MessageEmbed } = require('discord.js');
-            const message = await interaction.reply({
+            const message = await interaction.editReply({
                 embeds: [
                     new MessageEmbed()
                         .setColor('#8b4513')
@@ -3899,7 +3893,7 @@ module.exports = {
             
         } else if (commandName === 'shophelp') {
             const { MessageEmbed } = require('discord.js');
-            await interaction.reply({
+            await interaction.editReply({
                 embeds: [
                     new MessageEmbed()
                         .setColor('#00aaff')
@@ -3920,21 +3914,20 @@ module.exports = {
                         .addField('💰 Earn Money', 
                             'Medieval mini-games! Use `/rank` to see unlocked games.\n⏳ Each can be used once every 6 hours', false)
                         .setFooter({ text: 'Need help? Ask an admin!' })
-                ], ephemeral: true
-            });
+                ] });
             
         // ========== HUNTING ==========
         } else if (commandName === 'hunting') {
             const stats = await getUserStats(guildId, userId);
             const rank = getRank(stats.total_earned);
             if (!canPlayGame(rank, 'hunting')) {
-                return interaction.reply({ content: `🔒 **Hunting** unlocks at **Knight** rank! Thou art but a ${rank.emoji} ${rank.name}.`, ephemeral: true });
+                return interaction.reply({ content: `🔒 **Hunting** unlocks at **Knight** rank! Thou art but a ${rank.emoji} ${rank.name}.` });
             }
             if (!canPlayMiniGame(userId, 'hunting')) {
                 const next = nextAvailableMiniGame(userId, 'hunting');
                 const hours = Math.floor(next / (1000 * 60 * 60));
                 const minutes = Math.floor((next % (1000 * 60 * 60)) / (1000 * 60));
-                return interaction.reply({ content: `⏰ Thou must rest! Try again in ${hours}h ${minutes}m.`, ephemeral: true });
+                return interaction.reply({ content: `⏰ Thou must rest! Try again in ${hours}h ${minutes}m.` });
             }
 
             const row = new MessageActionRow().addComponents(
@@ -3943,7 +3936,7 @@ module.exports = {
                 new MessageButton().setCustomId('rabbit').setLabel('🐰 Hunt Rabbit').setStyle('SUCCESS')
             );
 
-            await interaction.reply({
+            await interaction.editReply({
                 embeds: [new MessageEmbed()
                     .setColor('#8b4513')
                     .setTitle('🏹 Royal Forest Hunting')
@@ -3956,7 +3949,7 @@ module.exports = {
             const collector = interaction.channel.createMessageComponentCollector({ filter, time: 30000 });
             
             collector.on('collect', async i => {
-                if (i.user.id !== userId) return i.reply({ content: 'This be not thy hunt!', ephemeral: true });
+                if (i.user.id !== userId) return i.reply({ content: 'This be not thy hunt!' });
                 
                 const choices = {
                     deer: { animal: 'Deer', base: 200, chance: 0.60, emoji: '🦌' },
@@ -3996,13 +3989,13 @@ module.exports = {
             const stats = await getUserStats(guildId, userId);
             const rank = getRank(stats.total_earned);
             if (!canPlayGame(rank, 'fishing')) {
-                return interaction.reply({ content: `🔒 **Fishing** is available to all ${rank.emoji} ${rank.name}s!`, ephemeral: true });
+                return interaction.reply({ content: `🔒 **Fishing** is available to all ${rank.emoji} ${rank.name}s!` });
             }
             if (!canPlayMiniGame(userId, 'fishing')) {
                 const next = nextAvailableMiniGame(userId, 'fishing');
                 const hours = Math.floor(next / (1000 * 60 * 60));
                 const minutes = Math.floor((next % (1000 * 60 * 60)) / (1000 * 60));
-                return interaction.reply({ content: `⏰ Thou must rest! Try again in ${hours}h ${minutes}m.`, ephemeral: true });
+                return interaction.reply({ content: `⏰ Thou must rest! Try again in ${hours}h ${minutes}m.` });
             }
 
             const row = new MessageActionRow().addComponents(
@@ -4011,7 +4004,7 @@ module.exports = {
                 new MessageButton().setCustomId('eel').setLabel('🦎 Cast for Eel').setStyle('SECONDARY')
             );
 
-            await interaction.reply({
+            await interaction.editReply({
                 embeds: [new MessageEmbed()
                     .setColor('#4682b4')
                     .setTitle('🎣 River Fishing')
@@ -4024,7 +4017,7 @@ module.exports = {
             const collector = interaction.channel.createMessageComponentCollector({ filter, time: 30000 });
             
             collector.on('collect', async i => {
-                if (i.user.id !== userId) return i.reply({ content: 'This be not thy fishing spot!', ephemeral: true });
+                if (i.user.id !== userId) return i.reply({ content: 'This be not thy fishing spot!' });
                 
                 const choices = {
                     salmon: { fish: 'Salmon', base: 180, chance: 0.55, emoji: '🐟' },
@@ -4064,13 +4057,13 @@ module.exports = {
             const stats = await getUserStats(guildId, userId);
             const rank = getRank(stats.total_earned);
             if (!canPlayGame(rank, 'mining')) {
-                return interaction.reply({ content: `🔒 **Mining** unlocks at **Knight** rank! Thou art but a ${rank.emoji} ${rank.name}.`, ephemeral: true });
+                return interaction.reply({ content: `🔒 **Mining** unlocks at **Knight** rank! Thou art but a ${rank.emoji} ${rank.name}.` });
             }
             if (!canPlayMiniGame(userId, 'mining')) {
                 const next = nextAvailableMiniGame(userId, 'mining');
                 const hours = Math.floor(next / (1000 * 60 * 60));
                 const minutes = Math.floor((next % (1000 * 60 * 60)) / (1000 * 60));
-                return interaction.reply({ content: `⏰ Thou must rest! Try again in ${hours}h ${minutes}m.`, ephemeral: true });
+                return interaction.reply({ content: `⏰ Thou must rest! Try again in ${hours}h ${minutes}m.` });
             }
 
             const row = new MessageActionRow().addComponents(
@@ -4079,7 +4072,7 @@ module.exports = {
                 new MessageButton().setCustomId('gems').setLabel('💎 Mine Gems').setStyle('SUCCESS')
             );
 
-            await interaction.reply({
+            await interaction.editReply({
                 embeds: [new MessageEmbed()
                     .setColor('#ffd700')
                     .setTitle('⛏️ Mountain Mining')
@@ -4092,7 +4085,7 @@ module.exports = {
             const collector = interaction.channel.createMessageComponentCollector({ filter, time: 30000 });
             
             collector.on('collect', async i => {
-                if (i.user.id !== userId) return i.reply({ content: 'This be not thy mine!', ephemeral: true });
+                if (i.user.id !== userId) return i.reply({ content: 'This be not thy mine!' });
                 
                 const choices = {
                     gold: { ore: 'Gold', base: 300, chance: 0.50, emoji: '💛', item: 'gold_ore' },
@@ -4136,13 +4129,13 @@ module.exports = {
             const stats = await getUserStats(guildId, userId);
             const rank = getRank(stats.total_earned);
             if (!canPlayGame(rank, 'herbalism')) {
-                return interaction.reply({ content: `🔒 **Herbalism** is available to all ${rank.emoji} ${rank.name}s!`, ephemeral: true });
+                return interaction.reply({ content: `🔒 **Herbalism** is available to all ${rank.emoji} ${rank.name}s!` });
             }
             if (!canPlayMiniGame(userId, 'herbalism')) {
                 const next = nextAvailableMiniGame(userId, 'herbalism');
                 const hours = Math.floor(next / (1000 * 60 * 60));
                 const minutes = Math.floor((next % (1000 * 60 * 60)) / (1000 * 60));
-                return interaction.reply({ content: `⏰ Thou must rest! Try again in ${hours}h ${minutes}m.`, ephemeral: true });
+                return interaction.reply({ content: `⏰ Thou must rest! Try again in ${hours}h ${minutes}m.` });
             }
 
             const row = new MessageActionRow().addComponents(
@@ -4151,7 +4144,7 @@ module.exports = {
                 new MessageButton().setCustomId('rare').setLabel('✨ Rare Herbs').setStyle('PRIMARY')
             );
 
-            await interaction.reply({
+            await interaction.editReply({
                 embeds: [new MessageEmbed()
                     .setColor('#228b22')
                     .setTitle('🌿 Forest Herbalism')
@@ -4164,7 +4157,7 @@ module.exports = {
             const collector = interaction.channel.createMessageComponentCollector({ filter, time: 30000 });
             
             collector.on('collect', async i => {
-                if (i.user.id !== userId) return i.reply({ content: 'This be not thy gathering!', ephemeral: true });
+                if (i.user.id !== userId) return i.reply({ content: 'This be not thy gathering!' });
                 
                 const choices = {
                     healing: { herb: 'Healing Herbs', base: 100, chance: 0.80, emoji: '🌿' },
@@ -4204,13 +4197,13 @@ module.exports = {
             const stats = await getUserStats(guildId, userId);
             const rank = getRank(stats.total_earned);
             if (!canPlayGame(rank, 'blacksmith')) {
-                return interaction.reply({ content: `🔒 **Blacksmith** unlocks at **Baron** rank! Thou art but a ${rank.emoji} ${rank.name}.`, ephemeral: true });
+                return interaction.reply({ content: `🔒 **Blacksmith** unlocks at **Baron** rank! Thou art but a ${rank.emoji} ${rank.name}.` });
             }
             if (!canPlayMiniGame(userId, 'blacksmith')) {
                 const next = nextAvailableMiniGame(userId, 'blacksmith');
                 const hours = Math.floor(next / (1000 * 60 * 60));
                 const minutes = Math.floor((next % (1000 * 60 * 60)) / (1000 * 60));
-                return interaction.reply({ content: `⏰ Thou must rest! Try again in ${hours}h ${minutes}m.`, ephemeral: true });
+                return interaction.reply({ content: `⏰ Thou must rest! Try again in ${hours}h ${minutes}m.` });
             }
 
             // Check for crafting materials
@@ -4238,7 +4231,7 @@ module.exports = {
                 if (hasGem) inventoryText += `\n💎 Gems x${hasGem.quantity}`;
             }
 
-            await interaction.reply({
+            await interaction.editReply({
                 embeds: [new MessageEmbed()
                     .setColor('#ff4500')
                     .setTitle('🔨 Blacksmith Forge')
@@ -4250,7 +4243,7 @@ module.exports = {
             const collector = interaction.channel.createMessageComponentCollector({ time: 30000 });
             
             collector.on('collect', async i => {
-                if (i.user.id !== userId) return i.reply({ content: 'This be not thy forge!', ephemeral: true });
+                if (i.user.id !== userId) return i.reply({ content: 'This be not thy forge!' });
                 
                 const choices = {
                     crude: { quality: 'Crude', base: 150, chance: 0.85, emoji: '🔨' },
@@ -4269,7 +4262,7 @@ module.exports = {
                     const gem = inv.find(item => item.item_id === 'gem');
                     
                     if (!goldOre && !silverOre && !gem) {
-                        return i.reply({ content: '🎒 Thou hast no materials! Mine for resources first.', ephemeral: true });
+                        return i.reply({ content: '🎒 Thou hast no materials! Mine for resources first.' });
                     }
                 }
                 
@@ -4340,13 +4333,13 @@ module.exports = {
             const stats = await getUserStats(guildId, userId);
             const rank = getRank(stats.total_earned);
             if (!canPlayGame(rank, 'alchemy')) {
-                return interaction.reply({ content: `🔒 **Alchemy** unlocks at **Earl** rank! Thou art but a ${rank.emoji} ${rank.name}.`, ephemeral: true });
+                return interaction.reply({ content: `🔒 **Alchemy** unlocks at **Earl** rank! Thou art but a ${rank.emoji} ${rank.name}.` });
             }
             if (!canPlayMiniGame(userId, 'alchemy')) {
                 const next = nextAvailableMiniGame(userId, 'alchemy');
                 const hours = Math.floor(next / (1000 * 60 * 60));
                 const minutes = Math.floor((next % (1000 * 60 * 60)) / (1000 * 60));
-                return interaction.reply({ content: `⏰ Thou must rest! Try again in ${hours}h ${minutes}m.`, ephemeral: true });
+                return interaction.reply({ content: `⏰ Thou must rest! Try again in ${hours}h ${minutes}m.` });
             }
 
             const row = new MessageActionRow().addComponents(
@@ -4355,7 +4348,7 @@ module.exports = {
                 new MessageButton().setCustomId('transmute').setLabel('✨ Transmutation').setStyle('DANGER')
             );
 
-            await interaction.reply({
+            await interaction.editReply({
                 embeds: [new MessageEmbed()
                     .setColor('#9370db')
                     .setTitle('⚗️ Alchemy Laboratory')
@@ -4367,7 +4360,7 @@ module.exports = {
             const collector = interaction.channel.createMessageComponentCollector({ time: 30000 });
             
             collector.on('collect', async i => {
-                if (i.user.id !== userId) return i.reply({ content: 'This be not thy laboratory!', ephemeral: true });
+                if (i.user.id !== userId) return i.reply({ content: 'This be not thy laboratory!' });
                 
                 const choices = {
                     health: { potion: 'Health Potion', base: 200, chance: 0.75, emoji: '💚' },
@@ -4407,13 +4400,13 @@ module.exports = {
             const stats = await getUserStats(guildId, userId);
             const rank = getRank(stats.total_earned);
             if (!canPlayGame(rank, 'bard')) {
-                return interaction.reply({ content: `🔒 **Bard Performance** unlocks at **Baron** rank! Thou art but a ${rank.emoji} ${rank.name}.`, ephemeral: true });
+                return interaction.reply({ content: `🔒 **Bard Performance** unlocks at **Baron** rank! Thou art but a ${rank.emoji} ${rank.name}.` });
             }
             if (!canPlayMiniGame(userId, 'bard')) {
                 const next = nextAvailableMiniGame(userId, 'bard');
                 const hours = Math.floor(next / (1000 * 60 * 60));
                 const minutes = Math.floor((next % (1000 * 60 * 60)) / (1000 * 60));
-                return interaction.reply({ content: `⏰ Thou must rest! Try again in ${hours}h ${minutes}m.`, ephemeral: true });
+                return interaction.reply({ content: `⏰ Thou must rest! Try again in ${hours}h ${minutes}m.` });
             }
 
             const row = new MessageActionRow().addComponents(
@@ -4422,7 +4415,7 @@ module.exports = {
                 new MessageButton().setCustomId('epic').setLabel('⚔️ Epic Tale').setStyle('DANGER')
             );
 
-            await interaction.reply({
+            await interaction.editReply({
                 embeds: [new MessageEmbed()
                     .setColor('#ffa500')
                     .setTitle('🎵 Tavern Performance')
@@ -4434,7 +4427,7 @@ module.exports = {
             const collector = interaction.channel.createMessageComponentCollector({ time: 30000 });
             
             collector.on('collect', async i => {
-                if (i.user.id !== userId) return i.reply({ content: 'This be not thy performance!', ephemeral: true });
+                if (i.user.id !== userId) return i.reply({ content: 'This be not thy performance!' });
                 
                 const choices = {
                     ballad: { song: 'Ballad', base: 150, chance: 0.75, emoji: '🎵' },
@@ -4474,13 +4467,13 @@ module.exports = {
             const stats = await getUserStats(guildId, userId);
             const rank = getRank(stats.total_earned);
             if (!canPlayGame(rank, 'horseracing')) {
-                return interaction.reply({ content: `🔒 **Horse Racing** unlocks at **Earl** rank! Thou art but a ${rank.emoji} ${rank.name}.`, ephemeral: true });
+                return interaction.reply({ content: `🔒 **Horse Racing** unlocks at **Earl** rank! Thou art but a ${rank.emoji} ${rank.name}.` });
             }
             if (!canPlayMiniGame(userId, 'horseracing')) {
                 const next = nextAvailableMiniGame(userId, 'horseracing');
                 const hours = Math.floor(next / (1000 * 60 * 60));
                 const minutes = Math.floor((next % (1000 * 60 * 60)) / (1000 * 60));
-                return interaction.reply({ content: `⏰ Thou must rest! Try again in ${hours}h ${minutes}m.`, ephemeral: true });
+                return interaction.reply({ content: `⏰ Thou must rest! Try again in ${hours}h ${minutes}m.` });
             }
 
             const row = new MessageActionRow().addComponents(
@@ -4489,7 +4482,7 @@ module.exports = {
                 new MessageButton().setCustomId('balanced').setLabel('⚖️ Balanced Horse').setStyle('SUCCESS')
             );
 
-            await interaction.reply({
+            await interaction.editReply({
                 embeds: [new MessageEmbed()
                     .setColor('#8b4513')
                     .setTitle('🐴 Horse Racing Track')
@@ -4501,7 +4494,7 @@ module.exports = {
             const collector = interaction.channel.createMessageComponentCollector({ time: 30000 });
             
             collector.on('collect', async i => {
-                if (i.user.id !== userId) return i.reply({ content: 'This be not thy race!', ephemeral: true });
+                if (i.user.id !== userId) return i.reply({ content: 'This be not thy race!' });
                 
                 const choices = {
                     speed: { horse: 'Speed Horse', base: 350, chance: 0.45, emoji: '⚡' },
@@ -4541,13 +4534,13 @@ module.exports = {
             const stats = await getUserStats(guildId, userId);
             const rank = getRank(stats.total_earned);
             if (!canPlayGame(rank, 'chess')) {
-                return interaction.reply({ content: `🔒 **Chess** unlocks at **Duke** rank! Thou art but a ${rank.emoji} ${rank.name}.`, ephemeral: true });
+                return interaction.reply({ content: `🔒 **Chess** unlocks at **Duke** rank! Thou art but a ${rank.emoji} ${rank.name}.` });
             }
             if (!canPlayMiniGame(userId, 'chess')) {
                 const next = nextAvailableMiniGame(userId, 'chess');
                 const hours = Math.floor(next / (1000 * 60 * 60));
                 const minutes = Math.floor((next % (1000 * 60 * 60)) / (1000 * 60));
-                return interaction.reply({ content: `⏰ Thou must rest! Try again in ${hours}h ${minutes}m.`, ephemeral: true });
+                return interaction.reply({ content: `⏰ Thou must rest! Try again in ${hours}h ${minutes}m.` });
             }
 
             const row = new MessageActionRow().addComponents(
@@ -4556,7 +4549,7 @@ module.exports = {
                 new MessageButton().setCustomId('strategic').setLabel('🧠 Strategic').setStyle('SUCCESS')
             );
 
-            await interaction.reply({
+            await interaction.editReply({
                 embeds: [new MessageEmbed()
                     .setColor('#000000')
                     .setTitle('♟️ Noble Chess Match')
@@ -4568,7 +4561,7 @@ module.exports = {
             const collector = interaction.channel.createMessageComponentCollector({ time: 30000 });
             
             collector.on('collect', async i => {
-                if (i.user.id !== userId) return i.reply({ content: 'This be not thy match!', ephemeral: true });
+                if (i.user.id !== userId) return i.reply({ content: 'This be not thy match!' });
                 
                 const choices = {
                     aggressive: { strategy: 'Aggressive', base: 400, chance: 0.45, emoji: '⚔️' },
@@ -4608,13 +4601,13 @@ module.exports = {
             const stats = await getUserStats(guildId, userId);
             const rank = getRank(stats.total_earned);
             if (!canPlayGame(rank, 'relics')) {
-                return interaction.reply({ content: `🔒 **Relic Hunting** unlocks at **Duke** rank! Thou art but a ${rank.emoji} ${rank.name}.`, ephemeral: true });
+                return interaction.reply({ content: `🔒 **Relic Hunting** unlocks at **Duke** rank! Thou art but a ${rank.emoji} ${rank.name}.` });
             }
             if (!canPlayMiniGame(userId, 'relics')) {
                 const next = nextAvailableMiniGame(userId, 'relics');
                 const hours = Math.floor(next / (1000 * 60 * 60));
                 const minutes = Math.floor((next % (1000 * 60 * 60)) / (1000 * 60));
-                return interaction.reply({ content: `⏰ Thou must rest! Try again in ${hours}h ${minutes}m.`, ephemeral: true });
+                return interaction.reply({ content: `⏰ Thou must rest! Try again in ${hours}h ${minutes}m.` });
             }
 
             const row = new MessageActionRow().addComponents(
@@ -4623,7 +4616,7 @@ module.exports = {
                 new MessageButton().setCustomId('vault').setLabel('🗝️ Hidden Vault').setStyle('SUCCESS')
             );
 
-            await interaction.reply({
+            await interaction.editReply({
                 embeds: [new MessageEmbed()
                     .setColor('#daa520')
                     .setTitle('🏛️ Relic Hunting Expedition')
@@ -4635,7 +4628,7 @@ module.exports = {
             const collector = interaction.channel.createMessageComponentCollector({ time: 30000 });
             
             collector.on('collect', async i => {
-                if (i.user.id !== userId) return i.reply({ content: 'This be not thy expedition!', ephemeral: true });
+                if (i.user.id !== userId) return i.reply({ content: 'This be not thy expedition!' });
                 
                 const choices = {
                     temple: { location: 'Ancient Temple', base: 400, chance: 0.50, emoji: '🏛️' },
@@ -4675,13 +4668,13 @@ module.exports = {
             const stats = await getUserStats(guildId, userId);
             const rank = getRank(stats.total_earned);
             if (!canPlayGame(rank, 'tournamentmelee')) {
-                return interaction.reply({ content: `🔒 **Tournament Melee** unlocks at **Duke** rank! Thou art but a ${rank.emoji} ${rank.name}.`, ephemeral: true });
+                return interaction.reply({ content: `🔒 **Tournament Melee** unlocks at **Duke** rank! Thou art but a ${rank.emoji} ${rank.name}.` });
             }
             if (!canPlayMiniGame(userId, 'tournamentmelee')) {
                 const next = nextAvailableMiniGame(userId, 'tournamentmelee');
                 const hours = Math.floor(next / (1000 * 60 * 60));
                 const minutes = Math.floor((next % (1000 * 60 * 60)) / (1000 * 60));
-                return interaction.reply({ content: `⏰ Thou must rest! Try again in ${hours}h ${minutes}m.`, ephemeral: true });
+                return interaction.reply({ content: `⏰ Thou must rest! Try again in ${hours}h ${minutes}m.` });
             }
 
             const row = new MessageActionRow().addComponents(
@@ -4690,7 +4683,7 @@ module.exports = {
                 new MessageButton().setCustomId('defense').setLabel('🛡️ Defensive Stance').setStyle('SUCCESS')
             );
 
-            await interaction.reply({
+            await interaction.editReply({
                 embeds: [new MessageEmbed()
                     .setColor('#8b0000')
                     .setTitle('⚔️ Grand Melee Tournament')
@@ -4702,7 +4695,7 @@ module.exports = {
             const collector = interaction.channel.createMessageComponentCollector({ time: 30000 });
             
             collector.on('collect', async i => {
-                if (i.user.id !== userId) return i.reply({ content: 'This be not thy melee!', ephemeral: true });
+                if (i.user.id !== userId) return i.reply({ content: 'This be not thy melee!' });
                 
                 const choices = {
                     offense: { style: 'All-Out Attack', base: 600, chance: 0.35, emoji: '⚔️' },
@@ -4742,13 +4735,13 @@ module.exports = {
             const stats = await getUserStats(guildId, userId);
             const rank = getRank(stats.total_earned);
             if (!canPlayGame(rank, 'beasttaming')) {
-                return interaction.reply({ content: `🔒 **Beast Taming** unlocks at **King** rank! Thou art but a ${rank.emoji} ${rank.name}.`, ephemeral: true });
+                return interaction.reply({ content: `🔒 **Beast Taming** unlocks at **King** rank! Thou art but a ${rank.emoji} ${rank.name}.` });
             }
             if (!canPlayMiniGame(userId, 'beasttaming')) {
                 const next = nextAvailableMiniGame(userId, 'beasttaming');
                 const hours = Math.floor(next / (1000 * 60 * 60));
                 const minutes = Math.floor((next % (1000 * 60 * 60)) / (1000 * 60));
-                return interaction.reply({ content: `⏰ Thou must rest! Try again in ${hours}h ${minutes}m.`, ephemeral: true });
+                return interaction.reply({ content: `⏰ Thou must rest! Try again in ${hours}h ${minutes}m.` });
             }
 
             const row = new MessageActionRow().addComponents(
@@ -4757,7 +4750,7 @@ module.exports = {
                 new MessageButton().setCustomId('eagle').setLabel('🦅 Tame Eagle').setStyle('SUCCESS')
             );
 
-            await interaction.reply({
+            await interaction.editReply({
                 embeds: [new MessageEmbed()
                     .setColor('#654321')
                     .setTitle('🐻 Beast Taming Challenge')
@@ -4769,7 +4762,7 @@ module.exports = {
             const collector = interaction.channel.createMessageComponentCollector({ time: 30000 });
             
             collector.on('collect', async i => {
-                if (i.user.id !== userId) return i.reply({ content: 'This be not thy taming!', ephemeral: true });
+                if (i.user.id !== userId) return i.reply({ content: 'This be not thy taming!' });
                 
                 const choices = {
                     wolf: { beast: 'Wolf', base: 500, chance: 0.50, emoji: '🐺' },
@@ -4809,13 +4802,13 @@ module.exports = {
             const stats = await getUserStats(guildId, userId);
             const rank = getRank(stats.total_earned);
             if (!canPlayGame(rank, 'siegedefense')) {
-                return interaction.reply({ content: `🔒 **Siege Defense** unlocks at **King** rank! Thou art but a ${rank.emoji} ${rank.name}.`, ephemeral: true });
+                return interaction.reply({ content: `🔒 **Siege Defense** unlocks at **King** rank! Thou art but a ${rank.emoji} ${rank.name}.` });
             }
             if (!canPlayMiniGame(userId, 'siegedefense')) {
                 const next = nextAvailableMiniGame(userId, 'siegedefense');
                 const hours = Math.floor(next / (1000 * 60 * 60));
                 const minutes = Math.floor((next % (1000 * 60 * 60)) / (1000 * 60));
-                return interaction.reply({ content: `⏰ Thou must rest! Try again in ${hours}h ${minutes}m.`, ephemeral: true });
+                return interaction.reply({ content: `⏰ Thou must rest! Try again in ${hours}h ${minutes}m.` });
             }
 
             const row = new MessageActionRow().addComponents(
@@ -4824,7 +4817,7 @@ module.exports = {
                 new MessageButton().setCustomId('siege').setLabel('🔥 Use Siege Weapons').setStyle('PRIMARY')
             );
 
-            await interaction.reply({
+            await interaction.editReply({
                 embeds: [new MessageEmbed()
                     .setColor('#2f4f4f')
                     .setTitle('🏰 Castle Siege Defense')
@@ -4836,7 +4829,7 @@ module.exports = {
             const collector = interaction.channel.createMessageComponentCollector({ time: 30000 });
             
             collector.on('collect', async i => {
-                if (i.user.id !== userId) return i.reply({ content: 'This be not thy siege!', ephemeral: true });
+                if (i.user.id !== userId) return i.reply({ content: 'This be not thy siege!' });
                 
                 const choices = {
                     archers: { tactic: 'Archers', base: 600, chance: 0.60, emoji: '🏹' },
@@ -4925,7 +4918,7 @@ module.exports = {
             if (streak === 7 && !(await db.hasAchievement(guildId, userId, 'streak_7'))) {
                 await db.unlockAchievement(guildId, userId, 'streak_7');
                 await db.addBalance(guildId, userId, ACHIEVEMENTS.streak_7.reward);
-                await interaction.reply({
+                await interaction.editReply({
                     embeds: [new MessageEmbed()
                         .setColor('#ffd700')
                         .setTitle('🎁 Daily Reward Claimed!')
@@ -4937,7 +4930,7 @@ module.exports = {
             if (streak === 30 && !(await db.hasAchievement(guildId, userId, 'streak_30'))) {
                 await db.unlockAchievement(guildId, userId, 'streak_30');
                 await db.addBalance(guildId, userId, ACHIEVEMENTS.streak_30.reward);
-                await interaction.reply({
+                await interaction.editReply({
                     embeds: [new MessageEmbed()
                         .setColor('#ffd700')
                         .setTitle('🎁 Daily Reward Claimed!')
@@ -4947,7 +4940,7 @@ module.exports = {
                 return;
             }
             
-            await interaction.reply({
+            await interaction.editReply({
                 embeds: [new MessageEmbed()
                     .setColor('#00ff00')
                     .setTitle('🎁 Daily Reward Claimed!')
@@ -4973,7 +4966,7 @@ module.exports = {
                 }
             }
             
-            await interaction.reply({
+            await interaction.editReply({
                 embeds: [new MessageEmbed()
                     .setColor('#ffd700')
                     .setTitle('🏆 Thy Achievements')
@@ -4987,31 +4980,31 @@ module.exports = {
             // Premium feature check
             const premiumError = await requiresPremium(guildId, 'Gift');
             if (premiumError) {
-                await interaction.reply({ embeds: [premiumError], ephemeral: true });
+                await interaction.editReply({ embeds: [premiumError] });
                 return;
             }
             const targetUser = interaction.options.getUser('user');
             const amount = interaction.options.getInteger('amount');
             
             if (targetUser.id === userId) {
-                return interaction.reply({ content: '❌ Thou cannot gift coin to thyself!', ephemeral: true });
+                return interaction.reply({ content: '❌ Thou cannot gift coin to thyself!' });
             }
             if (targetUser.bot) {
-                return interaction.reply({ content: '❌ Bots cannot receive gifts!', ephemeral: true });
+                return interaction.reply({ content: '❌ Bots cannot receive gifts!' });
             }
             if (amount < 50) {
-                return interaction.reply({ content: '❌ Minimum gift is $50!', ephemeral: true });
+                return interaction.reply({ content: '❌ Minimum gift is $50!' });
             }
             
             const balance = await db.getBalance(guildId, userId);
             if (balance < amount) {
-                return interaction.reply({ content: `❌ Thou dost not have $${amount}! Balance: $${balance}`, ephemeral: true });
+                return interaction.reply({ content: `❌ Thou dost not have $${amount}! Balance: $${balance}` });
             }
             
             await db.addBalance(guildId, userId, -amount);
             await db.addBalance(guildId, targetUser.id, amount);
             
-            await interaction.reply({
+            await interaction.editReply({
                 embeds: [new MessageEmbed()
                     .setColor('#ff69b4')
                     .setTitle('💝 Gift Sent!')
@@ -5024,7 +5017,7 @@ module.exports = {
             // Premium feature check
             const premiumError = await requiresPremium(guildId, 'Properties');
             if (premiumError) {
-                await interaction.reply({ embeds: [premiumError], ephemeral: true });
+                await interaction.editReply({ embeds: [premiumError] });
                 return;
             }
             const properties = await db.getUserProperties(guildId, userId);
@@ -5060,7 +5053,7 @@ module.exports = {
                 description += `\n💎 **Auto-collected $${collected}!**`;
             }
             
-            await interaction.reply({
+            await interaction.editReply({
                 embeds: [new MessageEmbed()
                     .setColor('#daa520')
                     .setTitle('🏛️ Thy Properties')
@@ -5074,7 +5067,7 @@ module.exports = {
             // Premium feature check
             const premiumError = await requiresPremium(guildId, 'Buy Property');
             if (premiumError) {
-                await interaction.reply({ embeds: [premiumError], ephemeral: true });
+                await interaction.editReply({ embeds: [premiumError] });
                 return;
             }
             const propertyType = interaction.options.getString('type');
@@ -5090,13 +5083,13 @@ module.exports = {
             const balance = await db.getBalance(guildId, userId);
             
             if (balance < property.price) {
-                return interaction.reply({ content: `❌ Thou needest $${property.price}! Balance: $${balance}`, ephemeral: true });
+                return interaction.reply({ content: `❌ Thou needest $${property.price}! Balance: $${balance}` });
             }
             
             // Check if already owns this type
             const existing = await db.getUserProperties(guildId, userId);
             if (existing.some(p => p.property_type === propertyType)) {
-                return interaction.reply({ content: `❌ Thou already ownest a ${property.name}!`, ephemeral: true });
+                return interaction.reply({ content: `❌ Thou already ownest a ${property.name}!` });
             }
             
             await db.addBalance(guildId, userId, -property.price);
@@ -5111,7 +5104,7 @@ module.exports = {
                 achievementText = `\n\n🏆 **ACHIEVEMENT UNLOCKED!**\n${ACHIEVEMENTS.property_owner.emoji} **${ACHIEVEMENTS.property_owner.name}** - $${ACHIEVEMENTS.property_owner.reward}`;
             }
             
-            await interaction.reply({
+            await interaction.editReply({
                 embeds: [new MessageEmbed()
                     .setColor('#00ff00')
                     .setTitle('🏛️ Property Purchased!')
@@ -5147,7 +5140,7 @@ module.exports = {
             
             description += '\n💡 Use these materials in `/blacksmith` to craft enhanced items for bonus rewards!';
             
-            await interaction.reply({
+            await interaction.editReply({
                 embeds: [new MessageEmbed()
                     .setColor('#daa520')
                     .setTitle('🎒 Thy Inventory')
@@ -5178,7 +5171,7 @@ module.exports = {
                 description += `${medal} **${user.username}** - $${leaderboard[i].total_earned}\n`;
             }
             
-            await interaction.reply({
+            await interaction.editReply({
                 embeds: [new MessageEmbed()
                     .setColor('#ffd700')
                     .setTitle('📊 Weekly Leaderboard')
@@ -5198,7 +5191,7 @@ module.exports = {
                 const ms = oldest + COOLDOWN_WINDOW - now;
                 const h = Math.floor(ms / (60*60*1000));
                 const m = Math.floor((ms % (60*60*1000)) / (60*1000));
-                await interaction.reply({
+                await interaction.editReply({
                     embeds: [
                         new MessageEmbed()
                             .setColor('#ffaa00')
@@ -5233,7 +5226,7 @@ module.exports = {
                     campaignsList += `\n\n${campaign.name}\n${campaign.description}${isCompleted ? ' ✅ **COMPLETED**' : ''}`;
                 }
                 
-                await interaction.reply({
+                await interaction.editReply({
                     embeds: [new MessageEmbed()
                         .setColor('#8b4513')
                         .setTitle('📖 Story Campaigns')
@@ -5244,7 +5237,7 @@ module.exports = {
                 const collector = interaction.channel.createMessageComponentCollector({ time: 60000 });
                 
                 collector.on('collect', async i => {
-                    if (i.user.id !== userId) return i.reply({ content: 'This be not thy quest!', ephemeral: true });
+                    if (i.user.id !== userId) return i.reply({ content: 'This be not thy quest!' });
                     
                     const campaignId = i.customId;
                     const campaign = CAMPAIGNS[campaignId];
@@ -5288,7 +5281,7 @@ module.exports = {
                 const chapter = campaign.chapters.find(c => c.num === chapterNum);
                 
                 if (!chapter) {
-                    return interaction.reply({ content: '❌ Campaign data error. Please report to admins.', ephemeral: true });
+                    return interaction.reply({ content: '❌ Campaign data error. Please report to admins.' });
                 }
                 
                 const choiceRow = new MessageActionRow();
@@ -5301,7 +5294,7 @@ module.exports = {
                     );
                 });
                 
-                await interaction.reply({
+                await interaction.editReply({
                     embeds: [new MessageEmbed()
                         .setColor('#8b4513')
                         .setTitle(`📖 ${campaign.name}`)
@@ -5323,7 +5316,7 @@ module.exports = {
         const match = customId.match(/^campaign_(.+)_(\d+)_(.+)$/);
         
         if (!match) {
-            return interaction.reply({ content: '❌ Invalid button format!', ephemeral: true });
+            return interaction.reply({ content: '❌ Invalid button format!' });
         }
         
         const campaignId = match[1];
@@ -5339,14 +5332,14 @@ module.exports = {
         const campaign = CAMPAIGNS[campaignId];
         if (!campaign) {
             console.log('[CAMPAIGN] Campaign not found!');
-            return interaction.reply({ content: '❌ Invalid campaign!', ephemeral: true });
+            return interaction.reply({ content: '❌ Invalid campaign!' });
         }
         
         const chapter = campaign.chapters.find(c => c.num === chapterNum);
-        if (!chapter) return interaction.reply({ content: '❌ Invalid chapter!', ephemeral: true });
+        if (!chapter) return interaction.reply({ content: '❌ Invalid chapter!' });
         
         const choice = chapter.choices.find(c => c.id === choiceId);
-        if (!choice) return interaction.reply({ content: '❌ Invalid choice!', ephemeral: true });
+        if (!choice) return interaction.reply({ content: '❌ Invalid choice!' });
         
         await interaction.update({ content: '🎲 The fates decide...', components: [], embeds: [] });
         
