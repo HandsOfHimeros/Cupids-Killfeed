@@ -26,6 +26,42 @@ function getPlatformPath(platform) {
     return 'dayzstandalone'; // PC fallback
 }
 
+// Helper function to safely respond to interactions
+async function safeInteractionReply(interaction, content, isError = false) {
+    try {
+        const options = typeof content === 'string' ? { 
+            content, 
+            ephemeral: isError 
+        } : { 
+            ...content, 
+            ephemeral: content.ephemeral !== undefined ? content.ephemeral : isError 
+        };
+        
+        if (interaction.replied) {
+            console.warn(`[INTERACTION] Attempted to reply to already replied interaction: ${interaction.commandName || interaction.customId}`);
+            return null;
+        } else if (interaction.deferred) {
+            return await interaction.editReply(options);
+        } else {
+            return await interaction.reply(options);
+        }
+    } catch (error) {
+        console.error('[INTERACTION] Failed to respond:', error.message);
+        // Try one last time with a basic message
+        try {
+            if (!interaction.replied && !interaction.deferred) {
+                await interaction.reply({ 
+                    content: isError ? '❌ An error occurred!' : '✅ Done!', 
+                    ephemeral: true 
+                }).catch(() => {});
+            }
+        } catch (lastError) {
+            console.error('[INTERACTION] All reply attempts failed:', lastError.message);
+        }
+        return null;
+    }
+}
+
 // Create database pool for spawn tables
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
@@ -788,6 +824,8 @@ bot.commands = new Collection();
 const commandsPath = path.join(__dirname, 'commands');
 const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
 
+console.log(`[COMMAND LOADER] Loading ${commandFiles.length} command files...`);
+
 for (const file of commandFiles) {
     const filePath = path.join(commandsPath, file);
     try {
@@ -797,22 +835,28 @@ for (const file of commandFiles) {
             // Store the module itself using the filename (without .js) for accessing methods like handleCampaignChoice
             const moduleName = file.replace('.js', '');
             bot.commands.set(moduleName, command);
+            console.log(`[COMMAND LOADER] ✓ Loaded module: ${moduleName} (${command.data.length} commands)`);
             
             // Also register each individual command
             for (const cmd of command.data) {
                 if (cmd && cmd.name) {
                     bot.commands.set(cmd.name, { ...command, data: cmd });
+                    console.log(`[COMMAND LOADER]   ✓ Registered command: ${cmd.name}`);
                 }
             }
         } else if (command && command.data && command.data.name) {
             bot.commands.set(command.data.name, command);
+            console.log(`[COMMAND LOADER] ✓ Loaded command: ${command.data.name}`);
         } else {
-            console.warn(`No commands detected in file: ${filePath}`);
+            console.warn(`[COMMAND LOADER] ⚠ No commands detected in file: ${file}`);
         }
     } catch (error) {
-        console.error(`Error loading command file ${filePath}:`, error);
+        console.error(`[COMMAND LOADER] ✗ Error loading ${file}:`, error.message);
+        console.error(error.stack);
     }
 }
+
+console.log(`[COMMAND LOADER] Loaded ${bot.commands.size} total commands/modules`);
 
 async function handleRaidScheduleSubmit(interaction) {
     try {
@@ -883,10 +927,16 @@ async function handleRaidScheduleSubmit(interaction) {
         await interaction.editReply({ embeds: [embed] });
     } catch (error) {
         console.error('[RAID SCHEDULE SUBMIT] Error:', error);
-        await interaction.reply({
-            content: `❌ Failed to save schedule: ${error.message}`,
-            ephemeral: true
-        }).catch(() => {});
+        const errorMsg = { content: `❌ Failed to save schedule: ${error.message}`, ephemeral: true };
+        try {
+            if (!interaction.replied && !interaction.deferred) {
+                await interaction.reply(errorMsg);
+            } else {
+                await interaction.editReply(errorMsg);
+            }
+        } catch (replyErr) {
+            console.error('[RAID SCHEDULE SUBMIT] Could not send error:', replyErr.message);
+        }
     }
 }
 
@@ -955,10 +1005,16 @@ async function handleTraderOpenSubmit(interaction) {
         
     } catch (error) {
         console.error('[TRADER OPEN SUBMIT] Error:', error);
-        await interaction.reply({
-            content: `❌ Failed to open trader: ${error.message}`,
-            ephemeral: true
-        }).catch(() => {});
+        const errorMsg = { content: `❌ Failed to open trader: ${error.message}`, ephemeral: true };
+        try {
+            if (!interaction.replied && !interaction.deferred) {
+                await interaction.reply(errorMsg);
+            } else {
+                await interaction.editReply(errorMsg);
+            }
+        } catch (replyErr) {
+            console.error('[TRADER OPEN SUBMIT] Could not send error:', replyErr.message);
+        }
     }
 }
 
@@ -966,55 +1022,100 @@ bot.on('interactionCreate', async interaction => {
     const startTime = Date.now();
     console.log('[INTERACTION] Received:', interaction.type, interaction.commandName || interaction.customId, 'at', startTime);
     
-    // PRIORITY: Handle commands FIRST to minimize processing delay
-    if (interaction.isCommand()) {
-        const command = bot.commands.get(interaction.commandName);
-        if (!command) return;
-
-        try {
-            console.log(`[INTERACTION] Executing command: ${interaction.commandName}`);
-            await command.execute(interaction);
-        } catch (error) {
-            console.error(error);
-            const content = 'There was an error while executing this command!';
-            try {
-                if (interaction.deferred || interaction.replied) {
-                    await interaction.editReply({ content });
-                } else {
-                    await interaction.reply({ content, ephemeral: true });
-                }
-            } catch (replyError) {
-                console.error('[INTERACTION] Could not send error message:', replyError.message);
+    // Set up a timeout warning
+    const timeoutWarning = setTimeout(() => {
+        console.warn(`[INTERACTION] WARNING: ${interaction.commandName || interaction.customId} taking longer than 2.5 seconds to respond!`);
+    }, 2500);
+    
+    try {
+        // PRIORITY: Handle commands FIRST to minimize processing delay
+        if (interaction.isCommand()) {
+            const command = bot.commands.get(interaction.commandName);
+            if (!command) {
+                console.error(`[INTERACTION] Command not found: ${interaction.commandName}`);
+                clearTimeout(timeoutWarning);
+                return;
             }
+
+            try {
+                console.log(`[INTERACTION] Executing command: ${interaction.commandName}`);
+                await command.execute(interaction);
+                const duration = Date.now() - startTime;
+                console.log(`[INTERACTION] Command ${interaction.commandName} completed in ${duration}ms`);
+            } catch (error) {
+                console.error(`[INTERACTION] Error executing ${interaction.commandName}:`, error);
+                const content = '❌ There was an error while executing this command!\n```' + error.message + '```';
+                try {
+                    if (interaction.deferred || interaction.replied) {
+                        await interaction.editReply({ content, ephemeral: true }).catch(e => 
+                            console.error('[INTERACTION] Failed to edit reply:', e.message)
+                        );
+                    } else {
+                        await interaction.reply({ content, ephemeral: true }).catch(e => 
+                            console.error('[INTERACTION] Failed to reply:', e.message)
+                        );
+                    }
+                } catch (replyError) {
+                    console.error('[INTERACTION] Could not send error message:', replyError.message);
+                }
+            }
+            clearTimeout(timeoutWarning);
+            return; // Exit early for commands
         }
-        return; // Exit early for commands
+    } catch (err) {
+        console.error('[INTERACTION] Fatal error in interaction handler:', err);
+        clearTimeout(timeoutWarning);
+        return;
     }
+    
+    clearTimeout(timeoutWarning);
     
     // Handle modal submissions
     if (interaction.isModalSubmit()) {
-        if (interaction.customId === 'guild_setup_modal') {
-            const adminCommand = bot.commands.get('admin');
-            if (adminCommand && adminCommand.handleSetupModalSubmit) {
-                await adminCommand.handleSetupModalSubmit(interaction);
+        try {
+            if (interaction.customId === 'guild_setup_modal') {
+                const adminCommand = bot.commands.get('admin');
+                if (adminCommand && adminCommand.handleSetupModalSubmit) {
+                    await adminCommand.handleSetupModalSubmit(interaction);
+                } else {
+                    await interaction.reply({ content: '❌ Admin command handler not found!', ephemeral: true }).catch(() => {});
+                }
+            } else if (interaction.customId === 'raid_schedule_modal') {
+                await handleRaidScheduleSubmit(interaction);
+            } else if (interaction.customId === 'trader_open_modal') {
+                await handleTraderOpenSubmit(interaction);
+            } else if (interaction.customId === 'zone_name_modal') {
+                const teleportCommand = require('./commands/teleport.js');
+                if (teleportCommand.handleZoneNameModal) {
+                    await teleportCommand.handleZoneNameModal(interaction);
+                } else {
+                    await interaction.reply({ content: '❌ Teleport handler not found!', ephemeral: true }).catch(() => {});
+                }
+            } else if (interaction.customId.startsWith('zone_coords_modal|')) {
+                const teleportCommand = require('./commands/teleport.js');
+                if (teleportCommand.handleZoneCoordsModal) {
+                    await teleportCommand.handleZoneCoordsModal(interaction);
+                } else {
+                    await interaction.reply({ content: '❌ Teleport handler not found!', ephemeral: true }).catch(() => {});
+                }
+            } else if (interaction.customId.startsWith('teleport_')) {
+                const teleportCommand = require('./commands/teleport.js');
+                if (teleportCommand.handleModalSubmit) {
+                    await teleportCommand.handleModalSubmit(interaction);
+                } else {
+                    await interaction.reply({ content: '❌ Teleport handler not found!', ephemeral: true }).catch(() => {});
+                }
+            } else {
+                console.warn(`[INTERACTION] Unhandled modal: ${interaction.customId}`);
+                await interaction.reply({ content: '❌ Unknown modal submission!', ephemeral: true }).catch(() => {});
             }
-        } else if (interaction.customId === 'raid_schedule_modal') {
-            await handleRaidScheduleSubmit(interaction);
-        } else if (interaction.customId === 'trader_open_modal') {
-            await handleTraderOpenSubmit(interaction);
-        } else if (interaction.customId === 'zone_name_modal') {
-            const teleportCommand = require('./commands/teleport.js');
-            if (teleportCommand.handleZoneNameModal) {
-                await teleportCommand.handleZoneNameModal(interaction);
-            }
-        } else if (interaction.customId.startsWith('zone_coords_modal|')) {
-            const teleportCommand = require('./commands/teleport.js');
-            if (teleportCommand.handleZoneCoordsModal) {
-                await teleportCommand.handleZoneCoordsModal(interaction);
-            }
-        } else if (interaction.customId.startsWith('teleport_')) {
-            const teleportCommand = require('./commands/teleport.js');
-            if (teleportCommand.handleModalSubmit) {
-                await teleportCommand.handleModalSubmit(interaction);
+        } catch (error) {
+            console.error('[INTERACTION] Modal error:', error);
+            const errorMsg = { content: `❌ Error: ${error.message}`, ephemeral: true };
+            if (!interaction.replied && !interaction.deferred) {
+                await interaction.reply(errorMsg).catch(() => {});
+            } else {
+                await interaction.editReply(errorMsg).catch(() => {});
             }
         }
         return;
@@ -1022,18 +1123,42 @@ bot.on('interactionCreate', async interaction => {
     
     // Handle select menu interactions for teleport
     if (interaction.isSelectMenu() && interaction.customId.startsWith('teleport_')) {
-        const teleportCommand = require('./commands/teleport.js');
-        if (teleportCommand.handleSelectMenu) {
-            await teleportCommand.handleSelectMenu(interaction);
+        try {
+            const teleportCommand = require('./commands/teleport.js');
+            if (teleportCommand.handleSelectMenu) {
+                await teleportCommand.handleSelectMenu(interaction);
+            } else {
+                await interaction.reply({ content: '❌ Teleport handler not found!', ephemeral: true }).catch(() => {});
+            }
+        } catch (error) {
+            console.error('[INTERACTION] Select menu error:', error);
+            const errorMsg = { content: `❌ Error: ${error.message}`, ephemeral: true };
+            if (!interaction.replied && !interaction.deferred) {
+                await interaction.reply(errorMsg).catch(() => {});
+            } else {
+                await interaction.editReply(errorMsg).catch(() => {});
+            }
         }
         return;
     }
     
     // Handle button interactions for teleport
     if (interaction.isButton() && (interaction.customId.startsWith('manual_coords|') || interaction.customId.startsWith('manual_zone_coords|') || interaction.customId === 'cancel_route' || interaction.customId === 'cancel_zone')) {
-        const teleportCommand = require('./commands/teleport.js');
-        if (teleportCommand.handleButton) {
-            await teleportCommand.handleButton(interaction);
+        try {
+            const teleportCommand = require('./commands/teleport.js');
+            if (teleportCommand.handleButton) {
+                await teleportCommand.handleButton(interaction);
+            } else {
+                await interaction.reply({ content: '❌ Teleport handler not found!', ephemeral: true }).catch(() => {});
+            }
+        } catch (error) {
+            console.error('[INTERACTION] Button error:', error);
+            const errorMsg = { content: `❌ Error: ${error.message}`, ephemeral: true };
+            if (!interaction.replied && !interaction.deferred) {
+                await interaction.reply(errorMsg).catch(() => {});
+            } else {
+                await interaction.editReply(errorMsg).catch(() => {});
+            }
         }
         return;
     }
@@ -1041,7 +1166,11 @@ bot.on('interactionCreate', async interaction => {
     // Handle kit system interactions
     if ((interaction.isButton() || interaction.isSelectMenu()) && interaction.customId.startsWith('kit_')) {
         const kitCommand = bot.commands.get('kit');
-        if (!kitCommand) return;
+        if (!kitCommand) {
+            console.error('[KIT] Kit command not found!');
+            await interaction.reply({ content: '❌ Kit system not available!', ephemeral: true }).catch(() => {});
+            return;
+        }
 
         try {
             if (interaction.customId.startsWith('kit_weapon_')) {
@@ -1054,10 +1183,17 @@ bot.on('interactionCreate', async interaction => {
                 await kitCommand.handleFinishKit(interaction);
             } else if (interaction.customId.startsWith('kit_cancel_')) {
                 await kitCommand.handleCancelKit(interaction);
+            } else {
+                console.warn(`[KIT] Unknown kit interaction: ${interaction.customId}`);
             }
         } catch (error) {
             console.error('[KIT] Error handling interaction:', error);
-            await interaction.reply({ content: '❌ An error occurred! Please try again.', ephemeral: true }).catch(() => {});
+            const errorMsg = { content: '❌ An error occurred! Please try again.', ephemeral: true };
+            if (!interaction.replied && !interaction.deferred) {
+                await interaction.reply(errorMsg).catch(() => {});
+            } else {
+                await interaction.editReply(errorMsg).catch(() => {});
+            }
         }
         return;
     }
@@ -1068,17 +1204,22 @@ bot.on('interactionCreate', async interaction => {
         const economyCommand = bot.commands.get('economy');
         console.log('[CAMPAIGN] Economy command found:', !!economyCommand);
         console.log('[CAMPAIGN] Has handleCampaignChoice:', !!economyCommand?.handleCampaignChoice);
-        console.log('[CAMPAIGN] Economy exports:', Object.keys(economyCommand || {}));
         
         if (economyCommand && economyCommand.handleCampaignChoice) {
             try {
                 await economyCommand.handleCampaignChoice(interaction);
             } catch (error) {
                 console.error('[CAMPAIGN] Error handling choice:', error);
-                await interaction.reply({ content: '❌ An error occurred! Please try again.', ephemeral: true });
+                const errorMsg = { content: '❌ An error occurred! Please try again.', ephemeral: true };
+                if (!interaction.replied && !interaction.deferred) {
+                    await interaction.reply(errorMsg).catch(() => {});
+                } else {
+                    await interaction.editReply(errorMsg).catch(() => {});
+                }
             }
         } else {
             console.error('[CAMPAIGN] Handler not found!');
+            await interaction.reply({ content: '❌ Campaign system not available!', ephemeral: true }).catch(() => {});
         }
         return;
     }

@@ -11,6 +11,30 @@ const pool = new Pool({
     idle_in_transaction_session_timeout: 10000
 });
 
+// Test database connection on startup
+pool.on('error', (err) => {
+    console.error('[DATABASE] Unexpected error on idle client:', err);
+});
+
+pool.on('connect', () => {
+    console.log('[DATABASE] New client connected to pool');
+});
+
+// Test connection function
+async function testConnection() {
+    try {
+        const result = await pool.query('SELECT NOW()');
+        console.log('[DATABASE] ✓ Connection successful! Server time:', result.rows[0].now);
+        return true;
+    } catch (error) {
+        console.error('[DATABASE] ✗ Connection failed:', error.message);
+        return false;
+    }
+}
+
+// Call test on startup
+testConnection().catch(err => console.error('[DATABASE] Test connection error:', err));
+
 // Guild Config operations
 async function getGuildConfig(guildId) {
     const result = await pool.query('SELECT * FROM guild_configs WHERE guild_id = $1', [guildId]);
