@@ -1381,17 +1381,31 @@ bot.on('ready', async () => {
     // RAID WEEKEND SCHEDULER: Check every 5 minutes for automatic raid schedule triggers
     setInterval(async () => {
         try {
+            console.log('[RAID SCHEDULER] Running check...');
             const guilds = await db.getAllGuildConfigs();
+            console.log(`[RAID SCHEDULER] Found ${guilds.length} total guilds`);
+            
+            let enabledCount = 0;
+            let skippedCount = 0;
             
             for (const guildConfig of guilds) {
                 // Only process guilds with automatic scheduling enabled
-                if (!guildConfig.raid_schedule_enabled) continue;
+                if (!guildConfig.raid_schedule_enabled) {
+                    skippedCount++;
+                    console.log(`[RAID SCHEDULER] Guild ${guildConfig.guild_id}: raid_schedule_enabled=false, skipping`);
+                    continue;
+                }
                 
                 // Skip if missing schedule data
                 if (guildConfig.raid_start_day === null || !guildConfig.raid_start_time ||
                     guildConfig.raid_end_day === null || !guildConfig.raid_end_time) {
+                    skippedCount++;
+                    console.log(`[RAID SCHEDULER] Guild ${guildConfig.guild_id}: missing schedule data, skipping`);
                     continue;
                 }
+                
+                enabledCount++;
+                console.log(`[RAID SCHEDULER] Processing guild ${guildConfig.guild_id} - currently_active: ${guildConfig.raid_currently_active}`);
                 
                 let timezone = guildConfig.raid_timezone || 'America/New_York';
                 
@@ -1418,6 +1432,9 @@ bot.on('ready', async () => {
                     
                     const isCurrentlyActive = guildConfig.raid_currently_active || false;
                     
+                   console.log(`[RAID SCHEDULER] Guild ${guildConfig.guild_id} - Current: Day ${currentDay} ${String(currentHours).padStart(2, '0')}:${String(currentMinutes).padStart(2, '0')}`);
+                    console.log(`[RAID SCHEDULER] Guild ${guildConfig.guild_id} - Start: Day ${guildConfig.raid_start_day} ${guildConfig.raid_start_time}, End: Day ${guildConfig.raid_end_day} ${guildConfig.raid_end_time}`);
+                    
                     // Helper to check if current time is within 5 minutes of target time
                     const isWithin5Minutes = (targetTime) => {
                         const [targetHour, targetMin] = targetTime.split(':').map(Number);
@@ -1431,22 +1448,28 @@ bot.on('ready', async () => {
                     // Check if it's time to START raiding
                     if (currentDay === guildConfig.raid_start_day && isWithin5Minutes(guildConfig.raid_start_time)) {
                         if (!isCurrentlyActive) {
-                            console.log(`[RAID SCHEDULER] Triggering raid START for guild ${guildConfig.guild_id} at ${currentHours}:${String(currentMinutes).padStart(2, '0')}`);
+                            console.log(`[RAID SCHEDULER] ✅ Triggering raid START for guild ${guildConfig.guild_id} at ${currentHours}:${String(currentMinutes).padStart(2, '0')}`);
                             await automaticRaidToggle(bot, guildConfig, true);
+                        } else {
+                            console.log(`[RAID SCHEDULER] ℹ️ Guild ${guildConfig.guild_id} - START time matched but raids already active`);
                         }
                     }
                     
                     // Check if it's time to END raiding
                     if (currentDay === guildConfig.raid_end_day && isWithin5Minutes(guildConfig.raid_end_time)) {
                         if (isCurrentlyActive) {
-                            console.log(`[RAID SCHEDULER] Triggering raid END for guild ${guildConfig.guild_id} at ${currentHours}:${String(currentMinutes).padStart(2, '0')}`);
+                            console.log(`[RAID SCHEDULER] ✅ Triggering raid END for guild ${guildConfig.guild_id} at ${currentHours}:${String(currentMinutes).padStart(2, '0')}`);
                             await automaticRaidToggle(bot, guildConfig, false);
+                        } else {
+                            console.log(`[RAID SCHEDULER] ℹ️ Guild ${guildConfig.guild_id} - END time matched but raids already inactive`);
                         }
                     }
                 } catch (error) {
                     console.error(`[RAID SCHEDULER] Error processing guild ${guildConfig.guild_id}:`, error);
                 }
             }
+            
+            console.log(`[RAID SCHEDULER] Check complete: ${enabledCount} processed, ${skippedCount} skipped`);
         } catch (error) {
             console.error('[RAID SCHEDULER] Fatal error:', error);
         }
