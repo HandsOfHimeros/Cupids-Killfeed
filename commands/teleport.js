@@ -72,7 +72,9 @@ module.exports = {
         const row = new MessageActionRow().addComponents(menu);
 
         // Defer immediately to prevent timeout
-        await interaction.deferReply({ ephemeral: true });
+        if (!interaction.deferred && !interaction.replied) {
+            await interaction.deferReply({ ephemeral: true });
+        }
         
         await interaction.editReply({
             content: '**Teleport Management**\nSelect an action:',

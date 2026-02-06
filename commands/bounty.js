@@ -81,7 +81,9 @@ module.exports = {
         }
         
         // Defer immediately to prevent timeout during database operations
-        await interaction.deferReply({ ephemeral: true });
+        if (!interaction.deferred && !interaction.replied) {
+            await interaction.deferReply({ ephemeral: true });
+        }
         
         const subcommand = interaction.options.getSubcommand();
 

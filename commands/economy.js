@@ -1038,7 +1038,9 @@ module.exports = {
         const { MessageEmbed } = require('discord.js');
         
         // Defer reply immediately to prevent timeout
-        await interaction.deferReply();
+        if (!interaction.deferred && !interaction.replied) {
+            await interaction.deferReply();
+        }
         
         // Get guild config for channel IDs
         const guildConfig = await db.getGuildConfig(guildId);

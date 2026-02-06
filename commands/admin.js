@@ -1092,7 +1092,9 @@ async function handleRaidScheduleModal(interaction, guildConfig) {
 }
 
 async function handleRaidStatus(interaction, guildConfig) {
-    await interaction.deferReply();
+    if (!interaction.deferred && !interaction.replied) {
+        await interaction.deferReply();
+    }
     
     const isActive = guildConfig.raid_currently_active || false;
     const scheduleEnabled = guildConfig.raid_schedule_enabled || false;
@@ -1797,7 +1799,9 @@ async function handleSetupModalSubmit(interaction) {
     const guildId = interaction.guildId;
     
     try {
-        await interaction.deferReply({ ephemeral: true });
+        if (!interaction.deferred && !interaction.replied) {
+            await interaction.deferReply({ ephemeral: true });
+        }
         
         const serviceId = interaction.fields.getTextInputValue('nitrado_service_id');
         const instance = interaction.fields.getTextInputValue('nitrado_instance');
@@ -1943,7 +1947,9 @@ async function handleSetupModalSubmit(interaction) {
 }
 
 async function handleAnnounceShop(interaction) {
-    await interaction.deferReply({ ephemeral: true });
+    if (!interaction.deferred && !interaction.replied) {
+        await interaction.deferReply({ ephemeral: true });
+    }
     
     try {
         // Get all configured guilds

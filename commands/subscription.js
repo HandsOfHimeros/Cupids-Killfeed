@@ -8,7 +8,9 @@ module.exports = {
         .setDescription('View subscription status and upgrade options'),
 
     async execute(interaction) {
-        await interaction.deferReply({ ephemeral: true });
+        if (!interaction.deferred && !interaction.replied) {
+            await interaction.deferReply({ ephemeral: true });
+        }
         
         const guildId = interaction.guildId;
         

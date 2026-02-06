@@ -1044,11 +1044,24 @@ bot.on('interactionCreate', async interaction => {
                 console.log(`[INTERACTION] Command ${interaction.commandName} completed in ${duration}ms`);
             } catch (error) {
                 console.error(`[INTERACTION] Error executing ${interaction.commandName}:`, error);
+                
+                // Only try to send error if interaction hasn't expired (< 15 minutes old)
+                const age = Date.now() - startTime;
+                if (age > 14 * 60 * 1000) {
+                    console.error('[INTERACTION] Interaction too old, cannot send error');
+                    clearTimeout(timeoutWarning);
+                    return;
+                }
+                
                 const content = '❌ There was an error while executing this command!\n```' + error.message + '```';
                 try {
-                    if (interaction.deferred || interaction.replied) {
+                    if (interaction.deferred) {
                         await interaction.editReply({ content, ephemeral: true }).catch(e => 
                             console.error('[INTERACTION] Failed to edit reply:', e.message)
+                        );
+                    } else if (interaction.replied) {
+                        await interaction.followUp({ content, ephemeral: true }).catch(e => 
+                            console.error('[INTERACTION] Failed to follow up:', e.message)
                         );
                     } else {
                         await interaction.reply({ content, ephemeral: true }).catch(e => 

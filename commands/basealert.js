@@ -142,7 +142,9 @@ module.exports = {
         }
         
         // Defer reply immediately to prevent timeout
-        await interaction.deferReply({ ephemeral: true });
+        if (!interaction.deferred && !interaction.replied) {
+            await interaction.deferReply({ ephemeral: true });
+        }
         
         const subcommand = interaction.options.getSubcommand();
         const userId = interaction.user.id;
