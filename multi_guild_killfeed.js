@@ -564,36 +564,42 @@ class MultiGuildKillfeed {
                     
                     // Auto-ban killer if enabled (PVE mode) - but only for player-vs-player kills
                     // Skip grenades, zombies, environmental deaths, and suicides
-                    if (guildConfig.auto_ban_on_kill && event.isPlayerKill && event.killer && event.victim) {
-                        // Skip if suicide (killer = victim)
-                        if (event.killer === event.victim) {
-                            console.log(`[AUTO-BAN] ${event.killer} committed suicide, no ban`);
-                        } else {
-                            // Check KILLER's position to see if they were in a PVP zone
-                            const checkPosition = event.killerPosition || event.position; // Use killer position if available, fallback to victim
-                            
-                            if (!checkPosition) {
-                                console.log(`[AUTO-BAN] No position data for kill by ${event.killer}, skipping ban check`);
+                    try {
+                        console.log(`[AUTO-BAN-DEBUG] Checking kill: auto_ban=${guildConfig.auto_ban_on_kill}, isPlayerKill=${event.isPlayerKill}, killer=${event.killer}, victim=${event.victim}`);
+                        if (guildConfig.auto_ban_on_kill && event.isPlayerKill && event.killer && event.victim) {
+                            // Skip if suicide (killer = victim)
+                            if (event.killer === event.victim) {
+                                console.log(`[AUTO-BAN] ${event.killer} committed suicide, no ban`);
                             } else {
-                                const inPvpZone = this.isInPvpZone(guildConfig, checkPosition);
-                                const positionType = event.killerPosition ? "killer" : "victim";
+                                // Check KILLER's position to see if they were in a PVP zone
+                                const checkPosition = event.killerPosition || event.position; // Use killer position if available, fallback to victim
                                 
-                                if (inPvpZone) {
-                                    console.log(`[AUTO-BAN] Kill at (${checkPosition.x}, ${checkPosition.z}) [${positionType} position] is IN PVP zone, no ban for ${event.killer}`);
+                                if (!checkPosition) {
+                                    console.log(`[AUTO-BAN] No position data for kill by ${event.killer}, skipping ban check`);
                                 } else {
-                                    console.log(`[AUTO-BAN] Kill at (${checkPosition.x}, ${checkPosition.z}) [${positionType} position] is OUTSIDE PVP zones - banning ${event.killer}`);
-                                    try {
-                                        await this.banPlayerOnNitrado(guildConfig, event.killer);
-                                        embed.setColor('#FF0000'); // Bright red for PVE violation
-                                        embed.addFields({ name: '⚠️ PVE VIOLATION', value: `**${event.killer}** has been automatically banned for PVP outside designated zones!`, inline: false });
-                                        console.log(`[AUTO-BAN] Successfully banned ${event.killer}`);
-                                    } catch (error) {
-                                        console.error(`[AUTO-BAN] Failed to ban ${event.killer}:`, error.message);
-                                        embed.addFields({ name: '❌ Auto-Ban Failed', value: `Could not ban ${event.killer}: ${error.message}`, inline: false });
+                                    const inPvpZone = this.isInPvpZone(guildConfig, checkPosition);
+                                    const positionType = event.killerPosition ? "killer" : "victim";
+                                    
+                                    if (inPvpZone) {
+                                        console.log(`[AUTO-BAN] Kill at (${checkPosition.x}, ${checkPosition.z}) [${positionType} position] is IN PVP zone, no ban for ${event.killer}`);
+                                    } else {
+                                        console.log(`[AUTO-BAN] Kill at (${checkPosition.x}, ${checkPosition.z}) [${positionType} position] is OUTSIDE PVP zones - banning ${event.killer}`);
+                                        try {
+                                            await this.banPlayerOnNitrado(guildConfig, event.killer);
+                                            embed.setColor('#FF0000'); // Bright red for PVE violation
+                                            embed.addFields({ name: '⚠️ PVE VIOLATION', value: `**${event.killer}** has been automatically banned for PVP outside designated zones!`, inline: false });
+                                            console.log(`[AUTO-BAN] Successfully banned ${event.killer}`);
+                                        } catch (error) {
+                                            console.error(`[AUTO-BAN] Failed to ban ${event.killer}:`, error.message);
+                                            embed.addFields({ name: '❌ Auto-Ban Failed', value: `Could not ban ${event.killer}: ${error.message}`, inline: false });
+                                        }
                                     }
                                 }
                             }
                         }
+                    } catch (autoBanError) {
+                        console.error(`[AUTO-BAN] ERROR in auto-ban check:`, autoBanError.message);
+                        console.error(`[AUTO-BAN] Stack:`, autoBanError.stack);
                     }
                     
                     // Check for safe zone violations on PVP servers - only for player-vs-player kills
