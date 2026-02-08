@@ -1122,12 +1122,12 @@ module.exports = {
                         'AMMUNITION': [166, 185],         // Indices 166-184: Ammunition
                         'MEDICAL': [185, 202],            // Indices 185-201: Medical supplies
                         'FOOD_DRINK': [202, 229],         // Indices 202-228: Food & drink
-                        'TOOLS': [229, 241],              // Indices 229-240: Tools & repair (removed invalid SharpeningStone)
-                        'CLOTHING_ARMOR': [241, 331],     // Indices 241-330: Clothing & armor (jackets, pants, boots, gloves, NBC gear)
-                        'BACKPACKS': [331, 357],          // Indices 331-356: Backpacks & storage
-                        'BUILDING': [357, 369],           // Indices 357-368: Building materials
-                        'VEHICLE': [369, 381],            // Indices 369-380: Vehicle parts
-                        'ELECTRONICS': [381, 405]         // Indices 381-404: Electronics & explosives (total 405 items)
+                        'TOOLS': [229, 244],              // Indices 229-243: Tools & repair
+                        'CLOTHING_ARMOR': [244, 334],     // Indices 244-333: Clothing & armor (jackets, pants, boots, gloves, NBC gear)
+                        'BACKPACKS': [334, 360],          // Indices 334-359: Backpacks & storage
+                        'BUILDING': [360, 372],           // Indices 360-371: Building materials
+                        'VEHICLE': [372, 384],            // Indices 372-383: Vehicle parts
+                        'ELECTRONICS': [384, 408]         // Indices 384-407: Electronics & explosives (total 408 items)
                     };
                     
                     for (const [categoryKey, [start, end]] of Object.entries(ranges)) {
