@@ -1113,21 +1113,21 @@ module.exports = {
                     // Assign items by index ranges (based on shop_items.js structure)
                     // This is more reliable than parsing comments
                     const ranges = {
-                        'ASSAULT_SMG': [0, 22],           // Indices 0-21: Assault rifles & SMGs
-                        'SNIPER_MARKSMAN': [22, 39],      // Indices 22-38: Sniper & marksman rifles
-                        'RIFLES_SHOTGUNS': [39, 48],      // Indices 39-47: Rifles & shotguns
-                        'PISTOLS': [48, 62],              // Indices 48-61: Pistols
-                        'MELEE': [62, 82],                // Indices 62-81: Melee weapons
-                        'ATTACHMENTS': [82, 166],         // Indices 82-165: Attachments (optics, suppressors, stocks, etc.)
-                        'AMMUNITION': [166, 185],         // Indices 166-184: Ammunition
-                        'MEDICAL': [185, 202],            // Indices 185-201: Medical supplies
-                        'FOOD_DRINK': [202, 229],         // Indices 202-228: Food & drink
-                        'TOOLS': [229, 244],              // Indices 229-243: Tools & repair
-                        'CLOTHING_ARMOR': [244, 334],     // Indices 244-333: Clothing & armor (jackets, pants, boots, gloves, NBC gear)
-                        'BACKPACKS': [334, 360],          // Indices 334-359: Backpacks & storage
-                        'BUILDING': [360, 372],           // Indices 360-371: Building materials
-                        'VEHICLE': [372, 384],            // Indices 372-383: Vehicle parts
-                        'ELECTRONICS': [384, 408]         // Indices 384-407: Electronics & explosives (total 408 items)
+                        'ASSAULT_SMG': [0, 22],           // Indices 0-21: Assault rifles & SMGs (22 items)
+                        'SNIPER_MARKSMAN': [22, 39],      // Indices 22-38: Sniper & marksman rifles (17 items)
+                        'RIFLES_SHOTGUNS': [39, 48],      // Indices 39-47: Rifles & shotguns (9 items)
+                        'PISTOLS': [48, 62],              // Indices 48-61: Pistols (14 items)
+                        'MELEE': [62, 82],                // Indices 62-81: Melee weapons (20 items)
+                        'ATTACHMENTS': [82, 166],         // Indices 82-165: Attachments (84 items)
+                        'AMMUNITION': [166, 185],         // Indices 166-184: Ammunition (19 items)
+                        'MEDICAL': [185, 202],            // Indices 185-201: Medical supplies (17 items)
+                        'FOOD_DRINK': [202, 229],         // Indices 202-228: Food & drink (27 items)
+                        'TOOLS': [229, 241],              // Indices 229-240: Tools & repair (12 items)
+                        'CLOTHING_ARMOR': [241, 331],     // Indices 241-330: Clothing & armor (90 items)
+                        'BACKPACKS': [331, 357],          // Indices 331-356: Backpacks & storage (26 items)
+                        'BUILDING': [357, 369],           // Indices 357-368: Building materials (12 items)
+                        'VEHICLE': [369, 381],            // Indices 369-380: Vehicle parts (12 items)
+                        'ELECTRONICS': [381, 401]         // Indices 381-400: Electronics & explosives (20 items, total 401)
                     };
                     
                     for (const [categoryKey, [start, end]] of Object.entries(ranges)) {
