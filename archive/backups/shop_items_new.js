@@ -122,7 +122,7 @@ module.exports = [
   { name: 'M68 Optic', class: 'M68Optic', averagePrice: 220, description: 'Red dot optic' },
   
   // Suppressors
-  { name: 'NATO Suppressor', class: 'ImprovisedSuppressor', averagePrice: 400, description: '5.56mm suppressor' },
+  { name: 'NATO Suppressor', class: 'M4_Suppressor', averagePrice: 400, description: '5.56mm suppressor' },
   { name: 'East Suppressor', class: 'PistolSuppressor', averagePrice: 350, description: '9mm suppressor' },
   { name: 'AK Suppressor', class: 'AK_Suppressor', averagePrice: 380, description: '7.62x39mm suppressor' },
   

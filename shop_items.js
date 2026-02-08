@@ -121,7 +121,7 @@ module.exports = [
   { name: 'MK4 Optic (Tan)', class: 'MK4Optic_tan', averagePrice: 280, description: 'MK4 optic (tan)' },
   
   // Suppressors
-  { name: 'NATO Suppressor', class: 'ImprovisedSuppressor', averagePrice: 400, description: '5.56mm suppressor' },
+  { name: 'NATO Suppressor', class: 'M4_Suppressor', averagePrice: 400, description: '5.56mm suppressor' },
   { name: 'East Suppressor', class: 'PistolSuppressor', averagePrice: 350, description: '9mm suppressor' },
   { name: 'AK Suppressor', class: 'AK_Suppressor', averagePrice: 380, description: '7.62x39mm suppressor' },
   

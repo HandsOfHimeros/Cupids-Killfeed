@@ -171,6 +171,22 @@ async function updateKillfeedState(guildId, lastLogLine) {
     `, [guildId, lastLogLine]);
 }
 
+async function updateKillfeedState(guildId, lastLogLine, lastAdmFilename = null) {
+    if (lastAdmFilename !== null) {
+        await safeQuery(`
+            UPDATE guild_configs 
+            SET last_killfeed_line = $2, last_adm_filename = $3
+            WHERE guild_id = $1
+        `, [guildId, lastLogLine, lastAdmFilename]);
+    } else {
+        await safeQuery(`
+            UPDATE guild_configs 
+            SET last_killfeed_line = $2
+            WHERE guild_id = $1
+        `, [guildId, lastLogLine]);
+    }
+}
+
 // Balance operations
 async function getBalance(guildId, userId) {
     const result = await safeQuery('SELECT balance FROM balances WHERE guild_id = $1 AND user_id = $2', [guildId, userId]);
@@ -296,14 +312,6 @@ async function setPlayerLocation(guildId, playerName, x, y, z) {
         ON CONFLICT (guild_id, player_name) DO UPDATE 
         SET x = $3, y = $4, z = $5, timestamp = $6
     `, [guildId, playerName.toLowerCase(), x, y, z, Date.now()]);
-}
-
-async function updateKillfeedState(guildId, lastLogLine) {
-    await safeQuery(`
-        UPDATE guild_configs 
-        SET last_killfeed_line = $2
-        WHERE guild_id = $1
-    `, [guildId, lastLogLine]);
 }
 
 // Player session operations for distance tracking

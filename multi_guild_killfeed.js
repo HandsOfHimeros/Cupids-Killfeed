@@ -41,6 +41,7 @@ class MultiGuildKillfeed {
                 if (!this.guildStates.has(guild.guild_id)) {
                     this.guildStates.set(guild.guild_id, {
                         lastLogLine: guild.last_killfeed_line || '',
+                        lastAdmFilename: guild.last_adm_filename || '',
                         lastPollTime: 0,
                         lastRestartTime: 0,
                         lastCleanupCheck: 0
@@ -81,7 +82,20 @@ class MultiGuildKillfeed {
 
     async pollGuild(guildConfig) {
         const guildId = guildConfig.guild_id;
-        const state = this.guildStates.get(guildId) || { lastLogLine: '', lastPollTime: 0, lastRestartTime: 0, lastCleanupCheck: 0 };
+        let state = this.guildStates.get(guildId);
+        
+        // If state doesn't exist, load it from database instead of using empty defaults
+        if (!state) {
+            console.log(`[MULTI-KILLFEED] Guild ${guildId} state not found in memory, loading from database...`);
+            state = {
+                lastLogLine: guildConfig.last_killfeed_line || '',
+                lastAdmFilename: guildConfig.last_adm_filename || '',
+                lastPollTime: 0,
+                lastRestartTime: 0,
+                lastCleanupCheck: 0
+            };
+            this.guildStates.set(guildId, state);
+        }
         
         console.log(`[MULTI-KILLFEED] Polling guild ${guildId}...`);
         
@@ -94,8 +108,26 @@ class MultiGuildKillfeed {
         }
         
         // Fetch log from this guild's Nitrado server
-        const logData = await this.fetchGuildLog(guildConfig);
-        if (!logData) return;
+        const logResult = await this.fetchGuildLog(guildConfig);
+        if (!logResult) return;
+        
+        const { logData, filename: currentAdmFilename } = logResult;
+        
+        // Check if ADM filename changed (indicates server restart)
+        let restartDetected = false;
+        if (state.lastAdmFilename && state.lastAdmFilename !== currentAdmFilename) {
+            console.log(`[MULTI-KILLFEED] Guild ${guildId}: ADM file changed from ${state.lastAdmFilename} to ${currentAdmFilename}`);
+            
+            // Check if this change happened within ±10min of a scheduled restart
+            const isNearRestartTime = this.isNearScheduledRestart(guildConfig);
+            if (isNearRestartTime) {
+                console.log(`[MULTI-KILLFEED] Guild ${guildId}: Restart detected near scheduled time - will post all events`);
+                restartDetected = true;
+            }
+        }
+        
+        // Update saved filename
+        state.lastAdmFilename = currentAdmFilename;
         
         // Parse and update player locations from log
         await this.parseAndUpdateLocations(guildId, guildConfig, logData);
@@ -114,8 +146,13 @@ class MultiGuildKillfeed {
         let newEvents = [];
         
         if (events.length > 0) {
+            // If restart detected, post all events to avoid missing anything around restart boundary
+            if (restartDetected) {
+                console.log(`[MULTI-KILLFEED] Guild ${guildId}: Restart detected - posting all ${events.length} events from new ADM file`);
+                newEvents = events;
+            }
             // On first poll, skip old events
-            if (state.lastPollTime === 0 || !state.lastLogLine) {
+            else if (state.lastPollTime === 0 || !state.lastLogLine) {
                 console.log(`[MULTI-KILLFEED] Guild ${guildId}: First poll, skipping ${events.length} old events to prevent spam`);
                 // Update tracking without posting
             } else {
@@ -156,13 +193,16 @@ class MultiGuildKillfeed {
                 }
                 await this.postEventToGuild(guildConfig, event, guild);
             }
-        }
-        
-        // Always update last seen line if there are any events in the log
-        if (events.length > 0) {
+            
+            // Update last seen line to the last event we posted
+            state.lastLogLine = newEvents[newEvents.length - 1].raw;
+            await db.updateKillfeedState(guildId, state.lastLogLine, state.lastAdmFilename);
+            console.log(`[MULTI-KILLFEED] Guild ${guildId}: Updated last line to: ${state.lastLogLine.substring(0, 100)}...`);
+        } else if (events.length > 0 && (state.lastPollTime === 0 || !state.lastLogLine)) {
+            // First poll - update to last line without posting to prevent spam
             state.lastLogLine = events[events.length - 1].raw;
-            // Persist to database
-            await db.updateKillfeedState(guildId, state.lastLogLine);
+            await db.updateKillfeedState(guildId, state.lastLogLine, state.lastAdmFilename);
+            console.log(`[MULTI-KILLFEED] Guild ${guildId}: First poll - saved last line without posting`);
         }
         
         state.lastPollTime = Date.now();
@@ -195,6 +235,7 @@ class MultiGuildKillfeed {
             }
             
             const latestFile = admFiles[0];
+            const admFilename = latestFile.name; // Save filename for tracking
             
             // Download log file - first get the temporary download URL
             const downloadUrl = `https://api.nitrado.net/services/${guildConfig.nitrado_service_id}/gameservers/file_server/download?file=/games/${guildConfig.nitrado_instance}/noftp/${platformPath}/config/${latestFile.name}`;
@@ -211,7 +252,7 @@ class MultiGuildKillfeed {
                 responseType: 'text'
             });
             
-            return logResp.data;
+            return { logData: logResp.data, filename: admFilename };
         } catch (error) {
             console.error(`[MULTI-KILLFEED] Error fetching log for guild ${guildConfig.guild_id}:`, error.message);
             return null;
@@ -1623,6 +1664,38 @@ class MultiGuildKillfeed {
         } catch (error) {
             console.error('[BOUNTY] Error processing bounty claim:', error);
         }
+    }
+    
+    // Check if current time is within ±10 minutes of any scheduled restart time
+    isNearScheduledRestart(guildConfig) {
+        if (!guildConfig.restart_times || guildConfig.restart_times.length === 0) {
+            return false; // No restart times configured
+        }
+        
+        // Get current time in HH:MM format (server time)
+        const now = new Date();
+        const currentMinutes = now.getHours() * 60 + now.getMinutes();
+        
+        // Check each restart time
+        for (const restartTime of guildConfig.restart_times) {
+            // Parse restart time (format: "HH:MM" or "HH:MM:SS")
+            const timeParts = restartTime.split(':');
+            const restartMinutes = parseInt(timeParts[0]) * 60 + parseInt(timeParts[1]);
+            
+            // Calculate difference (handle wrap-around at midnight)
+            let diff = Math.abs(currentMinutes - restartMinutes);
+            if (diff > 720) { // More than 12 hours difference means we wrapped around midnight
+                diff = 1440 - diff; // 1440 minutes in a day
+            }
+            
+            // Check if within ±10 minutes
+            if (diff <= 10) {
+                console.log(`[MULTI-KILLFEED] Current time is within 10min of restart time ${restartTime}`);
+                return true;
+            }
+        }
+        
+        return false;
     }
 }
 

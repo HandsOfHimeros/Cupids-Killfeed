@@ -1,0 +1,28 @@
+====================================
+SHOP ITEMS VALIDATION REPORT
+Generated: 2/2/2026, 10:25:06 PM
+====================================
+
+Total shop items: 399
+Valid items: 395
+Invalid items: 4
+
+====================================
+INVALID ITEMS (Class names not in types.xml):
+====================================
+
+[Line 96] M4 CQB Buttstock (Green)
+   Class: "M4_CQBBttstck_Green" ❌ NOT FOUND
+   Price: 100 coins
+
+[Line 98] M4 MP Buttstock (Green)
+   Class: "M4_MPBttstck_Green" ❌ NOT FOUND
+   Price: 90 coins
+
+[Line 100] M4 OE Buttstock (Green)
+   Class: "M4_OEBttstck_Green" ❌ NOT FOUND
+   Price: 80 coins
+
+[Line 106] M4 MP Handguard (Green)
+   Class: "M4_MPHndgrd_Green" ❌ NOT FOUND
+   Price: 70 coins
