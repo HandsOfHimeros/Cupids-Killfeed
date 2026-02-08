@@ -1323,34 +1323,47 @@ module.exports = {
                                 
                                 qtyCollector.on('collect', async qtyInteraction => {
                                     console.log(`[QTY-COLLECTOR] Received: ${qtyInteraction.customId}`);
-                                    if (qtyInteraction.customId.startsWith('qty_')) {
-                                        const parts = qtyInteraction.customId.split('_');
-                                        const qtyItemIdx = parseInt(parts[1]);
-                                        const qty = parseInt(parts[2]);
-                                        const qtyItem = shopItems[qtyItemIdx];
-                                        
-                                        const existing = shoppingCart.get(qtyItemIdx) || 0;
-                                        shoppingCart.set(qtyItemIdx, existing + qty);
-                                        
-                                        console.log(`[SHOP] Adding ${qty}x ${qtyItem.name} to cart. Total now: ${shoppingCart.get(qtyItemIdx)}`);
-                                        
-                                        await qtyInteraction.update({
-                                            embeds: [
-                                                new MessageEmbed()
-                                                    .setColor('#00ff00')
-                                                    .setTitle('✅ Added to Cart')
-                                                    .setDescription(`Added ${qty}x **${qtyItem.name}** to your cart!\n\nTotal in cart: ${shoppingCart.get(qtyItemIdx)}x`)
-                                            ],
-                                            components: []
-                                        });
-                                        
-                                        console.log(`[SHOP] Ephemeral message updated, now updating main message cart button...`);
-                                        // Update main message cart button
-                                        await message.edit({ components: updateCartButton() }).catch(err => {
-                                            console.error(`[SHOP] Failed to update cart button:`, err);
-                                        });
-                                        console.log(`[SHOP] Cart button updated successfully`);
-                                        qtyCollector.stop();
+                                    try {
+                                        if (qtyInteraction.customId.startsWith('qty_')) {
+                                            const parts = qtyInteraction.customId.split('_');
+                                            const qtyItemIdx = parseInt(parts[1]);
+                                            const qty = parseInt(parts[2]);
+                                            const qtyItem = shopItems[qtyItemIdx];
+                                            
+                                            const existing = shoppingCart.get(qtyItemIdx) || 0;
+                                            shoppingCart.set(qtyItemIdx, existing + qty);
+                                            
+                                            console.log(`[SHOP] Adding ${qty}x ${qtyItem.name} to cart. Total now: ${shoppingCart.get(qtyItemIdx)}`);
+                                            
+                                            await qtyInteraction.update({
+                                                embeds: [
+                                                    new MessageEmbed()
+                                                        .setColor('#00ff00')
+                                                        .setTitle('✅ Added to Cart')
+                                                        .setDescription(`Added ${qty}x **${qtyItem.name}** to your cart!\n\nTotal in cart: ${shoppingCart.get(qtyItemIdx)}x`)
+                                                ],
+                                                components: []
+                                            });
+                                            
+                                            console.log(`[SHOP] Ephemeral message updated, now updating main message cart button...`);
+                                            // Update main message cart button
+                                            await message.edit({ components: updateCartButton() }).catch(err => {
+                                                console.error(`[SHOP] Failed to update cart button:`, err);
+                                            });
+                                            console.log(`[SHOP] Cart button updated successfully`);
+                                            qtyCollector.stop();
+                                        }
+                                    } catch (error) {
+                                        console.error('[QTY-COLLECTOR] Error:', error);
+                                        try {
+                                            if (!qtyInteraction.replied && !qtyInteraction.deferred) {
+                                                await qtyInteraction.reply({ content: '❌ Failed to add item to cart.', ephemeral: true });
+                                            } else if (qtyInteraction.replied) {
+                                                await qtyInteraction.followUp({ content: '❌ Failed to add item to cart.', ephemeral: true });
+                                            }
+                                        } catch (replyError) {
+                                            console.error('[QTY-COLLECTOR] Failed to send error message:', replyError);
+                                        }
                                     }
                                 });
                                 
@@ -1781,7 +1794,18 @@ module.exports = {
                             
                         } catch (error) {
                             console.error('[SHOP] Error in collector:', error);
-                            await i.reply({ content: 'An error occurred. Please try again.' }).catch(() => {});
+                            // Check interaction state to avoid "already replied" errors
+                            try {
+                                if (!i.replied && !i.deferred) {
+                                    await i.reply({ content: '❌ An error occurred. Please try again.', ephemeral: true });
+                                } else if (i.replied) {
+                                    await i.followUp({ content: '❌ An error occurred. Please try again.', ephemeral: true });
+                                } else if (i.deferred) {
+                                    await i.editReply({ content: '❌ An error occurred. Please try again.' });
+                                }
+                            } catch (replyError) {
+                                console.error('[SHOP] Failed to send error message:', replyError);
+                            }
                         }
                     });
                     
