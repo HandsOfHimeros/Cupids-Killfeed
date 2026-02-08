@@ -1984,8 +1984,8 @@ module.exports = {
         
         if (commandName === 'fortuneteller') {
             if (!canPlayMiniGame(userId, 'fortuneteller')) {
-                const nextTime = nextAvailableMiniGame(userId);
-                await interaction.editReply({ content: `⏳ The oracle rests! Return <t:${Math.floor(nextTime / 1000)}:R>` });
+                const nextTime = nextAvailableMiniGame(userId, 'fortuneteller');
+                await interaction.editReply({ content: `⏳ The oracle rests! Return <t:${Math.floor((Date.now() + nextTime) / 1000)}:R>` });
                 return;
             }
             
@@ -2043,8 +2043,8 @@ module.exports = {
             });
         } else if (commandName === 'pillage') {
             if (!canPlayMiniGame(userId, 'pillage')) {
-                const nextTime = nextAvailableMiniGame(userId);
-                await interaction.editReply({ content: `⏳ Thou art too exhausted! Rest until <t:${Math.floor(nextTime / 1000)}:R>` });
+                const nextTime = nextAvailableMiniGame(userId, 'pillage');
+                await interaction.editReply({ content: `⏳ Thou art too exhausted! Rest until <t:${Math.floor((Date.now() + nextTime) / 1000)}:R>` });
                 return;
             }
             
@@ -2161,8 +2161,8 @@ module.exports = {
             });
         } else if (commandName === 'archery') {
             if (!canPlayMiniGame(userId, 'archery')) {
-                const nextTime = nextAvailableMiniGame(userId);
-                await interaction.editReply({ content: `⏳ Thy arm needs rest! Return <t:${Math.floor(nextTime / 1000)}:R>` });
+                const nextTime = nextAvailableMiniGame(userId, 'archery');
+                await interaction.editReply({ content: `⏳ Thy arm needs rest! Return <t:${Math.floor((Date.now() + nextTime) / 1000)}:R>` });
                 return;
             }
             
@@ -2258,8 +2258,8 @@ module.exports = {
             });
         } else if (commandName === 'tarot') {
             if (!canPlayMiniGame(userId, 'tarot')) {
-                const nextTime = nextAvailableMiniGame(userId);
-                await interaction.editReply({ content: `⏳ The cards must rest! Return <t:${Math.floor(nextTime / 1000)}:R>` });
+                const nextTime = nextAvailableMiniGame(userId, 'tarot');
+                await interaction.editReply({ content: `⏳ The cards must rest! Return <t:${Math.floor((Date.now() + nextTime) / 1000)}:R>` });
                 return;
             }
             
@@ -2333,8 +2333,8 @@ module.exports = {
             });
         } else if (commandName === 'quest') {
             if (!canPlayMiniGame(userId, 'quest')) {
-                const nextTime = nextAvailableMiniGame(userId);
-                await interaction.editReply({ content: `⏳ Thou art weary from adventure! Rest until <t:${Math.floor(nextTime / 1000)}:R>` });
+                const nextTime = nextAvailableMiniGame(userId, 'quest');
+                await interaction.editReply({ content: `⏳ Thou art weary from adventure! Rest until <t:${Math.floor((Date.now() + nextTime) / 1000)}:R>` });
                 return;
             }
             
@@ -2430,8 +2430,8 @@ module.exports = {
             });
         } else if (commandName === 'liarsdice') {
             if (!canPlayMiniGame(userId, 'liarsdice')) {
-                const nextTime = nextAvailableMiniGame(userId);
-                await interaction.editReply({ content: `⏳ The tavern keeper says nay! Return <t:${Math.floor(nextTime / 1000)}:R>` });
+                const nextTime = nextAvailableMiniGame(userId, 'liarsdice');
+                await interaction.editReply({ content: `⏳ The tavern keeper says nay! Return <t:${Math.floor((Date.now() + nextTime) / 1000)}:R>` });
                 return;
             }
             
@@ -2530,8 +2530,8 @@ module.exports = {
             });
         } else if (commandName === 'smuggle') {
             if (!canPlayMiniGame(userId, 'smuggle')) {
-                const nextTime = nextAvailableMiniGame(userId);
-                await interaction.editReply({ content: `⏳ The gates are watched! Wait until <t:${Math.floor(nextTime / 1000)}:R>` });
+                const nextTime = nextAvailableMiniGame(userId, 'smuggle');
+                await interaction.editReply({ content: `⏳ The gates are watched! Wait until <t:${Math.floor((Date.now() + nextTime) / 1000)}:R>` });
                 return;
             }
             
@@ -2628,8 +2628,8 @@ module.exports = {
             });
         } else if (commandName === 'pickpocket') {
             if (!canPlayMiniGame(userId, 'pickpocket')) {
-                const nextTime = nextAvailableMiniGame(userId);
-                await interaction.editReply({ content: `⏳ Lay low for now! Return <t:${Math.floor(nextTime / 1000)}:R>` });
+                const nextTime = nextAvailableMiniGame(userId, 'pickpocket');
+                await interaction.editReply({ content: `⏳ Lay low for now! Return <t:${Math.floor((Date.now() + nextTime) / 1000)}:R>` });
                 return;
             }
             
@@ -2726,8 +2726,8 @@ module.exports = {
             });
         } else if (commandName === 'bribe') {
             if (!canPlayMiniGame(userId, 'bribe')) {
-                const nextTime = nextAvailableMiniGame(userId);
-                await interaction.editReply({ content: `⏳ The guards remember thee! Wait until <t:${Math.floor(nextTime / 1000)}:R>` });
+                const nextTime = nextAvailableMiniGame(userId, 'bribe');
+                await interaction.editReply({ content: `⏳ The guards remember thee! Wait until <t:${Math.floor((Date.now() + nextTime) / 1000)}:R>` });
                 return;
             }
             
@@ -2936,8 +2936,8 @@ module.exports = {
             }
             
             if (!canPlayMiniGame(userId, 'questboard')) {
-                const nextTime = nextAvailableMiniGame(userId);
-                await interaction.editReply({ content: `⏳ Rest before more quests! Return <t:${Math.floor(nextTime / 1000)}:R>` });
+                const nextTime = nextAvailableMiniGame(userId, 'questboard');
+                await interaction.editReply({ content: `⏳ Rest before more quests! Return <t:${Math.floor((Date.now() + nextTime) / 1000)}:R>` });
                 return;
             }
             
@@ -2978,8 +2978,8 @@ module.exports = {
             }
             
             if (!canPlayMiniGame(userId, 'taverndice')) {
-                const nextTime = nextAvailableMiniGame(userId);
-                await interaction.editReply({ content: `⏳ The dice are in use! Return <t:${Math.floor(nextTime / 1000)}:R>` });
+                const nextTime = nextAvailableMiniGame(userId, 'taverndice');
+                await interaction.editReply({ content: `⏳ The dice are in use! Return <t:${Math.floor((Date.now() + nextTime) / 1000)}:R>` });
                 return;
             }
             
@@ -3854,8 +3854,8 @@ module.exports = {
         // ============ MEDIEVAL MINI-GAMES ============
         } else if (commandName === 'labor') {
             if (!canPlayMiniGame(userId, 'labor')) {
-                const nextTime = nextAvailableMiniGame(userId);
-                await interaction.editReply({ content: `⏳ Thou art weary! Rest until <t:${Math.floor(nextTime / 1000)}:R>` });
+                const nextTime = nextAvailableMiniGame(userId, 'labor');
+                await interaction.editReply({ content: `⏳ Thou art weary! Rest until <t:${Math.floor((Date.now() + nextTime) / 1000)}:R>` });
                 return;
             }
             
@@ -5500,3 +5500,4 @@ function createBackup() {
 setInterval(createBackup, 6 * 60 * 60 * 1000);
 // Create initial backup on load
 createBackup();
+
