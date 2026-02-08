@@ -3947,13 +3947,13 @@ module.exports = {
             const stats = await getUserStats(guildId, userId);
             const rank = getRank(stats.total_earned);
             if (!canPlayGame(rank, 'hunting')) {
-                return interaction.reply({ content: `🔒 **Hunting** unlocks at **Knight** rank! Thou art but a ${rank.emoji} ${rank.name}.` });
+                return interaction.editReply({ content: `🔒 **Hunting** unlocks at **Knight** rank! Thou art but a ${rank.emoji} ${rank.name}.` });
             }
             if (!canPlayMiniGame(userId, 'hunting')) {
                 const next = nextAvailableMiniGame(userId, 'hunting');
                 const hours = Math.floor(next / (1000 * 60 * 60));
                 const minutes = Math.floor((next % (1000 * 60 * 60)) / (1000 * 60));
-                return interaction.reply({ content: `⏰ Thou must rest! Try again in ${hours}h ${minutes}m.` });
+                return interaction.editReply({ content: `⏰ Thou must rest! Try again in ${hours}h ${minutes}m.` });
             }
 
             const row = new MessageActionRow().addComponents(
@@ -4015,13 +4015,13 @@ module.exports = {
             const stats = await getUserStats(guildId, userId);
             const rank = getRank(stats.total_earned);
             if (!canPlayGame(rank, 'fishing')) {
-                return interaction.reply({ content: `🔒 **Fishing** is available to all ${rank.emoji} ${rank.name}s!` });
+                return interaction.editReply({ content: `🔒 **Fishing** is available to all ${rank.emoji} ${rank.name}s!` });
             }
             if (!canPlayMiniGame(userId, 'fishing')) {
                 const next = nextAvailableMiniGame(userId, 'fishing');
                 const hours = Math.floor(next / (1000 * 60 * 60));
                 const minutes = Math.floor((next % (1000 * 60 * 60)) / (1000 * 60));
-                return interaction.reply({ content: `⏰ Thou must rest! Try again in ${hours}h ${minutes}m.` });
+                return interaction.editReply({ content: `⏰ Thou must rest! Try again in ${hours}h ${minutes}m.` });
             }
 
             const row = new MessageActionRow().addComponents(
@@ -4083,13 +4083,13 @@ module.exports = {
             const stats = await getUserStats(guildId, userId);
             const rank = getRank(stats.total_earned);
             if (!canPlayGame(rank, 'mining')) {
-                return interaction.reply({ content: `🔒 **Mining** unlocks at **Knight** rank! Thou art but a ${rank.emoji} ${rank.name}.` });
+                return interaction.editReply({ content: `🔒 **Mining** unlocks at **Knight** rank! Thou art but a ${rank.emoji} ${rank.name}.` });
             }
             if (!canPlayMiniGame(userId, 'mining')) {
                 const next = nextAvailableMiniGame(userId, 'mining');
                 const hours = Math.floor(next / (1000 * 60 * 60));
                 const minutes = Math.floor((next % (1000 * 60 * 60)) / (1000 * 60));
-                return interaction.reply({ content: `⏰ Thou must rest! Try again in ${hours}h ${minutes}m.` });
+                return interaction.editReply({ content: `⏰ Thou must rest! Try again in ${hours}h ${minutes}m.` });
             }
 
             const row = new MessageActionRow().addComponents(
@@ -4155,13 +4155,13 @@ module.exports = {
             const stats = await getUserStats(guildId, userId);
             const rank = getRank(stats.total_earned);
             if (!canPlayGame(rank, 'herbalism')) {
-                return interaction.reply({ content: `🔒 **Herbalism** is available to all ${rank.emoji} ${rank.name}s!` });
+                return interaction.editReply({ content: `🔒 **Herbalism** is available to all ${rank.emoji} ${rank.name}s!` });
             }
             if (!canPlayMiniGame(userId, 'herbalism')) {
                 const next = nextAvailableMiniGame(userId, 'herbalism');
                 const hours = Math.floor(next / (1000 * 60 * 60));
                 const minutes = Math.floor((next % (1000 * 60 * 60)) / (1000 * 60));
-                return interaction.reply({ content: `⏰ Thou must rest! Try again in ${hours}h ${minutes}m.` });
+                return interaction.editReply({ content: `⏰ Thou must rest! Try again in ${hours}h ${minutes}m.` });
             }
 
             const row = new MessageActionRow().addComponents(
@@ -4223,13 +4223,13 @@ module.exports = {
             const stats = await getUserStats(guildId, userId);
             const rank = getRank(stats.total_earned);
             if (!canPlayGame(rank, 'blacksmith')) {
-                return interaction.reply({ content: `🔒 **Blacksmith** unlocks at **Baron** rank! Thou art but a ${rank.emoji} ${rank.name}.` });
+                return interaction.editReply({ content: `🔒 **Blacksmith** unlocks at **Baron** rank! Thou art but a ${rank.emoji} ${rank.name}.` });
             }
             if (!canPlayMiniGame(userId, 'blacksmith')) {
                 const next = nextAvailableMiniGame(userId, 'blacksmith');
                 const hours = Math.floor(next / (1000 * 60 * 60));
                 const minutes = Math.floor((next % (1000 * 60 * 60)) / (1000 * 60));
-                return interaction.reply({ content: `⏰ Thou must rest! Try again in ${hours}h ${minutes}m.` });
+                return interaction.editReply({ content: `⏰ Thou must rest! Try again in ${hours}h ${minutes}m.` });
             }
 
             // Check for crafting materials
@@ -4359,13 +4359,13 @@ module.exports = {
             const stats = await getUserStats(guildId, userId);
             const rank = getRank(stats.total_earned);
             if (!canPlayGame(rank, 'alchemy')) {
-                return interaction.reply({ content: `🔒 **Alchemy** unlocks at **Earl** rank! Thou art but a ${rank.emoji} ${rank.name}.` });
+                return interaction.editReply({ content: `🔒 **Alchemy** unlocks at **Earl** rank! Thou art but a ${rank.emoji} ${rank.name}.` });
             }
             if (!canPlayMiniGame(userId, 'alchemy')) {
                 const next = nextAvailableMiniGame(userId, 'alchemy');
                 const hours = Math.floor(next / (1000 * 60 * 60));
                 const minutes = Math.floor((next % (1000 * 60 * 60)) / (1000 * 60));
-                return interaction.reply({ content: `⏰ Thou must rest! Try again in ${hours}h ${minutes}m.` });
+                return interaction.editReply({ content: `⏰ Thou must rest! Try again in ${hours}h ${minutes}m.` });
             }
 
             const row = new MessageActionRow().addComponents(
@@ -4426,13 +4426,13 @@ module.exports = {
             const stats = await getUserStats(guildId, userId);
             const rank = getRank(stats.total_earned);
             if (!canPlayGame(rank, 'bard')) {
-                return interaction.reply({ content: `🔒 **Bard Performance** unlocks at **Baron** rank! Thou art but a ${rank.emoji} ${rank.name}.` });
+                return interaction.editReply({ content: `🔒 **Bard Performance** unlocks at **Baron** rank! Thou art but a ${rank.emoji} ${rank.name}.` });
             }
             if (!canPlayMiniGame(userId, 'bard')) {
                 const next = nextAvailableMiniGame(userId, 'bard');
                 const hours = Math.floor(next / (1000 * 60 * 60));
                 const minutes = Math.floor((next % (1000 * 60 * 60)) / (1000 * 60));
-                return interaction.reply({ content: `⏰ Thou must rest! Try again in ${hours}h ${minutes}m.` });
+                return interaction.editReply({ content: `⏰ Thou must rest! Try again in ${hours}h ${minutes}m.` });
             }
 
             const row = new MessageActionRow().addComponents(
@@ -4493,13 +4493,13 @@ module.exports = {
             const stats = await getUserStats(guildId, userId);
             const rank = getRank(stats.total_earned);
             if (!canPlayGame(rank, 'horseracing')) {
-                return interaction.reply({ content: `🔒 **Horse Racing** unlocks at **Earl** rank! Thou art but a ${rank.emoji} ${rank.name}.` });
+                return interaction.editReply({ content: `🔒 **Horse Racing** unlocks at **Earl** rank! Thou art but a ${rank.emoji} ${rank.name}.` });
             }
             if (!canPlayMiniGame(userId, 'horseracing')) {
                 const next = nextAvailableMiniGame(userId, 'horseracing');
                 const hours = Math.floor(next / (1000 * 60 * 60));
                 const minutes = Math.floor((next % (1000 * 60 * 60)) / (1000 * 60));
-                return interaction.reply({ content: `⏰ Thou must rest! Try again in ${hours}h ${minutes}m.` });
+                return interaction.editReply({ content: `⏰ Thou must rest! Try again in ${hours}h ${minutes}m.` });
             }
 
             const row = new MessageActionRow().addComponents(
@@ -4560,13 +4560,13 @@ module.exports = {
             const stats = await getUserStats(guildId, userId);
             const rank = getRank(stats.total_earned);
             if (!canPlayGame(rank, 'chess')) {
-                return interaction.reply({ content: `🔒 **Chess** unlocks at **Duke** rank! Thou art but a ${rank.emoji} ${rank.name}.` });
+                return interaction.editReply({ content: `🔒 **Chess** unlocks at **Duke** rank! Thou art but a ${rank.emoji} ${rank.name}.` });
             }
             if (!canPlayMiniGame(userId, 'chess')) {
                 const next = nextAvailableMiniGame(userId, 'chess');
                 const hours = Math.floor(next / (1000 * 60 * 60));
                 const minutes = Math.floor((next % (1000 * 60 * 60)) / (1000 * 60));
-                return interaction.reply({ content: `⏰ Thou must rest! Try again in ${hours}h ${minutes}m.` });
+                return interaction.editReply({ content: `⏰ Thou must rest! Try again in ${hours}h ${minutes}m.` });
             }
 
             const row = new MessageActionRow().addComponents(
@@ -4627,13 +4627,13 @@ module.exports = {
             const stats = await getUserStats(guildId, userId);
             const rank = getRank(stats.total_earned);
             if (!canPlayGame(rank, 'relics')) {
-                return interaction.reply({ content: `🔒 **Relic Hunting** unlocks at **Duke** rank! Thou art but a ${rank.emoji} ${rank.name}.` });
+                return interaction.editReply({ content: `🔒 **Relic Hunting** unlocks at **Duke** rank! Thou art but a ${rank.emoji} ${rank.name}.` });
             }
             if (!canPlayMiniGame(userId, 'relics')) {
                 const next = nextAvailableMiniGame(userId, 'relics');
                 const hours = Math.floor(next / (1000 * 60 * 60));
                 const minutes = Math.floor((next % (1000 * 60 * 60)) / (1000 * 60));
-                return interaction.reply({ content: `⏰ Thou must rest! Try again in ${hours}h ${minutes}m.` });
+                return interaction.editReply({ content: `⏰ Thou must rest! Try again in ${hours}h ${minutes}m.` });
             }
 
             const row = new MessageActionRow().addComponents(
@@ -4694,13 +4694,13 @@ module.exports = {
             const stats = await getUserStats(guildId, userId);
             const rank = getRank(stats.total_earned);
             if (!canPlayGame(rank, 'tournamentmelee')) {
-                return interaction.reply({ content: `🔒 **Tournament Melee** unlocks at **Duke** rank! Thou art but a ${rank.emoji} ${rank.name}.` });
+                return interaction.editReply({ content: `🔒 **Tournament Melee** unlocks at **Duke** rank! Thou art but a ${rank.emoji} ${rank.name}.` });
             }
             if (!canPlayMiniGame(userId, 'tournamentmelee')) {
                 const next = nextAvailableMiniGame(userId, 'tournamentmelee');
                 const hours = Math.floor(next / (1000 * 60 * 60));
                 const minutes = Math.floor((next % (1000 * 60 * 60)) / (1000 * 60));
-                return interaction.reply({ content: `⏰ Thou must rest! Try again in ${hours}h ${minutes}m.` });
+                return interaction.editReply({ content: `⏰ Thou must rest! Try again in ${hours}h ${minutes}m.` });
             }
 
             const row = new MessageActionRow().addComponents(
@@ -4761,13 +4761,13 @@ module.exports = {
             const stats = await getUserStats(guildId, userId);
             const rank = getRank(stats.total_earned);
             if (!canPlayGame(rank, 'beasttaming')) {
-                return interaction.reply({ content: `🔒 **Beast Taming** unlocks at **King** rank! Thou art but a ${rank.emoji} ${rank.name}.` });
+                return interaction.editReply({ content: `🔒 **Beast Taming** unlocks at **King** rank! Thou art but a ${rank.emoji} ${rank.name}.` });
             }
             if (!canPlayMiniGame(userId, 'beasttaming')) {
                 const next = nextAvailableMiniGame(userId, 'beasttaming');
                 const hours = Math.floor(next / (1000 * 60 * 60));
                 const minutes = Math.floor((next % (1000 * 60 * 60)) / (1000 * 60));
-                return interaction.reply({ content: `⏰ Thou must rest! Try again in ${hours}h ${minutes}m.` });
+                return interaction.editReply({ content: `⏰ Thou must rest! Try again in ${hours}h ${minutes}m.` });
             }
 
             const row = new MessageActionRow().addComponents(
@@ -4828,13 +4828,13 @@ module.exports = {
             const stats = await getUserStats(guildId, userId);
             const rank = getRank(stats.total_earned);
             if (!canPlayGame(rank, 'siegedefense')) {
-                return interaction.reply({ content: `🔒 **Siege Defense** unlocks at **King** rank! Thou art but a ${rank.emoji} ${rank.name}.` });
+                return interaction.editReply({ content: `🔒 **Siege Defense** unlocks at **King** rank! Thou art but a ${rank.emoji} ${rank.name}.` });
             }
             if (!canPlayMiniGame(userId, 'siegedefense')) {
                 const next = nextAvailableMiniGame(userId, 'siegedefense');
                 const hours = Math.floor(next / (1000 * 60 * 60));
                 const minutes = Math.floor((next % (1000 * 60 * 60)) / (1000 * 60));
-                return interaction.reply({ content: `⏰ Thou must rest! Try again in ${hours}h ${minutes}m.` });
+                return interaction.editReply({ content: `⏰ Thou must rest! Try again in ${hours}h ${minutes}m.` });
             }
 
             const row = new MessageActionRow().addComponents(
@@ -4906,13 +4906,12 @@ module.exports = {
                     const reward = getDailyReward(loginData.current_streak);
                     const tomorrow = new Date(loginData.last_claim_date);
                     tomorrow.setDate(tomorrow.getDate() + 1);
-                    return interaction.reply({
+                    return interaction.editReply({
                         embeds: [new MessageEmbed()
                             .setColor('#ff6b6b')
                             .setTitle('⏰ Already Claimed Today!')
                             .setDescription(`Thou hast already claimed thy daily reward!\n\n🔥 Current Streak: **${loginData.current_streak} days**\n💰 Today's Reward: **$${reward}**\n\nReturn tomorrow for day **${loginData.current_streak + 1}** reward!`)
-                            .setFooter({ text: `Longest streak: ${loginData.longest_streak} days` })],
-                        ephemeral: true
+                            .setFooter({ text: `Longest streak: ${loginData.longest_streak} days` })]
                     });
                 }
                 
@@ -5013,18 +5012,18 @@ module.exports = {
             const amount = interaction.options.getInteger('amount');
             
             if (targetUser.id === userId) {
-                return interaction.reply({ content: '❌ Thou cannot gift coin to thyself!' });
+                return interaction.editReply({ content: '❌ Thou cannot gift coin to thyself!' });
             }
             if (targetUser.bot) {
-                return interaction.reply({ content: '❌ Bots cannot receive gifts!' });
+                return interaction.editReply({ content: '❌ Bots cannot receive gifts!' });
             }
             if (amount < 50) {
-                return interaction.reply({ content: '❌ Minimum gift is $50!' });
+                return interaction.editReply({ content: '❌ Minimum gift is $50!' });
             }
             
             const balance = await db.getBalance(guildId, userId);
             if (balance < amount) {
-                return interaction.reply({ content: `❌ Thou dost not have $${amount}! Balance: $${balance}` });
+                return interaction.editReply({ content: `❌ Thou dost not have $${amount}! Balance: $${balance}` });
             }
             
             await db.addBalance(guildId, userId, -amount);
@@ -5049,7 +5048,7 @@ module.exports = {
             const properties = await db.getUserProperties(guildId, userId);
             
             if (properties.length === 0) {
-                return interaction.reply({
+                return interaction.editReply({
                     embeds: [new MessageEmbed()
                         .setColor('#8b4513')
                         .setTitle('🏛️ Thy Properties')
@@ -5109,13 +5108,13 @@ module.exports = {
             const balance = await db.getBalance(guildId, userId);
             
             if (balance < property.price) {
-                return interaction.reply({ content: `❌ Thou needest $${property.price}! Balance: $${balance}` });
+                return interaction.editReply({ content: `❌ Thou needest $${property.price}! Balance: $${balance}` });
             }
             
             // Check if already owns this type
             const existing = await db.getUserProperties(guildId, userId);
             if (existing.some(p => p.property_type === propertyType)) {
-                return interaction.reply({ content: `❌ Thou already ownest a ${property.name}!` });
+                return interaction.editReply({ content: `❌ Thou already ownest a ${property.name}!` });
             }
             
             await db.addBalance(guildId, userId, -property.price);
@@ -5143,7 +5142,7 @@ module.exports = {
             const inventory = await db.getInventory(guildId, userId);
             
             if (inventory.length === 0) {
-                return interaction.reply({
+                return interaction.editReply({
                     embeds: [new MessageEmbed()
                         .setColor('#8b4513')
                         .setTitle('🎒 Thy Inventory')
@@ -5179,7 +5178,7 @@ module.exports = {
             const leaderboard = await db.getWeeklyLeaderboard(guildId, 10);
             
             if (leaderboard.length === 0) {
-                return interaction.reply({
+                return interaction.editReply({
                     embeds: [new MessageEmbed()
                         .setColor('#ffd700')
                         .setTitle('📊 Weekly Leaderboard')
@@ -5307,7 +5306,7 @@ module.exports = {
                 const chapter = campaign.chapters.find(c => c.num === chapterNum);
                 
                 if (!chapter) {
-                    return interaction.reply({ content: '❌ Campaign data error. Please report to admins.' });
+                    return interaction.editReply({ content: '❌ Campaign data error. Please report to admins.' });
                 }
                 
                 const choiceRow = new MessageActionRow();
@@ -5342,7 +5341,7 @@ module.exports = {
         const match = customId.match(/^campaign_(.+)_(\d+)_(.+)$/);
         
         if (!match) {
-            return interaction.reply({ content: '❌ Invalid button format!' });
+            return interaction.editReply({ content: '❌ Invalid button format!' });
         }
         
         const campaignId = match[1];
@@ -5358,14 +5357,14 @@ module.exports = {
         const campaign = CAMPAIGNS[campaignId];
         if (!campaign) {
             console.log('[CAMPAIGN] Campaign not found!');
-            return interaction.reply({ content: '❌ Invalid campaign!' });
+            return interaction.editReply({ content: '❌ Invalid campaign!' });
         }
         
         const chapter = campaign.chapters.find(c => c.num === chapterNum);
-        if (!chapter) return interaction.reply({ content: '❌ Invalid chapter!' });
+        if (!chapter) return interaction.editReply({ content: '❌ Invalid chapter!' });
         
         const choice = chapter.choices.find(c => c.id === choiceId);
-        if (!choice) return interaction.reply({ content: '❌ Invalid choice!' });
+        if (!choice) return interaction.editReply({ content: '❌ Invalid choice!' });
         
         await interaction.update({ content: '🎲 The fates decide...', components: [], embeds: [] });
         
