@@ -943,6 +943,26 @@ module.exports = {
             .setName('shophelp')
             .setDescription('Learn how to use the shop and spawn system'),
         new SlashCommandBuilder()
+            .setName('shoporders')
+            .setDescription('View your recent shop order history'),
+        new SlashCommandBuilder()
+            .setName('shopfails')
+            .setDescription('[Admin] View recent failed shop orders for this server'),
+        new SlashCommandBuilder()
+            .setName('shopretry')
+            .setDescription('[Admin] Retry spawning a failed order')
+            .addStringOption(option =>
+                option.setName('order_id')
+                    .setDescription('Order ID to retry (e.g. 42)')
+                    .setRequired(true)),
+        new SlashCommandBuilder()
+            .setName('shoprefund')
+            .setDescription('[Admin] Refund a failed order back to the player')
+            .addStringOption(option =>
+                option.setName('order_id')
+                    .setDescription('Order ID to refund (e.g. 42)')
+                    .setRequired(true)),
+        new SlashCommandBuilder()
             .setName('hunting')
             .setDescription('🏹 Hunt wild game in the royal forest - Deer, boar, or rabbits?'),
         new SlashCommandBuilder()
@@ -1724,21 +1744,34 @@ module.exports = {
                                     return;
                                 }
                                 
+                                // Create order record (pending) before touching balance
+                                const restartId = Date.now().toString();
+                                // Get DayZ name first so it's recorded on the order
+                                const dayzName = await db.getDayZName(guildId, userId) || interaction.user.username;
+                                const orderId = await db.createShopOrder(guildId, userId, dayzName, totalCost, restartId);
+                                const orderItems = Array.from(shoppingCart.entries()).map(([idx, qty]) => ({
+                                    itemClass: shopItems[idx].class,
+                                    itemName: shopItems[idx].name,
+                                    qty,
+                                    unitPrice: shopItems[idx].averagePrice
+                                }));
+                                await db.addShopOrderItems(orderId, orderItems);
+
                                 // Deduct money
                                 await db.addBalance(guildId, userId, -totalCost);
-                                
-                                // Get DayZ name
-                                const dayzName = await db.getDayZName(guildId, userId) || interaction.user.username;
+                                await db.updateShopOrderStatus(orderId, 'queued');
                                 
                                 // Check if player has a location before processing
                                 const playerPos = await db.getPlayerLocation(guildId, dayzName);
                                 if (!playerPos) {
+                                    await db.updateShopOrderStatus(orderId, 'failed', 'Player location not tracked');
                                     await i.followUp({ 
                                         content: `❌ **Location Not Found**\n\nYour location hasn't been tracked yet. You must be in-game and tracked before purchasing.\n\nYour money has been refunded.`, 
                                         ephemeral: true 
                                     });
                                     // Refund the money
                                     await db.addBalance(guildId, userId, totalCost);
+                                    await db.updateShopOrderStatus(orderId, 'refunded', 'Auto-refunded: no player location');
                                     return;
                                 }
 
@@ -1755,18 +1788,21 @@ module.exports = {
                                             item: item.name,
                                             class: item.class,
                                             timestamp: Date.now(),
-                                            restart_id: Date.now().toString()
+                                            restart_id: restartId,
+                                            orderId
                                         });
                                     }
                                 }
                                 
                                 try {
                                     await addCupidSpawnEntriesBatch(batchEntries, guildId);
-                                    console.log(`[SHOP] Batch spawned ${batchEntries.length} items for ${dayzName} in one FTP write`);
+                                    await db.updateShopOrderStatus(orderId, 'spawned');
+                                    console.log(`[SHOP] Order #${orderId}: batch spawned ${batchEntries.length} items for ${dayzName}`);
                                 } catch (error) {
-                                    console.error('[SHOP] Batch spawn error:', error.message);
+                                    await db.updateShopOrderStatus(orderId, 'failed', error.message);
+                                    console.error(`[SHOP] Order #${orderId} failed:`, error.message);
                                     await i.followUp({
-                                        content: `⚠️ **Items failed to spawn:** ${error.message}\n\nContact an admin for assistance.`,
+                                        content: `⚠️ **Items failed to spawn**\nOrder ID: \`#${orderId}\`\n\`${error.message}\`\n\nAsk an admin to run \`/shopretry\` or \`/shoprefund\` with your order ID.`,
                                         ephemeral: true
                                     });
                                 }
@@ -1796,6 +1832,7 @@ module.exports = {
                                             .setColor('#00ff00')
                                             .setTitle('✅ Purchase Complete!')
                                             .setDescription(`You purchased:\n${itemList}\n\nTotal: $${totalCost}\nNew balance: $${bal - totalCost}${locationInfo}`)
+                                            .setFooter({ text: `Order #${orderId} • Use /shoporders to view history` })
                                     ],
                                     components: [],
                                     ephemeral: true
@@ -3953,6 +3990,119 @@ module.exports = {
                         .setFooter({ text: 'Need help? Ask an admin!' })
                 ] });
             
+        // ========== SHOP ORDERS ==========
+        } else if (commandName === 'shoporders') {
+            const orders = await db.getUserShopOrders(guildId, userId, 10);
+            if (!orders.length) {
+                return interaction.editReply({ content: '📋 You have no shop orders yet.', ephemeral: true });
+            }
+            const statusEmoji = { pending: '⏳', queued: '🔄', spawned: '✅', failed: '❌', refunded: '💸' };
+            const lines = orders.map(o => {
+                const items = Array.isArray(o.items) ? o.items.map(it => `${it.qty}x ${it.item_name}`).join(', ') : '—';
+                const date = new Date(o.created_at).toLocaleDateString();
+                return `${statusEmoji[o.status] || '❓'} **#${o.id}** — $${o.total_cost} — ${o.status.toUpperCase()}\n${items} *(${date})*`;
+            });
+            return interaction.editReply({
+                embeds: [new MessageEmbed()
+                    .setColor('#00aaff')
+                    .setTitle('📋 Your Shop Orders')
+                    .setDescription(lines.join('\n\n').slice(0, 4000))
+                    .setFooter({ text: 'Failed orders? Ask an admin to run /shopretry or /shoprefund' })],
+                ephemeral: true
+            });
+
+        // ========== SHOPFAILS (admin) ==========
+        } else if (commandName === 'shopfails') {
+            const member = interaction.member;
+            const isAdmin = member.permissions.has('ADMINISTRATOR') || member.permissions.has('MANAGE_GUILD');
+            if (!isAdmin) return interaction.editReply({ content: '❌ Admin only.', ephemeral: true });
+
+            const failed = await db.getGuildFailedOrders(guildId, 20);
+            if (!failed.length) return interaction.editReply({ content: '✅ No failed orders.', ephemeral: true });
+
+            const lines = failed.map(o => {
+                const items = Array.isArray(o.items) ? o.items.map(it => `${it.qty}x ${it.item_name}`).join(', ') : '—';
+                const date = new Date(o.created_at).toLocaleString();
+                return `**#${o.id}** <@${o.user_id}> — $${o.total_cost} — ${date}\n${items}\n${o.error ? `⚠️ \`${o.error}\`` : ''}`;
+            });
+            return interaction.editReply({
+                embeds: [new MessageEmbed()
+                    .setColor('#ff4444')
+                    .setTitle('❌ Failed Shop Orders')
+                    .setDescription(lines.join('\n\n').slice(0, 4000))
+                    .setFooter({ text: 'Use /shopretry <id> or /shoprefund <id>' })],
+                ephemeral: true
+            });
+
+        // ========== SHOPRETRY (admin) ==========
+        } else if (commandName === 'shopretry') {
+            const member = interaction.member;
+            const isAdmin = member.permissions.has('ADMINISTRATOR') || member.permissions.has('MANAGE_GUILD');
+            if (!isAdmin) return interaction.editReply({ content: '❌ Admin only.', ephemeral: true });
+
+            const orderId = parseInt(interaction.options.getString('order_id'));
+            if (isNaN(orderId)) return interaction.editReply({ content: '❌ Invalid order ID.', ephemeral: true });
+
+            const order = await db.getShopOrder(orderId, guildId);
+            if (!order) return interaction.editReply({ content: `❌ Order #${orderId} not found.`, ephemeral: true });
+            if (order.status === 'spawned') return interaction.editReply({ content: `✅ Order #${orderId} already spawned.`, ephemeral: true });
+            if (order.status === 'refunded') return interaction.editReply({ content: `💸 Order #${orderId} was already refunded.`, ephemeral: true });
+
+            await interaction.editReply({ content: `🔄 Retrying order #${orderId}...` });
+
+            const { addCupidSpawnEntriesBatch } = require('../index.js');
+            const shopItems = require('../shop_items.js');
+            const dayzName = order.dayz_name || await db.getDayZName(guildId, order.user_id);
+
+            if (!dayzName) {
+                return interaction.editReply({ content: `❌ No DayZ name found for user <@${order.user_id}>. Ask them to run \`/setname\`.` });
+            }
+
+            const batchEntries = [];
+            for (const item of order.items) {
+                const shopItem = shopItems.find(s => s.name === item.item_name || s.class === item.item_class);
+                for (let q = 0; q < item.qty; q++) {
+                    batchEntries.push({
+                        userId: order.user_id,
+                        dayzPlayerName: dayzName,
+                        item: item.item_name,
+                        class: item.item_class || (shopItem && shopItem.class) || item.item_name,
+                        timestamp: Date.now(),
+                        restart_id: order.restart_id || Date.now().toString(),
+                        orderId
+                    });
+                }
+            }
+
+            try {
+                await addCupidSpawnEntriesBatch(batchEntries, guildId);
+                await db.updateShopOrderStatus(orderId, 'spawned');
+                return interaction.editReply({ content: `✅ Order #${orderId} retried successfully — ${batchEntries.length} item(s) spawned for **${dayzName}**.` });
+            } catch (err) {
+                await db.updateShopOrderStatus(orderId, 'failed', err.message);
+                return interaction.editReply({ content: `❌ Retry failed for order #${orderId}: \`${err.message}\`` });
+            }
+
+        // ========== SHOPREFUND (admin) ==========
+        } else if (commandName === 'shoprefund') {
+            const member = interaction.member;
+            const isAdmin = member.permissions.has('ADMINISTRATOR') || member.permissions.has('MANAGE_GUILD');
+            if (!isAdmin) return interaction.editReply({ content: '❌ Admin only.', ephemeral: true });
+
+            const orderId = parseInt(interaction.options.getString('order_id'));
+            if (isNaN(orderId)) return interaction.editReply({ content: '❌ Invalid order ID.', ephemeral: true });
+
+            const order = await db.getShopOrder(orderId, guildId);
+            if (!order) return interaction.editReply({ content: `❌ Order #${orderId} not found.`, ephemeral: true });
+            if (order.status === 'refunded') return interaction.editReply({ content: `💸 Order #${orderId} already refunded.`, ephemeral: true });
+            if (order.status === 'spawned') return interaction.editReply({ content: `✅ Order #${orderId} was successfully spawned — refund not issued.`, ephemeral: true });
+
+            await db.addBalance(guildId, order.user_id, order.total_cost);
+            await db.updateShopOrderStatus(orderId, 'refunded', 'Admin manual refund');
+            return interaction.editReply({
+                content: `💸 Refunded **$${order.total_cost}** to <@${order.user_id}> for order #${orderId}.`
+            });
+
         // ========== HUNTING ==========
         } else if (commandName === 'hunting') {
             const stats = await getUserStats(guildId, userId);

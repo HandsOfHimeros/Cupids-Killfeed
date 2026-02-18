@@ -259,6 +259,121 @@ async function addWeeklyShopPurchasedCount(guildId, userId, itemCount) {
     );
 }
 
+// ============ SHOP ORDER TRACKING ============
+let shopOrderSchemaReady = false;
+
+async function ensureShopOrderSchema() {
+    if (shopOrderSchemaReady) return;
+
+    await safeQuery(`
+        CREATE TABLE IF NOT EXISTS shop_orders (
+            id SERIAL PRIMARY KEY,
+            guild_id VARCHAR(32) NOT NULL,
+            user_id VARCHAR(32) NOT NULL,
+            dayz_name VARCHAR(255),
+            total_cost INTEGER NOT NULL DEFAULT 0,
+            status VARCHAR(20) NOT NULL DEFAULT 'pending',
+            error TEXT,
+            restart_id VARCHAR(64),
+            created_at TIMESTAMP DEFAULT NOW(),
+            updated_at TIMESTAMP DEFAULT NOW()
+        )
+    `);
+
+    await safeQuery(`
+        CREATE TABLE IF NOT EXISTS shop_order_items (
+            id SERIAL PRIMARY KEY,
+            order_id INTEGER NOT NULL REFERENCES shop_orders(id) ON DELETE CASCADE,
+            item_class VARCHAR(255) NOT NULL,
+            item_name VARCHAR(255) NOT NULL,
+            qty INTEGER NOT NULL DEFAULT 1,
+            unit_price INTEGER NOT NULL DEFAULT 0
+        )
+    `);
+
+    await safeQuery(`CREATE INDEX IF NOT EXISTS idx_shop_orders_guild_user ON shop_orders(guild_id, user_id)`);
+    await safeQuery(`CREATE INDEX IF NOT EXISTS idx_shop_orders_status ON shop_orders(guild_id, status)`);
+
+    shopOrderSchemaReady = true;
+}
+
+async function createShopOrder(guildId, userId, dayzName, totalCost, restartId) {
+    await ensureShopOrderSchema();
+    const result = await safeQuery(
+        `INSERT INTO shop_orders (guild_id, user_id, dayz_name, total_cost, status, restart_id, created_at, updated_at)
+         VALUES ($1, $2, $3, $4, 'pending', $5, NOW(), NOW())
+         RETURNING id`,
+        [guildId, userId, dayzName, totalCost, restartId]
+    );
+    return result.rows[0].id;
+}
+
+async function addShopOrderItems(orderId, items) {
+    // items: array of { itemClass, itemName, qty, unitPrice }
+    for (const item of items) {
+        await safeQuery(
+            `INSERT INTO shop_order_items (order_id, item_class, item_name, qty, unit_price)
+             VALUES ($1, $2, $3, $4, $5)`,
+            [orderId, item.itemClass, item.itemName, item.qty, item.unitPrice]
+        );
+    }
+}
+
+async function updateShopOrderStatus(orderId, status, error = null) {
+    await safeQuery(
+        `UPDATE shop_orders SET status = $2, error = $3, updated_at = NOW() WHERE id = $1`,
+        [orderId, status, error]
+    );
+}
+
+async function getShopOrder(orderId, guildId) {
+    await ensureShopOrderSchema();
+    const order = await safeQuery(
+        `SELECT * FROM shop_orders WHERE id = $1 AND guild_id = $2`,
+        [orderId, guildId]
+    );
+    if (!order.rows[0]) return null;
+    const items = await safeQuery(
+        `SELECT * FROM shop_order_items WHERE order_id = $1`,
+        [orderId]
+    );
+    return { ...order.rows[0], items: items.rows };
+}
+
+async function getUserShopOrders(guildId, userId, limit = 10) {
+    await ensureShopOrderSchema();
+    const orders = await safeQuery(
+        `SELECT o.*, 
+                COALESCE(json_agg(json_build_object('item_name', i.item_name, 'qty', i.qty, 'unit_price', i.unit_price)) 
+                    FILTER (WHERE i.id IS NOT NULL), '[]') AS items
+         FROM shop_orders o
+         LEFT JOIN shop_order_items i ON i.order_id = o.id
+         WHERE o.guild_id = $1 AND o.user_id = $2
+         GROUP BY o.id
+         ORDER BY o.created_at DESC
+         LIMIT $3`,
+        [guildId, userId, limit]
+    );
+    return orders.rows;
+}
+
+async function getGuildFailedOrders(guildId, limit = 20) {
+    await ensureShopOrderSchema();
+    const orders = await safeQuery(
+        `SELECT o.*,
+                COALESCE(json_agg(json_build_object('item_name', i.item_name, 'qty', i.qty)) 
+                    FILTER (WHERE i.id IS NOT NULL), '[]') AS items
+         FROM shop_orders o
+         LEFT JOIN shop_order_items i ON i.order_id = o.id
+         WHERE o.guild_id = $1 AND o.status = 'failed'
+         GROUP BY o.id
+         ORDER BY o.created_at DESC
+         LIMIT $2`,
+        [guildId, limit]
+    );
+    return orders.rows;
+}
+
 // Balance operations
 async function getBalance(guildId, userId) {
     const result = await safeQuery('SELECT balance FROM balances WHERE guild_id = $1 AND user_id = $2', [guildId, userId]);
@@ -606,6 +721,14 @@ module.exports = {
     getShopWeeklyItemLimit,
     getWeeklyShopPurchasedCount,
     addWeeklyShopPurchasedCount,
+    // Shop order tracking
+    ensureShopOrderSchema,
+    createShopOrder,
+    addShopOrderItems,
+    updateShopOrderStatus,
+    getShopOrder,
+    getUserShopOrders,
+    getGuildFailedOrders,
     getBalance,
     setBalance,
     addBalance,
