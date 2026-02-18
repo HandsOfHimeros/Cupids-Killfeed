@@ -1088,7 +1088,7 @@ module.exports = {
                 console.log('[SHOP] Passed channel check');
                 // --- SHOP COMMAND LOGIC ---
                 const shopItems = require('../shop_items.js');
-                const { addCupidSpawnEntry } = require('../index.js');
+                const { addCupidSpawnEntriesBatch } = require('../index.js');
                 
                 // Helper function to group items by category
                 function getCategorizedItems() {
@@ -1744,38 +1744,29 @@ module.exports = {
 
                                 await db.addWeeklyShopPurchasedCount(guildId, userId, requestedItems);
                                 
-                                // Add all items to spawn - MUST BE SEQUENTIAL to avoid race condition
-                                let spawnErrors = [];
+                                // Build all spawn entries for the entire cart, then do ONE FTP write
+                                const batchEntries = [];
                                 for (const [itemIdx, qty] of shoppingCart.entries()) {
                                     const item = shopItems[itemIdx];
-                                    
-                                    // Create separate spawn entry for each item
-                                    for (let i = 0; i < qty; i++) {
-                                        const spawnEntry = {
+                                    for (let q = 0; q < qty; q++) {
+                                        batchEntries.push({
                                             userId,
                                             dayzPlayerName: dayzName,
                                             item: item.name,
                                             class: item.class,
                                             timestamp: Date.now(),
                                             restart_id: Date.now().toString()
-                                        };
-                                        
-                                        try {
-                                            await addCupidSpawnEntry(spawnEntry, guildId);
-                                            console.log(`[SHOP] Spawned ${item.name} (${i+1}/${qty})`);
-                                        } catch (error) {
-                                            console.error(`[SHOP] Error spawning ${item.name}:`, error.message);
-                                            spawnErrors.push(`${item.name}: ${error.message}`);
-                                        }
+                                        });
                                     }
-                                    
-                                    console.log(`[SHOP] Added ${qty}x ${item.name} for ${dayzName}`);
                                 }
                                 
-                                // If there were spawn errors, notify user
-                                if (spawnErrors.length > 0) {
+                                try {
+                                    await addCupidSpawnEntriesBatch(batchEntries, guildId);
+                                    console.log(`[SHOP] Batch spawned ${batchEntries.length} items for ${dayzName} in one FTP write`);
+                                } catch (error) {
+                                    console.error('[SHOP] Batch spawn error:', error.message);
                                     await i.followUp({
-                                        content: `⚠️ **Some items failed to spawn:**\n${spawnErrors.join('\n')}\n\nContact an admin for assistance.`,
+                                        content: `⚠️ **Items failed to spawn:** ${error.message}\n\nContact an admin for assistance.`,
                                         ephemeral: true
                                     });
                                 }

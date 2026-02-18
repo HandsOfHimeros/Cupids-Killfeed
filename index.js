@@ -369,6 +369,206 @@ async function addCupidSpawnEntry(spawnEntry, guildId) {
     });
 }
 
+// Batch version: one FTP download + one FTP upload for an entire cart order.
+// All entries must belong to the same player (same cart checkout).
+async function addCupidSpawnEntriesBatch(spawnEntries, guildId) {
+    if (!spawnEntries || spawnEntries.length === 0) return;
+    if (spawnEntries.length === 1) {
+        return addCupidSpawnEntry(spawnEntries[0], guildId);
+    }
+    return queueSpawnWrite(guildId, async () => {
+        return await addCupidSpawnEntriesBatchInternal(spawnEntries, guildId);
+    });
+}
+
+async function addCupidSpawnEntriesBatchInternal(spawnEntries, guildId) {
+    const guildConfig = await db.getGuildConfig(guildId);
+    if (!guildConfig) throw new Error('Guild not configured. Please run /admin killfeed setup first.');
+
+    const platformPath = getPlatformPath(guildConfig.platform);
+    const FILE_PATH = `/games/${guildConfig.nitrado_instance}/ftproot/${platformPath}_missions/dayzOffline.${guildConfig.map_name}/custom/spawn.json`;
+    const FTP_FILE_PATH = `/${platformPath}_missions/dayzOffline.${guildConfig.map_name}/custom/spawn.json`;
+    const GAMEPLAY_FILE_PATH = `/games/${guildConfig.nitrado_instance}/ftproot/${platformPath}_missions/dayzOffline.${guildConfig.map_name}/cfggameplay.json`;
+    const GAMEPLAY_FTP_PATH = `/${platformPath}_missions/dayzOffline.${guildConfig.map_name}/cfggameplay.json`;
+    const BASE_URL = 'https://api.nitrado.net/services';
+
+    // Load spawn templates once
+    let spawnTemplates = {};
+    let defaultTemplate = { pos: [0, 0, 0], ypr: [0, 0, 0], scale: 1, enableCEPersistency: 0 };
+    try {
+        const spawnConfigPath = path.join(__dirname, 'spawn.json');
+        if (fs.existsSync(spawnConfigPath)) {
+            const spawnConfig = JSON.parse(fs.readFileSync(spawnConfigPath, 'utf8'));
+            spawnTemplates = spawnConfig.spawnTemplates || {};
+            defaultTemplate = spawnConfig.defaultSpawnTemplate || defaultTemplate;
+        }
+    } catch (err) {
+        console.error('[SPAWN-BATCH] Error loading spawn.json templates:', err.message);
+    }
+
+    // Look up player location once (all entries are from same player)
+    const firstEntry = spawnEntries[0];
+    if (!firstEntry.dayzPlayerName) throw new Error('No dayzPlayerName provided in spawn entries');
+    const playerLocation = await db.getPlayerLocation(guildId, firstEntry.dayzPlayerName);
+    if (!playerLocation) {
+        throw new Error(`No location found for ${firstEntry.dayzPlayerName}. Player must be tracked in-game before purchasing.`);
+    }
+    const playerX = playerLocation.x;
+    const playerY = playerLocation.y;
+    const playerZ = playerLocation.z;
+    console.log(`[SPAWN-BATCH] Player location: [${playerX}, ${playerY}, ${playerZ}]`);
+
+    // Download current spawn.json ONCE
+    let spawnJson = { Objects: [] };
+    try {
+        const downloadUrl = `${BASE_URL}/${guildConfig.nitrado_service_id}/gameservers/file_server/download?file=${encodeURIComponent(FILE_PATH)}`;
+        const downloadResp = await axios.get(downloadUrl, { headers: { 'Authorization': `Bearer ${guildConfig.nitrado_token}` } });
+        const fileUrl = downloadResp.data.data.token.url;
+        const fileResp = await axios.get(fileUrl);
+        if (fileResp.data && Array.isArray(fileResp.data.Objects)) {
+            spawnJson = { Objects: fileResp.data.Objects };
+        } else if (fileResp.data && Array.isArray(fileResp.data)) {
+            spawnJson = { Objects: fileResp.data };
+        }
+        console.log(`[SPAWN-BATCH] Downloaded spawn.json, ${spawnJson.Objects.length} existing objects`);
+    } catch (downloadErr) {
+        console.log('[SPAWN-BATCH] Could not download spawn.json, starting fresh:', downloadErr.message);
+    }
+
+    // Find or create table near player ONCE
+    let nearbyTable = null;
+    for (const obj of spawnJson.Objects) {
+        if (obj.name === 'StaticObj_Furniture_lobby_table') {
+            const distance = Math.sqrt(Math.pow(obj.pos[0] - playerX, 2) + Math.pow(obj.pos[2] - playerZ, 2));
+            if (distance < 20) {
+                nearbyTable = obj;
+                console.log(`[SPAWN-BATCH] Found nearby table at [${obj.pos[0]}, ${obj.pos[1]}, ${obj.pos[2]}], distance: ${distance.toFixed(2)}m`);
+                break;
+            }
+        }
+    }
+
+    let tablePos;
+    let itemCount = 0;
+    if (!nearbyTable) {
+        console.log(`[SPAWN-BATCH] Creating new table at [${playerX}, ${playerY}, ${playerZ}]`);
+        const tableObject = {
+            name: 'StaticObj_Furniture_lobby_table',
+            pos: [playerX, playerY, playerZ],
+            ypr: [90, 0, 0],
+            scale: 1,
+            enableCEPersistency: 0,
+            customString: JSON.stringify({ owner: firstEntry.dayzPlayerName, created: Date.now(), restart_id: firstEntry.restart_id, item_count: 0 })
+        };
+        spawnJson.Objects.push(tableObject);
+        nearbyTable = tableObject;
+        tablePos = [playerX, playerY, playerZ];
+    } else {
+        tablePos = nearbyTable.pos;
+        try {
+            const tableData = JSON.parse(nearbyTable.customString);
+            itemCount = tableData.item_count || 0;
+            console.log(`[SPAWN-BATCH] Using existing table, current items: ${itemCount}`);
+        } catch (e) {
+            console.log('[SPAWN-BATCH] Could not parse table item count, starting at 0');
+        }
+    }
+
+    // Place ALL items on the table in one pass
+    const itemsPerRow = 4;
+    const gridStartX = tablePos[0] - 0.3;
+    const gridStartZ = tablePos[2] - 0.7;
+    const gridSpacingX = 0.15;
+    const gridSpacingZ = 0.3;
+
+    for (const spawnEntry of spawnEntries) {
+        const template = spawnTemplates[spawnEntry.class] || { ...defaultTemplate, name: spawnEntry.class };
+        const itemYOffset = (template.pos && template.pos[1] !== undefined && template.pos[1] !== 0) ? template.pos[1] : 0.55;
+
+        const row = Math.floor(itemCount / itemsPerRow);
+        const col = itemCount % itemsPerRow;
+        const itemX = gridStartX + (col * gridSpacingX);
+        const itemY = tablePos[1] + itemYOffset;
+        const itemZ = gridStartZ + (row * gridSpacingZ);
+
+        const spawnObject = {
+            name: spawnEntry.class,
+            pos: [itemX, itemY, itemZ],
+            ypr: template.ypr || [0, 0, 0],
+            scale: template.scale || 1,
+            enableCEPersistency: template.enableCEPersistency || 0,
+            customString: JSON.stringify({
+                userId: spawnEntry.userId,
+                dayzPlayerName: spawnEntry.dayzPlayerName,
+                item: spawnEntry.item,
+                timestamp: spawnEntry.timestamp,
+                restart_id: spawnEntry.restart_id,
+                purchaseId: spawnEntry.purchaseId || null
+            })
+        };
+        spawnJson.Objects.push(spawnObject);
+        console.log(`[SPAWN-BATCH] Queued ${spawnEntry.class} at row ${row}, col ${col} => [${itemX.toFixed(2)}, ${itemY.toFixed(2)}, ${itemZ.toFixed(2)}]`);
+        itemCount++;
+    }
+
+    // Update table item count in the in-memory object
+    try {
+        const tableData = JSON.parse(nearbyTable.customString);
+        tableData.item_count = itemCount;
+        nearbyTable.customString = JSON.stringify(tableData);
+        console.log(`[SPAWN-BATCH] Updated table item count to ${itemCount}`);
+    } catch (e) {
+        console.log('[SPAWN-BATCH] Could not update table item count');
+    }
+
+    // Get FTP credentials ONCE
+    const infoUrl = `${BASE_URL}/${guildConfig.nitrado_service_id}/gameservers`;
+    const infoResp = await axios.get(infoUrl, { headers: { 'Authorization': `Bearer ${guildConfig.nitrado_token}` } });
+    const ftpCreds = infoResp.data.data.gameserver.credentials.ftp;
+    const ftpHost = ftpCreds.hostname;
+    const ftpUser = ftpCreds.username;
+    const ftpPass = ftpCreds.password;
+    const ftpPort = ftpCreds.port || 21;
+
+    // Upload ONCE
+    const { Client } = require('basic-ftp');
+    const ftpClient = new Client();
+    ftpClient.ftp.verbose = false;
+    try {
+        await ftpClient.access({ host: ftpHost, user: ftpUser, password: ftpPass, port: ftpPort, secure: false });
+        console.log('[SPAWN-BATCH] Connected to FTP');
+
+        const tmpPath = path.join(__dirname, 'logs', `spawn_batch_${Date.now()}.json`);
+        fs.writeFileSync(tmpPath, JSON.stringify(spawnJson, null, 2), 'utf8');
+        await ftpClient.uploadFrom(tmpPath, FTP_FILE_PATH);
+        fs.unlinkSync(tmpPath);
+        console.log(`[SPAWN-BATCH] Uploaded spawn.json with ${spawnEntries.length} new items in a single FTP write`);
+
+        // Register spawn.json in cfggameplay.json if needed
+        try {
+            const dlUrl = `${BASE_URL}/${guildConfig.nitrado_service_id}/gameservers/file_server/download?file=${encodeURIComponent(GAMEPLAY_FILE_PATH)}`;
+            const dlResp = await axios.get(dlUrl, { headers: { 'Authorization': `Bearer ${guildConfig.nitrado_token}` } });
+            const fileUrl = dlResp.data.data.token.url;
+            const fileResp = await axios.get(fileUrl, { responseType: 'text' });
+            let fileContent = fileResp.data;
+            if (!fileContent.includes('"./custom/spawn.json"')) {
+                const updated = fileContent.replace(/"objectSpawnersArr"\s*:\s*\[\s*\]/, `"objectSpawnersArr": [\n        "./custom/spawn.json"\n    ]`);
+                if (updated !== fileContent) {
+                    const gTmp = path.join(__dirname, 'logs', `cfggameplay_${Date.now()}.json`);
+                    fs.writeFileSync(gTmp, updated, 'utf8');
+                    await ftpClient.uploadFrom(gTmp, GAMEPLAY_FTP_PATH);
+                    fs.unlinkSync(gTmp);
+                    console.log('[SPAWN-BATCH] Registered spawn.json in cfggameplay.json');
+                }
+            }
+        } catch (gameplayErr) {
+            console.error('[SPAWN-BATCH] Warning: Could not update cfggameplay.json:', gameplayErr.message);
+        }
+    } finally {
+        ftpClient.close();
+    }
+}
+
 async function addCupidSpawnEntryInternal(spawnEntry, guildId) {
     // Get guild configuration
     const guildConfig = await db.getGuildConfig(guildId);
@@ -733,6 +933,7 @@ async function spawnPendingKits(guildId) {
 }
 
 module.exports.addCupidSpawnEntry = addCupidSpawnEntry;
+module.exports.addCupidSpawnEntriesBatch = addCupidSpawnEntriesBatch;
 module.exports.spawnPendingKits = spawnPendingKits;
 
 // --- Player Location Tracking ---
