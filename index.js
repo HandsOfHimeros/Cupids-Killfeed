@@ -419,7 +419,10 @@ async function addCupidSpawnEntriesBatchInternal(spawnEntries, guildId) {
     console.log(`[SPAWN-BATCH] Player location: [${playerX}, ${playerY}, ${playerZ}]`);
 
     // Download current spawn.json ONCE
+    // IMPORTANT: if download fails we throw — we never overwrite with an empty file
     let spawnJson = { Objects: [] };
+    let downloadedObjectCount = 0;
+    let serverHadExistingFile = false;
     try {
         const downloadUrl = `${BASE_URL}/${guildConfig.nitrado_service_id}/gameservers/file_server/download?file=${encodeURIComponent(FILE_PATH)}`;
         const downloadResp = await axios.get(downloadUrl, { headers: { 'Authorization': `Bearer ${guildConfig.nitrado_token}` } });
@@ -427,12 +430,25 @@ async function addCupidSpawnEntriesBatchInternal(spawnEntries, guildId) {
         const fileResp = await axios.get(fileUrl);
         if (fileResp.data && Array.isArray(fileResp.data.Objects)) {
             spawnJson = { Objects: fileResp.data.Objects };
+            serverHadExistingFile = true;
         } else if (fileResp.data && Array.isArray(fileResp.data)) {
             spawnJson = { Objects: fileResp.data };
+            serverHadExistingFile = true;
+        } else {
+            // File exists but is empty/invalid — safe to start fresh
+            console.log('[SPAWN-BATCH] spawn.json empty or unrecognised format, starting fresh');
         }
-        console.log(`[SPAWN-BATCH] Downloaded spawn.json, ${spawnJson.Objects.length} existing objects`);
+        downloadedObjectCount = spawnJson.Objects.length;
+        console.log(`[SPAWN-BATCH] Downloaded spawn.json, ${downloadedObjectCount} existing objects`);
     } catch (downloadErr) {
-        console.log('[SPAWN-BATCH] Could not download spawn.json, starting fresh:', downloadErr.message);
+        // If Nitrado is unreachable (server restart, maintenance) abort rather than wiping the file
+        const status = downloadErr.response?.status;
+        if (status === 404) {
+            // File genuinely doesn't exist yet — safe to create it
+            console.log('[SPAWN-BATCH] spawn.json not found on server (404), will create new file');
+        } else {
+            throw new Error(`Could not download spawn.json from Nitrado (${downloadErr.message}). The server may be restarting — please try again in a moment.`);
+        }
     }
 
     // Find or create table near player ONCE
@@ -474,21 +490,49 @@ async function addCupidSpawnEntriesBatchInternal(spawnEntries, guildId) {
         }
     }
 
-    // Place ALL items on the table in one pass
+    // Place ALL items on the table(s) in one pass — auto-overflow to new tables
+    const MAX_ITEMS_PER_TABLE = 16; // 4 cols × 4 rows
     const itemsPerRow = 4;
-    const gridStartX = tablePos[0] - 0.3;
-    const gridStartZ = tablePos[2] - 0.7;
     const gridSpacingX = 0.15;
     const gridSpacingZ = 0.3;
+    const tableOffsetZ = 2.0; // metres between overflow tables
+
+    // Track all tables touched so we can update their item_count at the end
+    let activeTables = [{ table: nearbyTable, pos: tablePos, startCount: itemCount, endCount: itemCount }];
+    let activeTableIdx = 0;
+    let slotOnCurrentTable = itemCount; // how many slots already used on the current table
 
     for (const spawnEntry of spawnEntries) {
+        // Check if current table is full — open a new overflow table
+        if (slotOnCurrentTable >= MAX_ITEMS_PER_TABLE) {
+            const prevPos = activeTables[activeTableIdx].pos;
+            const newPos = [prevPos[0], prevPos[1], prevPos[2] + tableOffsetZ];
+            console.log(`[SPAWN-BATCH] Table full (${MAX_ITEMS_PER_TABLE} items), creating overflow table at [${newPos[0]}, ${newPos[1]}, ${newPos[2]}]`);
+            const newTable = {
+                name: 'StaticObj_Furniture_lobby_table',
+                pos: newPos,
+                ypr: [90, 0, 0],
+                scale: 1,
+                enableCEPersistency: 0,
+                customString: JSON.stringify({ owner: firstEntry.dayzPlayerName, created: Date.now(), restart_id: firstEntry.restart_id, item_count: 0 })
+            };
+            spawnJson.Objects.push(newTable);
+            activeTableIdx++;
+            activeTables.push({ table: newTable, pos: newPos, startCount: 0, endCount: 0 });
+            slotOnCurrentTable = 0;
+        }
+
+        const currentTablePos = activeTables[activeTableIdx].pos;
+        const gridStartX = currentTablePos[0] - 0.3;
+        const gridStartZ = currentTablePos[2] - 0.7;
+
         const template = spawnTemplates[spawnEntry.class] || { ...defaultTemplate, name: spawnEntry.class };
         const itemYOffset = (template.pos && template.pos[1] !== undefined && template.pos[1] !== 0) ? template.pos[1] : 0.55;
 
-        const row = Math.floor(itemCount / itemsPerRow);
-        const col = itemCount % itemsPerRow;
+        const row = Math.floor(slotOnCurrentTable / itemsPerRow);
+        const col = slotOnCurrentTable % itemsPerRow;
         const itemX = gridStartX + (col * gridSpacingX);
-        const itemY = tablePos[1] + itemYOffset;
+        const itemY = currentTablePos[1] + itemYOffset;
         const itemZ = gridStartZ + (row * gridSpacingZ);
 
         const spawnObject = {
@@ -507,19 +551,23 @@ async function addCupidSpawnEntriesBatchInternal(spawnEntries, guildId) {
             })
         };
         spawnJson.Objects.push(spawnObject);
-        console.log(`[SPAWN-BATCH] Queued ${spawnEntry.class} at row ${row}, col ${col} => [${itemX.toFixed(2)}, ${itemY.toFixed(2)}, ${itemZ.toFixed(2)}]`);
-        itemCount++;
+        console.log(`[SPAWN-BATCH] Queued ${spawnEntry.class} on table ${activeTableIdx + 1} row ${row} col ${col} => [${itemX.toFixed(2)}, ${itemY.toFixed(2)}, ${itemZ.toFixed(2)}]`);
+        slotOnCurrentTable++;
+        activeTables[activeTableIdx].endCount = slotOnCurrentTable;
     }
 
-    // Update table item count in the in-memory object
-    try {
-        const tableData = JSON.parse(nearbyTable.customString);
-        tableData.item_count = itemCount;
-        nearbyTable.customString = JSON.stringify(tableData);
-        console.log(`[SPAWN-BATCH] Updated table item count to ${itemCount}`);
-    } catch (e) {
-        console.log('[SPAWN-BATCH] Could not update table item count');
+    // Update item_count on all touched tables
+    for (const entry of activeTables) {
+        try {
+            const tableData = JSON.parse(entry.table.customString);
+            tableData.item_count = entry.endCount;
+            entry.table.customString = JSON.stringify(tableData);
+            console.log(`[SPAWN-BATCH] Table item count updated to ${entry.endCount}`);
+        } catch (e) {
+            console.log('[SPAWN-BATCH] Could not update table item count');
+        }
     }
+    console.log(`[SPAWN-BATCH] Placed ${spawnEntries.length} items across ${activeTables.length} table(s)`);
 
     // Get FTP credentials ONCE
     const infoUrl = `${BASE_URL}/${guildConfig.nitrado_service_id}/gameservers`;
@@ -538,11 +586,17 @@ async function addCupidSpawnEntriesBatchInternal(spawnEntries, guildId) {
         await ftpClient.access({ host: ftpHost, user: ftpUser, password: ftpPass, port: ftpPort, secure: false });
         console.log('[SPAWN-BATCH] Connected to FTP');
 
+        // Sanity check: never upload fewer objects than we downloaded
+        const finalObjectCount = spawnJson.Objects.length;
+        if (finalObjectCount < downloadedObjectCount) {
+            throw new Error(`Refusing to upload spawn.json — would drop objects (downloaded ${downloadedObjectCount}, about to write ${finalObjectCount}). Server may have returned incomplete data.`);
+        }
+
         const tmpPath = path.join(__dirname, 'logs', `spawn_batch_${Date.now()}.json`);
         fs.writeFileSync(tmpPath, JSON.stringify(spawnJson, null, 2), 'utf8');
         await ftpClient.uploadFrom(tmpPath, FTP_FILE_PATH);
         fs.unlinkSync(tmpPath);
-        console.log(`[SPAWN-BATCH] Uploaded spawn.json with ${spawnEntries.length} new items in a single FTP write`);
+        console.log(`[SPAWN-BATCH] Uploaded spawn.json with ${spawnEntries.length} new items in a single FTP write (total objects: ${finalObjectCount})`);
 
         // Register spawn.json in cfggameplay.json if needed
         try {
@@ -606,6 +660,7 @@ async function addCupidSpawnEntryInternal(spawnEntry, guildId) {
         
         // Step 2: Download current spawn.json from Nitrado
         let spawnJson = { Objects: [] };
+        let downloadedObjectCount = 0;
         try {
             const downloadUrl = `${BASE_URL}/${guildConfig.nitrado_service_id}/gameservers/file_server/download?file=${encodeURIComponent(FILE_PATH)}`;
             const downloadResp = await axios.get(downloadUrl, {
@@ -620,10 +675,16 @@ async function addCupidSpawnEntryInternal(spawnEntry, guildId) {
             } else if (fileResp.data && Array.isArray(fileResp.data)) {
                 spawnJson = { Objects: fileResp.data };
             } else {
-                console.log('[SPAWN] spawn.json not found or empty, creating new one');
+                console.log('[SPAWN] spawn.json empty or unrecognised format, starting fresh');
             }
+            downloadedObjectCount = spawnJson.Objects.length;
         } catch (downloadErr) {
-            console.log('[SPAWN] Could not download spawn.json, will create new:', downloadErr.message);
+            const status = downloadErr.response?.status;
+            if (status === 404) {
+                console.log('[SPAWN] spawn.json not found on server (404), will create new file');
+            } else {
+                throw new Error(`Could not download spawn.json from Nitrado (${downloadErr.message}). The server may be restarting — please try again in a moment.`);
+            }
         }
         
         // Step 3: Get spawn template for this item class
@@ -802,6 +863,12 @@ async function addCupidSpawnEntryInternal(spawnEntry, guildId) {
             
             console.log('[SPAWN] Connected to FTP');
             
+            // Sanity check: never upload fewer objects than we downloaded
+            const finalObjectCount = spawnJson.Objects.length;
+            if (finalObjectCount < downloadedObjectCount) {
+                throw new Error(`Refusing to upload spawn.json — would drop objects (downloaded ${downloadedObjectCount}, about to write ${finalObjectCount}). Server may have returned incomplete data.`);
+            }
+
             // Write to temp file and upload spawn.json
             const tmpPath = path.join(__dirname, 'logs', `spawn_${Date.now()}.json`);
             fs.writeFileSync(tmpPath, JSON.stringify(spawnJson, null, 2), 'utf8');
@@ -809,7 +876,7 @@ async function addCupidSpawnEntryInternal(spawnEntry, guildId) {
             await client.uploadFrom(tmpPath, FTP_FILE_PATH);
             fs.unlinkSync(tmpPath);
             
-            console.log('[SPAWN] Successfully uploaded spawn.json via FTP');
+            console.log(`[SPAWN] Successfully uploaded spawn.json via FTP (total objects: ${finalObjectCount})`);
             
             // Step 8: Update cfggameplay.json to register spawn.json in objectSpawnersArr
             console.log('[SPAWN] Updating cfggameplay.json to register spawn.json...');
@@ -1464,6 +1531,14 @@ bot.login(config.TOKEN).catch(error => {
 bot.on('ready', async () => {
     console.info(`Logged in as ${bot.user.tag}!`);
     console.log('KILLFEED IS ACTIVE!');
+
+    // Ensure shop order tables exist (creates them if first deploy)
+    try {
+        await db.ensureShopOrderSchema();
+        console.log('[DB] Shop order schema ready');
+    } catch (err) {
+        console.error('[DB] Failed to initialize shop order schema:', err.message);
+    }
     
     // Start multi-guild killfeed monitoring
     if (!multiGuildKillfeed) {
