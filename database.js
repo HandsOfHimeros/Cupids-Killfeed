@@ -29,6 +29,8 @@ let poolMetrics = {
     lastError: null
 };
 
+let shopLimitSchemaReady = false;
+
 // Test database connection on startup
 pool.on('error', (err) => {
     poolMetrics.errors++;
@@ -185,6 +187,76 @@ async function updateKillfeedState(guildId, lastLogLine, lastAdmFilename = null)
             WHERE guild_id = $1
         `, [guildId, lastLogLine]);
     }
+}
+
+async function ensureShopLimitSchema() {
+    if (shopLimitSchemaReady) return;
+
+    await safeQuery(`
+        ALTER TABLE guild_configs
+        ADD COLUMN IF NOT EXISTS shop_weekly_item_limit INTEGER DEFAULT 0
+    `);
+
+    await safeQuery(`
+        CREATE TABLE IF NOT EXISTS weekly_shop_purchases (
+            guild_id VARCHAR(32) NOT NULL,
+            user_id VARCHAR(32) NOT NULL,
+            week_start DATE NOT NULL,
+            item_count INTEGER NOT NULL DEFAULT 0,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (guild_id, user_id, week_start)
+        )
+    `);
+
+    await safeQuery(`
+        CREATE INDEX IF NOT EXISTS idx_weekly_shop_purchases_lookup
+        ON weekly_shop_purchases(guild_id, user_id, week_start)
+    `);
+
+    shopLimitSchemaReady = true;
+}
+
+async function setShopWeeklyItemLimit(guildId, itemLimit) {
+    await ensureShopLimitSchema();
+    await safeQuery(
+        'UPDATE guild_configs SET shop_weekly_item_limit = $2, updated_at = CURRENT_TIMESTAMP WHERE guild_id = $1',
+        [guildId, Math.max(0, itemLimit)]
+    );
+}
+
+async function getShopWeeklyItemLimit(guildId) {
+    await ensureShopLimitSchema();
+    const result = await safeQuery(
+        'SELECT shop_weekly_item_limit FROM guild_configs WHERE guild_id = $1',
+        [guildId]
+    );
+    return result.rows[0]?.shop_weekly_item_limit || 0;
+}
+
+async function getWeeklyShopPurchasedCount(guildId, userId) {
+    await ensureShopLimitSchema();
+    const result = await safeQuery(
+        `SELECT item_count
+         FROM weekly_shop_purchases
+         WHERE guild_id = $1
+           AND user_id = $2
+           AND week_start = DATE_TRUNC('week', (NOW() AT TIME ZONE 'UTC'))::date`,
+        [guildId, userId]
+    );
+    return result.rows[0]?.item_count || 0;
+}
+
+async function addWeeklyShopPurchasedCount(guildId, userId, itemCount) {
+    await ensureShopLimitSchema();
+    await safeQuery(
+        `INSERT INTO weekly_shop_purchases (guild_id, user_id, week_start, item_count, updated_at)
+         VALUES ($1, $2, DATE_TRUNC('week', (NOW() AT TIME ZONE 'UTC'))::date, $3, CURRENT_TIMESTAMP)
+         ON CONFLICT (guild_id, user_id, week_start)
+         DO UPDATE SET
+            item_count = weekly_shop_purchases.item_count + $3,
+            updated_at = CURRENT_TIMESTAMP`,
+        [guildId, userId, Math.max(0, itemCount)]
+    );
 }
 
 // Balance operations
@@ -530,6 +602,10 @@ module.exports = {
     setGuildChannels,
     getAllGuildConfigs,
     updateKillfeedState,
+    setShopWeeklyItemLimit,
+    getShopWeeklyItemLimit,
+    getWeeklyShopPurchasedCount,
+    addWeeklyShopPurchasedCount,
     getBalance,
     setBalance,
     addBalance,

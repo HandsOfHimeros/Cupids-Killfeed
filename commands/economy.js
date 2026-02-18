@@ -1675,6 +1675,24 @@ module.exports = {
                             
                             // Checkout
                             if (i.customId === 'checkout') {
+                                const requestedItems = Array.from(shoppingCart.values())
+                                    .reduce((sum, qty) => sum + qty, 0);
+
+                                const weeklyLimit = Number(guildConfig?.shop_weekly_item_limit || 0);
+                                if (weeklyLimit > 0) {
+                                    const alreadyPurchasedThisWeek = await db.getWeeklyShopPurchasedCount(guildId, userId);
+                                    const projectedTotal = alreadyPurchasedThisWeek + requestedItems;
+
+                                    if (projectedTotal > weeklyLimit) {
+                                        const remaining = Math.max(0, weeklyLimit - alreadyPurchasedThisWeek);
+                                        await i.reply({
+                                            content: `🚫 Weekly purchase limit reached.\n\nLimit: **${weeklyLimit}** items/week\nAlready purchased: **${alreadyPurchasedThisWeek}**\nIn this cart: **${requestedItems}**\nRemaining this week: **${remaining}**`,
+                                            ephemeral: true
+                                        });
+                                        return;
+                                    }
+                                }
+
                                 // Immediately disable all buttons to prevent double-clicking
                                 const disabledRow = new MessageActionRow()
                                     .addComponents(
@@ -1723,6 +1741,8 @@ module.exports = {
                                     await db.addBalance(guildId, userId, totalCost);
                                     return;
                                 }
+
+                                await db.addWeeklyShopPurchasedCount(guildId, userId, requestedItems);
                                 
                                 // Add all items to spawn - MUST BE SEQUENTIAL to avoid race condition
                                 let spawnErrors = [];

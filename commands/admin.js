@@ -278,6 +278,17 @@ module.exports = {
                         .setName('teleport')
                         .setDescription('Manage teleport zones and routes')
                 )
+                .addSubcommand(subcommand =>
+                    subcommand
+                        .setName('shoplimit')
+                        .setDescription('Set or view per-player weekly shop item limit')
+                        .addIntegerOption(option =>
+                            option.setName('items')
+                                .setDescription('Max items each player can buy per week (0 = unlimited)')
+                                .setRequired(false)
+                                .setMinValue(0)
+                        )
+                )
         ),
 
     async execute(interaction) {
@@ -326,6 +337,9 @@ module.exports = {
             case "teleport":
                 const teleportModule = require('./teleport.js');
                 await teleportModule.execute(interaction);
+                break;
+            case "shoplimit":
+                await handleShopLimitCommand(interaction);
                 break;
             default:
                 break;
@@ -390,6 +404,61 @@ async function handleMapChange(interaction) {
     } catch (error) {
         console.error('[MAPCHANGE] Error:', error);
         await interaction.reply({ content: 'Error updating map: ' + error.message, ephemeral: true });
+    }
+}
+
+async function handleShopLimitCommand(interaction) {
+    const guildId = interaction.guildId;
+
+    try {
+        const guildConfig = await db.getGuildConfig(guildId);
+        if (!guildConfig) {
+            return interaction.reply({
+                content: 'This server is not configured. Please run `/admin killfeed setup` first.',
+                ephemeral: true
+            });
+        }
+
+        const items = interaction.options.getInteger('items');
+
+        if (items === null || items === undefined) {
+            const currentLimit = await db.getShopWeeklyItemLimit(guildId);
+            return interaction.reply({
+                embeds: [
+                    new MessageEmbed()
+                        .setColor('#00aaff')
+                        .setTitle('Weekly Shop Limit')
+                        .setDescription(
+                            currentLimit > 0
+                                ? `Players can purchase up to **${currentLimit}** item(s) per week.`
+                                : 'Weekly shop limit is currently **disabled** (unlimited purchases).'
+                        )
+                ],
+                ephemeral: true
+            });
+        }
+
+        await db.setShopWeeklyItemLimit(guildId, items);
+
+        await interaction.reply({
+            embeds: [
+                new MessageEmbed()
+                    .setColor('#00ff99')
+                    .setTitle('Shop Limit Updated')
+                    .setDescription(
+                        items > 0
+                            ? `Players can now purchase up to **${items}** item(s) per week.`
+                            : 'Weekly shop limit disabled. Players now have **unlimited** weekly item purchases.'
+                    )
+            ],
+            ephemeral: true
+        });
+    } catch (error) {
+        console.error('[SHOPLIMIT] Error:', error);
+        await interaction.reply({
+            content: 'Error updating weekly shop limit: ' + error.message,
+            ephemeral: true
+        });
     }
 }
 
@@ -1777,6 +1846,7 @@ async function handleViewConfigCommand(interaction) {
                         { name: 'Platform', value: config.platform, inline: true },
                         { name: 'Economy Channel', value: config.economy_channel_id ? `<#${config.economy_channel_id}>` : 'Not set', inline: true },
                         { name: 'Shop Channel', value: config.shop_channel_id ? `<#${config.shop_channel_id}>` : 'Not set', inline: true },
+                        { name: 'Weekly Shop Limit', value: (config.shop_weekly_item_limit && config.shop_weekly_item_limit > 0) ? `${config.shop_weekly_item_limit} items/player` : 'Unlimited', inline: true },
                         { name: 'Killfeed Channel', value: config.killfeed_channel_id ? `<#${config.killfeed_channel_id}>` : 'Not set', inline: true },
                         { name: 'Connections Channel', value: config.connections_channel_id ? `<#${config.connections_channel_id}>` : 'Not set', inline: true },
                         { name: 'Restart Hours (UTC)', value: config.restart_hours, inline: false }
